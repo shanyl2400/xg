@@ -3,6 +3,7 @@ package route
 import (
 	"errors"
 	"net/http"
+	"strconv"
 	"xg/entity"
 	"xg/service"
 
@@ -60,4 +61,47 @@ func (s *Server) listUserAuthority(c *gin.Context) {
 		return
 	}
 	s.responseSuccessWithData(c, "authority", auth)
+}
+
+func (s *Server) listUsers(c *gin.Context) {
+	users, err := service.GetUserService().ListUsers(c.Request.Context())
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccessWithData(c, "users", users)
+}
+
+func (s *Server) resetPassword(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	user, ok := s.getJWTUser(c)
+	if !ok {
+		return
+	}
+	err = service.GetUserService().ResetPassword(c.Request.Context(), id, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
+func (s *Server) createUser(c *gin.Context) {
+	req := new(entity.CreateUserRequest)
+	err := c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	id, err := service.GetUserService().CreateUser(c.Request.Context(), req)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccessWithData(c, "id", id)
 }

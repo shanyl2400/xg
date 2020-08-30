@@ -18,6 +18,8 @@ var (
 	ErrNoAuthorizeToOperate = errors.New("no auth to operate")
 	ErrNoAuthToOperateOrder = errors.New("no auth to operate order")
 	ErrNoNeedToOperate      = errors.New("no need to operate")
+
+	ErrInvalidOrgStatus = errors.New("invalid org status")
 )
 
 type UserService struct {
@@ -99,6 +101,19 @@ func (u *UserService) UpdatePassword(ctx context.Context, newPassword string, op
 	return nil
 }
 
+func (u *UserService) ResetPassword(ctx context.Context, userId int, operator *entity.JWTUser) error {
+	user, err := da.GetUsersModel().GetUserById(ctx, userId)
+	if err != nil {
+		return err
+	}
+	user.Password = crypto.Hash("123456")
+	err = da.GetUsersModel().UpdateUser(ctx, *user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (u *UserService) ListUserAuthority(ctx context.Context, operator *entity.JWTUser) ([]*entity.Auth, error) {
 	authList, err := da.GetRoleModel().ListRoleAuth(ctx, operator.RoleId)
 	if err != nil {
@@ -140,6 +155,40 @@ func (u *UserService) CreateUser(ctx context.Context, req *entity.CreateUserRequ
 		OrgId:    req.OrgId,
 		RoleId:   req.RoleId,
 	})
+}
+
+func (u *UserService) ListUsers(ctx context.Context) ([]*entity.UserInfo, error) {
+	users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{})
+	roles, err := da.GetRoleModel().ListRoles(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	orgs, err := da.GetOrgModel().ListOrgs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	roleMap := make(map[int]string)
+	orgMap := make(map[int]string)
+
+	for i := range orgs {
+		orgMap[orgs[i].ID] = orgs[i].Name
+	}
+	for i := range roles {
+		roleMap[roles[i].ID] = roles[i].Name
+	}
+
+	userList := make([]*entity.UserInfo, len(users))
+	for i := range users {
+		userList[i] = &entity.UserInfo{
+			UserId:   users[i].ID,
+			RoleId:   users[i].RoleId,
+			OrgId:    users[i].OrgId,
+			RoleName: roleMap[users[i].RoleId],
+			OrgName:  orgMap[users[i].OrgId],
+		}
+	}
+	return userList, nil
 }
 
 var (

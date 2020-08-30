@@ -10,8 +10,16 @@ import (
 type RoleService struct {
 }
 
-func (r *RoleService) CreateRole(ctx context.Context, name string) (int, error) {
-	return da.GetRoleModel().CreateRole(ctx, name)
+func (r *RoleService) CreateRole(ctx context.Context, name string, authList []int) (int, error) {
+	id, err := da.GetRoleModel().CreateRole(ctx, name)
+	if err != nil {
+		return -1, err
+	}
+	err = da.GetRoleModel().SetRoleAuth(ctx, id, authList)
+	if err != nil {
+		return -1, err
+	}
+	return id, nil
 }
 
 func (r *RoleService) ListRole(ctx context.Context) ([]*entity.Role, error) {
@@ -21,9 +29,22 @@ func (r *RoleService) ListRole(ctx context.Context) ([]*entity.Role, error) {
 	}
 	res := make([]*entity.Role, len(roles))
 	for i := range roles {
+		authInfo, err := da.GetRoleModel().ListRoleAuth(ctx, roles[i].ID)
+		if err != nil {
+			return nil, err
+		}
+		authList := make([]*entity.Auth, len(authInfo.AuthIDs))
+		for i := range authInfo.AuthIDs {
+			authList[i] = &entity.Auth{
+				ID:   authInfo.AuthIDs[i],
+				Name: authInfo.AuthNames[i],
+			}
+		}
+
 		res[i] = &entity.Role{
-			ID:   roles[i].ID,
-			Name: roles[i].Name,
+			ID:       roles[i].ID,
+			Name:     roles[i].Name,
+			AuthList: authList,
 		}
 	}
 	return res, nil

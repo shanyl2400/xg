@@ -19,6 +19,14 @@ type UserDetailsInfo struct {
 	Auths    []string `json:"auths"`
 }
 
+type UserInfo struct {
+	UserId   int    `json:"user_id"`
+	RoleId   int    `json:"role_id"`
+	OrgId    int    `json:"org_id"`
+	RoleName string `json:"role_name"`
+	OrgName  string `json:"org_name"`
+}
+
 type UserLoginRequest struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`

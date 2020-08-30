@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"sync"
+	"time"
 	"xg/da"
 	"xg/entity"
 )
@@ -27,6 +28,20 @@ func (s *SubjectService) ListSubjects(ctx context.Context, parentID int) ([]*ent
 		}
 	}
 	return res, nil
+}
+
+func (s *SubjectService) CreateSubject(ctx context.Context, req entity.CreateSubjectRequest) (int, error) {
+	now := time.Now()
+	id, err := da.GetSubjectModel().CreateSubject(ctx, da.Subject{
+		Level:    req.Level,
+		ParentId: req.ParentId,
+		Name:     req.Name,
+
+		UpdatedAt: &now,
+		CreatedAt: &now,
+		DeletedAt: &now,
+	})
+	return id, err
 }
 
 var (

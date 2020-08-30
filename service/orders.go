@@ -210,6 +210,29 @@ func (o *OrderService) AddOrderRemark(ctx context.Context, orderId int, content 
 	return nil
 }
 
+func (o *OrderService) SearchOrderPayRecords(ctx context.Context, condition *entity.SearchPayRecordCondition, operator *entity.JWTUser) (*entity.PayRecordInfoList, error) {
+	total, records, err := da.GetOrderModel().SearchPayRecord(ctx, da.SearchPayRecordCondition{
+		PayRecordIDList: condition.PayRecordIDList,
+		OrderIDList:     condition.OrderIDList,
+		AuthorIDList:    condition.AuthorIDList,
+		Mode:            condition.Mode,
+		StatusList:      condition.StatusList,
+
+		OrderBy: condition.OrderBy,
+
+		PageSize: condition.PageSize,
+		Page:     condition.Page,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &entity.PayRecordInfoList{
+		Total:   total,
+		Records: o.getPayRecordInfo(ctx, records),
+	}, nil
+}
+
 func (o *OrderService) SearchOrders(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) (*entity.OrderInfoList, error) {
 	//查询订单
 	total, orders, err := da.GetOrderModel().SearchOrder(ctx, da.SearchOrderCondition{
@@ -247,6 +270,22 @@ func (o *OrderService) SearchOrderWithOrgId(ctx context.Context, condition *enti
 	condition.ToOrgIDList = []int{operator.OrgId}
 	//查询订单
 	return o.SearchOrders(ctx, condition, operator)
+}
+
+func (o *OrderService) getPayRecordInfo(ctx context.Context, records []*da.OrderPayRecord) []*entity.PayRecordInfo {
+	res := make([]*entity.PayRecordInfo, len(records))
+	for i := range records {
+		res[i] = &entity.PayRecordInfo{
+			ID:      records[i].ID,
+			OrderID: records[i].OrderID,
+			Mode:    records[i].Mode,
+			Title:   records[i].Title,
+			Amount:  records[i].Amount,
+
+			Status: records[i].Status,
+		}
+	}
+	return res
 }
 
 func (o *OrderService) getOrderInfoDetails(ctx context.Context, orders []*da.Order) ([]*entity.OrderInfoDetails, error) {
