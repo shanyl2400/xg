@@ -9,6 +9,7 @@ import (
 
 type IRolesModel interface {
 	CreateRole(ctx context.Context, name string) (int, error)
+	CreateRoleWithID(ctx context.Context, id int, name string) (int, error)
 	ListRoles(ctx context.Context) ([]*Role, error)
 	GetRoleById(ctx context.Context, id int) (*Role, error)
 
@@ -42,6 +43,21 @@ type DBRoleModel struct{}
 func (d *DBRoleModel) CreateRole(ctx context.Context, name string) (int, error) {
 	now := time.Now()
 	role := &Role{
+		Name:      name,
+		UpdatedAt: &now,
+		CreatedAt: &now,
+	}
+	err := db.Get().Create(role).Error
+	if err != nil {
+		return -1, err
+	}
+	return role.ID, nil
+}
+
+func (d *DBRoleModel) CreateRoleWithID(ctx context.Context, id int, name string) (int, error) {
+	now := time.Now()
+	role := &Role{
+		ID:        id,
 		Name:      name,
 		UpdatedAt: &now,
 		CreatedAt: &now,
