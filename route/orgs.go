@@ -50,10 +50,7 @@ func (s *Server) createOrg(c *gin.Context) {
 		s.responseErr(c, http.StatusBadRequest, err)
 		return
 	}
-	user, ok := s.getJWTUser(c)
-	if !ok {
-		return
-	}
+	user := s.getJWTUser(c)
 	id, err := service.GetOrgService().CreateOrg(c.Request.Context(), req, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
@@ -69,10 +66,7 @@ func (s *Server) ApproveOrg(c *gin.Context) {
 		s.responseErr(c, http.StatusBadRequest, err)
 		return
 	}
-	user, ok := s.getJWTUser(c)
-	if !ok {
-		return
-	}
+	user := s.getJWTUser(c)
 	err = service.GetOrgService().CheckOrgById(c.Request.Context(), id, entity.OrgStatusCertified, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
@@ -88,10 +82,7 @@ func (s *Server) RejectOrg(c *gin.Context) {
 		s.responseErr(c, http.StatusBadRequest, err)
 		return
 	}
-	user, ok := s.getJWTUser(c)
-	if !ok {
-		return
-	}
+	user := s.getJWTUser(c)
 	err = service.GetOrgService().CheckOrgById(c.Request.Context(), id, entity.OrgStatusRevoked, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)

@@ -42,13 +42,13 @@ func (s *Server) mustOutOrg(c *gin.Context) {
 	}
 }
 
-func (s *Server) getJWTUser(c *gin.Context) (*entity.JWTUser, bool) {
+func (s *Server) getJWTUser(c *gin.Context) *entity.JWTUser {
 	user, ok := c.Get("user")
 	if !ok {
-		return nil, false
+		return nil
 	}
 
-	return user.(*entity.JWTUser), true
+	return user.(*entity.JWTUser)
 }
 
 func (s *Server) corsMiddleware(c *gin.Context) {

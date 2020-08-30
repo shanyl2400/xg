@@ -1,6 +1,7 @@
 package route
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strconv"
@@ -38,10 +39,7 @@ func (s *Server) updatePassword(c *gin.Context) {
 		s.responseErr(c, http.StatusBadRequest, err)
 		return
 	}
-	user, ok := s.getJWTUser(c)
-	if !ok {
-		return
-	}
+	user := s.getJWTUser(c)
 	err = service.GetUserService().UpdatePassword(c.Request.Context(), newPasswordReq.NewPassword, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
@@ -51,10 +49,7 @@ func (s *Server) updatePassword(c *gin.Context) {
 }
 
 func (s *Server) listUserAuthority(c *gin.Context) {
-	user, ok := s.getJWTUser(c)
-	if !ok {
-		return
-	}
+	user := s.getJWTUser(c)
 	auth, err := service.GetUserService().ListUserAuthority(c.Request.Context(), user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
@@ -79,10 +74,7 @@ func (s *Server) resetPassword(c *gin.Context) {
 		s.responseErr(c, http.StatusBadRequest, err)
 		return
 	}
-	user, ok := s.getJWTUser(c)
-	if !ok {
-		return
-	}
+	user := s.getJWTUser(c)
 	err = service.GetUserService().ResetPassword(c.Request.Context(), id, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
@@ -104,4 +96,18 @@ func (s *Server) createUser(c *gin.Context) {
 		return
 	}
 	s.responseSuccessWithData(c, "id", id)
+}
+
+func (s *Server) hasPermission(ctx context.Context, user *entity.JWTUser, permission string) error {
+	authList, err := service.GetRoleService().GetRoleAuth(ctx, user.RoleId)
+	if err != nil {
+		return err
+	}
+	for i := range authList {
+		if authList[i] == permission {
+
+		}
+	}
+
+	return nil
 }

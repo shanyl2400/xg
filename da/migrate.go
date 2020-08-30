@@ -65,51 +65,51 @@ func InitData(flag bool) {
 }
 
 func initAuth() {
-	err := GetAuthModel().CreateAuthWithID(context.Background(), 1, "录单权")
+	err := GetAuthModel().CreateAuthWithID(context.Background(), entity.AuthEnterStudent, "录单权")
 	if err != nil {
 		panic(err)
 	}
-	err = GetAuthModel().CreateAuthWithID(context.Background(), 2, "自派单权")
+	err = GetAuthModel().CreateAuthWithID(context.Background(), entity.AuthDispatchSelfOrder, "自派单权")
 	if err != nil {
 		panic(err)
 	}
-	err = GetAuthModel().CreateAuthWithID(context.Background(), 3, "全名单派单权")
+	err = GetAuthModel().CreateAuthWithID(context.Background(), entity.AuthDispatchOrder, "全名单派单权")
 	if err != nil {
 		panic(err)
 	}
-	err = GetAuthModel().CreateAuthWithID(context.Background(), 4, "审核订单权限")
+	err = GetAuthModel().CreateAuthWithID(context.Background(), entity.AuthCheckOrder, "审核订单权限")
 	if err != nil {
 		panic(err)
 	}
-	err = GetAuthModel().CreateAuthWithID(context.Background(), 5, "查看所有订单")
+	err = GetAuthModel().CreateAuthWithID(context.Background(), entity.AuthListAllOrder, "查看所有订单")
 	if err != nil {
 		panic(err)
 	}
-	err = GetAuthModel().CreateAuthWithID(context.Background(), 6, "机构订单权限")
+	err = GetAuthModel().CreateAuthWithID(context.Background(), entity.AuthListOrgOrder, "机构订单权限")
 	if err != nil {
 		panic(err)
 	}
-	err = GetAuthModel().CreateAuthWithID(context.Background(), 7, "订单来源管理")
+	err = GetAuthModel().CreateAuthWithID(context.Background(), entity.AuthManageOrderSource, "订单来源管理")
 	if err != nil {
 		panic(err)
 	}
-	err = GetAuthModel().CreateAuthWithID(context.Background(), 8, "课程分类管理")
+	err = GetAuthModel().CreateAuthWithID(context.Background(), entity.AuthManageSubject, "课程分类管理")
 	if err != nil {
 		panic(err)
 	}
-	err = GetAuthModel().CreateAuthWithID(context.Background(), 9, "机构管理")
+	err = GetAuthModel().CreateAuthWithID(context.Background(), entity.AuthManageOrg, "机构管理")
 	if err != nil {
 		panic(err)
 	}
-	err = GetAuthModel().CreateAuthWithID(context.Background(), 10, "机构审核")
+	err = GetAuthModel().CreateAuthWithID(context.Background(), entity.AuthCheckOrg, "机构审核")
 	if err != nil {
 		panic(err)
 	}
-	err = GetAuthModel().CreateAuthWithID(context.Background(), 11, "用户管理")
+	err = GetAuthModel().CreateAuthWithID(context.Background(), entity.AuthManageUser, "用户管理")
 	if err != nil {
 		panic(err)
 	}
-	err = GetAuthModel().CreateAuthWithID(context.Background(), 12, "角色管理")
+	err = GetAuthModel().CreateAuthWithID(context.Background(), entity.AuthManageRole, "角色管理")
 	if err != nil {
 		panic(err)
 	}

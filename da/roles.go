@@ -105,7 +105,7 @@ func (d *DBRoleModel) SetRoleAuth(ctx context.Context, id int, authIdList []int)
 
 func (d *DBRoleModel) ListRoleAuth(ctx context.Context, id int) (*RoleAuthInfo, error) {
 	ras := make([]*RoleAuth, 0)
-	err := db.Get().Where(&RoleAuth{RoleId: id}).First(&ras).Error
+	err := db.Get().Where(&RoleAuth{RoleId: id}).Find(&ras).Error
 	if err != nil {
 		return nil, err
 	}

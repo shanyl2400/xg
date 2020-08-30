@@ -16,10 +16,7 @@ func (s *Server) createStudent(c *gin.Context) {
 		s.responseErr(c, http.StatusBadRequest, err)
 		return
 	}
-	user, ok := s.getJWTUser(c)
-	if !ok {
-		return
-	}
+	user := s.getJWTUser(c)
 	id, status, err := service.GetStudentService().CreateStudent(c.Request.Context(), req, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
@@ -36,10 +33,7 @@ func (s *Server) getStudentById(c *gin.Context) {
 	if !ok {
 		return
 	}
-	user, ok := s.getJWTUser(c)
-	if !ok {
-		return
-	}
+	user := s.getJWTUser(c)
 	student, err := service.GetStudentService().GetStudentById(c.Request.Context(), id, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
@@ -88,10 +82,7 @@ func buildCondition(c *gin.Context) *entity.SearchStudentRequest {
 }
 func (s *Server) searchPrivateStudents(c *gin.Context) {
 	condition := buildCondition(c)
-	user, ok := s.getJWTUser(c)
-	if !ok {
-		return
-	}
+	user := s.getJWTUser(c)
 	total, students, err := service.GetStudentService().SearchPrivateStudents(c.Request.Context(), condition, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)

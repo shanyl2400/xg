@@ -17,10 +17,7 @@ func (s *Server) createOrder(c *gin.Context) {
 		s.responseErr(c, http.StatusBadRequest, err)
 		return
 	}
-	user, ok := s.getJWTUser(c)
-	if !ok {
-		return
-	}
+	user := s.getJWTUser(c)
 	id, err := service.GetOrderService().CreateOrder(c.Request.Context(), req, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
@@ -31,10 +28,7 @@ func (s *Server) createOrder(c *gin.Context) {
 
 func (s *Server) searchOrder(c *gin.Context) {
 	req := buildOrderCondition(c)
-	user, ok := s.getJWTUser(c)
-	if !ok {
-		return
-	}
+	user := s.getJWTUser(c)
 
 	orders, err := service.GetOrderService().SearchOrders(c.Request.Context(), req, user)
 	if err != nil {
@@ -46,10 +40,7 @@ func (s *Server) searchOrder(c *gin.Context) {
 
 func (s *Server) searchOrderWithAuthor(c *gin.Context) {
 	req := buildOrderCondition(c)
-	user, ok := s.getJWTUser(c)
-	if !ok {
-		return
-	}
+	user := s.getJWTUser(c)
 
 	orders, err := service.GetOrderService().SearchOrderWithAuthor(c.Request.Context(), req, user)
 	if err != nil {
@@ -61,10 +52,7 @@ func (s *Server) searchOrderWithAuthor(c *gin.Context) {
 
 func (s *Server) searchOrderWithOrgID(c *gin.Context) {
 	req := buildOrderCondition(c)
-	user, ok := s.getJWTUser(c)
-	if !ok {
-		return
-	}
+	user := s.getJWTUser(c)
 
 	orders, err := service.GetOrderService().SearchOrderWithOrgId(c.Request.Context(), req, user)
 	if err != nil {
@@ -81,10 +69,7 @@ func (s *Server) getOrderByID(c *gin.Context) {
 		s.responseErr(c, http.StatusBadRequest, err)
 		return
 	}
-	user, ok := s.getJWTUser(c)
-	if !ok {
-		return
-	}
+	user := s.getJWTUser(c)
 
 	order, err := service.GetOrderService().GetOrderById(c.Request.Context(), id, user)
 	if err != nil {
@@ -96,10 +81,7 @@ func (s *Server) getOrderByID(c *gin.Context) {
 
 func (s *Server) searchPendingPayRecord(c *gin.Context) {
 	req := buildSearchPayRecordCondition(c)
-	user, ok := s.getJWTUser(c)
-	if !ok {
-		return
-	}
+	user := s.getJWTUser(c)
 	req.StatusList = []int{entity.OrderPayStatusPendingCheck}
 
 	records, err := service.GetOrderService().SearchOrderPayRecords(c.Request.Context(), req, user)
