@@ -73,7 +73,7 @@ func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequ
 	}
 	tx := db.Get().Begin()
 	//修改order状态
-	err = da.GetOrderModel().UpdateOrderStatusTx(ctx, tx, req.OrderID, entity.OrderStatusPendingSigned)
+	err = da.GetOrderModel().UpdateOrderStatusTx(ctx, tx, req.OrderID, entity.OrderStatusSigned)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -84,13 +84,31 @@ func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequ
 		Mode:    entity.OrderPayModePay,
 		Title:   req.Title,
 		Amount:  req.Amount,
-		Status:  entity.OrderPayStatusPendingCheck,
+		Status:  entity.OrderPayStatusPending,
 	})
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
 	tx.Commit()
+	return nil
+}
+
+func (o *OrderService) RevokeOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error {
+	orderObj, err := da.GetOrderModel().GetOrderById(ctx, orderId)
+	if err != nil {
+		return err
+	}
+	if orderObj.Order.ToOrgID != operator.OrgId {
+		return ErrNoAuthorizeToOperate
+	}
+	if orderObj.Order.Status != entity.OrderStatusRevoked {
+		return nil
+	}
+	err = da.GetOrderModel().UpdateOrderStatusTx(ctx, db.Get(), orderId, entity.OrderStatusRevoked)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -103,33 +121,18 @@ func (o *OrderService) payOrder(ctx context.Context, mode int, req *entity.Order
 	if orderObj.Order.ToOrgID != operator.OrgId {
 		return ErrNoAuthorizeToOperate
 	}
-	if orderObj.Order.Status == entity.OrderStatusCreated {
-		return ErrNoAuthToOperateOrder
-	}
-
-	tx := db.Get().Begin()
-	//若order不为提醒状态，则修改order状态
-	if orderObj.Order.Status != entity.OrderStatusPendingSigned && orderObj.Order.Status != entity.OrderStatusPendingCheck {
-		err = da.GetOrderModel().UpdateOrderStatusTx(ctx, tx, req.OrderID, entity.OrderStatusPendingCheck)
-		if err != nil {
-			tx.Rollback()
-			return err
-		}
-	}
 
 	//增加orderPay
-	_, err = da.GetOrderModel().AddOrderPayRecordTx(ctx, tx, &da.OrderPayRecord{
+	_, err = da.GetOrderModel().AddOrderPayRecordTx(ctx, db.Get(), &da.OrderPayRecord{
 		OrderID: req.OrderID,
 		Mode:    mode,
 		Title:   req.Title,
 		Amount:  req.Amount,
-		Status:  entity.OrderPayStatusPendingCheck,
+		Status:  entity.OrderPayStatusPending,
 	})
 	if err != nil {
-		tx.Rollback()
 		return err
 	}
-	tx.Commit()
 	return nil
 }
 
@@ -139,52 +142,26 @@ func (o *OrderService) PayOrder(ctx context.Context, req *entity.OrderPayRequest
 }
 
 //退费
-func (o *OrderService) Payback(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error {
+func (o *OrderService) PaybackOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error {
 	return o.payOrder(ctx, entity.OrderPayModePayback, req, operator)
 }
 
 //确认
-func (o *OrderService) ConfirmOrderPay(ctx context.Context, orderId, orderPayId int, operator *entity.JWTUser) error {
+func (o *OrderService) ConfirmOrderPay(ctx context.Context, orderPayId int, status int, operator *entity.JWTUser) error {
 	//所有payRecord都确认，才能将order确认
 	//检查order状态
-	orderObj, err := da.GetOrderModel().GetOrderById(ctx, orderId)
-	if err != nil {
-		return err
-	}
-	if orderObj.Order.Status == entity.OrderStatusCreated ||
-		orderObj.Order.Status == entity.OrderStatusChecked {
-		return ErrNoNeedToOperate
-	}
-
 	tx := db.Get().Begin()
 	//修改支付记录状态
-	err = da.GetOrderModel().UpdateOrderPayRecordTx(ctx, tx, orderPayId, entity.OrderPayStatusChecked)
+	err := da.GetOrderModel().UpdateOrderPayRecordTx(ctx, tx, orderPayId, status)
 	if err != nil {
 		tx.Rollback()
 		return err
-	}
-	//若没有其他支付，则修改订单状态
-	hasPending := false
-	for i := range orderObj.PaymentInfo {
-		if orderObj.PaymentInfo[i].ID != orderPayId &&
-			orderObj.PaymentInfo[i].Status == entity.OrderPayStatusPendingCheck {
-			hasPending = true
-		}
-	}
-	//当前订单已无pending支付记录,将订单设置为checked
-	if !hasPending {
-		err = da.GetOrderModel().UpdateOrderStatusTx(ctx, tx, orderId, entity.OrderStatusChecked)
-		if err != nil {
-			tx.Rollback()
-			return err
-		}
 	}
 
 	return nil
 }
 
 //TODO: search order pay record
-
 func (o *OrderService) AddOrderRemark(ctx context.Context, orderId int, content string, operator *entity.JWTUser) error {
 	orderObj, err := da.GetOrderModel().GetOrderById(ctx, orderId)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 	"xg/db"
+	"xg/entity"
 )
 
 type IRolesModel interface {
@@ -34,8 +35,7 @@ type RoleAuth struct {
 
 type RoleAuthInfo struct {
 	RoleID    int
-	AuthIDs   []int
-	AuthNames []string
+	Auth 	[]*entity.Auth
 }
 
 type DBRoleModel struct{}
@@ -120,12 +120,12 @@ func (d *DBRoleModel) ListRoleAuth(ctx context.Context, id int) (*RoleAuthInfo, 
 	if err != nil {
 		return nil, err
 	}
-	authNames := make([]string, len(auths))
 	for i := range auths {
-		authNames[i] = auths[i].Name
+		ret.Auth = append(ret.Auth, &entity.Auth{
+			ID:   auths[i].ID,
+			Name: auths[i].Name,
+		})
 	}
-	ret.AuthIDs = authIds
-	ret.AuthNames = authNames
 
 	return ret, nil
 }

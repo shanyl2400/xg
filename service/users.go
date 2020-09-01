@@ -83,7 +83,7 @@ func (u *UserService) fillUserInfo(ctx context.Context, user *da.User) (*entity.
 		OrgId:    user.OrgId,
 		RoleName: roleInfo.Name,
 		OrgName:  orgInfo.Name,
-		Auths:    auth.AuthNames,
+		Auths:    auth.Auth,
 	}, nil
 }
 
@@ -119,16 +119,7 @@ func (u *UserService) ListUserAuthority(ctx context.Context, operator *entity.JW
 	if err != nil {
 		return nil, err
 	}
-	authObjList, err := da.GetAuthModel().ListAuthByIDs(ctx, authList.AuthIDs)
-	if err != nil {
-		return nil, err
-	}
-	res := make([]*entity.Auth, len(authObjList))
-	for i := range authObjList {
-		res[i] = (*entity.Auth)(authObjList[i])
-	}
-
-	return res, nil
+	return authList.Auth, nil
 }
 
 func (u *UserService) checkUserEntity(ctx context.Context, req *entity.CreateUserRequest) error {

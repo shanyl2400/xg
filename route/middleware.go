@@ -5,6 +5,7 @@ import (
 	"strings"
 	"xg/crypto"
 	"xg/entity"
+	"xg/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -24,6 +25,28 @@ func (s *Server) mustLogin(c *gin.Context) {
 	}
 	c.Set("user", user)
 }
+
+
+func (s *Server) hasPermission(permission []int) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		user := s.getJWTUser(c)
+		authList, err := service.GetRoleService().GetRoleAuth(c.Request.Context(), user.RoleId)
+		if err != nil {
+			s.responseErr(c, http.StatusInsufficientStorage, err)
+			c.Abort()
+		}
+		for i := range authList {
+			for j := range permission {
+				if authList[i].ID == permission[j] {
+					return
+				}
+			}
+		}
+		s.responseErr(c, http.StatusUnauthorized, ErrNoAuth)
+		c.Abort()
+	}
+}
+
 
 func (s *Server) mustOutOrg(c *gin.Context) {
 	rawUser, ok := c.Get("user")

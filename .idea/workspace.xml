@@ -4,7 +4,22 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b8a8d727-203e-411b-95ea-92ca3a9ffbff" name="Default Changelist" comment="" />
+    <list default="true" id="b8a8d727-203e-411b-95ea-92ca3a9ffbff" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/da/roles.go" beforeDir="false" afterPath="$PROJECT_DIR$/da/roles.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/entity/orders.go" beforeDir="false" afterPath="$PROJECT_DIR$/entity/orders.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/entity/users.go" beforeDir="false" afterPath="$PROJECT_DIR$/entity/users.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/route/middleware.go" beforeDir="false" afterPath="$PROJECT_DIR$/route/middleware.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/route/orders.go" beforeDir="false" afterPath="$PROJECT_DIR$/route/orders.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/route/route.go" beforeDir="false" afterPath="$PROJECT_DIR$/route/route.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/route/students.go" beforeDir="false" afterPath="$PROJECT_DIR$/route/students.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/route/users.go" beforeDir="false" afterPath="$PROJECT_DIR$/route/users.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/orders.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/orders.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/role.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/role.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/users.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/users.go" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -18,17 +33,22 @@
     </option>
   </component>
   <component name="GOROOT" path="C:\Go" />
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="ProjectId" id="1ft4HGFZolBMWyfNumZLYnJYqLv" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="DefaultGoTemplateProperty" value="Go File" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="go.import.settings.migrated" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../calmisland/kidsloop_service_school" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -89,9 +109,9 @@
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
     <state x="974" y="266" width="585" height="592" key="find.popup/0.0.1920.1050/1920.0.1920.1050@0.0.1920.1050" timestamp="1597304038473" />
-    <state x="623" y="227" width="672" height="678" key="search.everywhere.popup" timestamp="1597303211540">
+    <state x="623" y="227" width="672" height="678" key="search.everywhere.popup" timestamp="1598939424625">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
-    <state x="623" y="227" width="672" height="678" key="search.everywhere.popup/0.0.1920.1050/1920.0.1920.1050@0.0.1920.1050" timestamp="1597303211540" />
+    <state x="623" y="227" width="672" height="678" key="search.everywhere.popup/0.0.1920.1050/1920.0.1920.1050@0.0.1920.1050" timestamp="1598939424625" />
   </component>
 </project>

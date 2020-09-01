@@ -4,13 +4,12 @@ import "time"
 
 const (
 	OrderStatusCreated = iota + 1
-	OrderStatusPendingSigned
-	OrderStatusPendingCheck
-	OrderStatusChecked
+	OrderStatusSigned
+	OrderStatusRevoked
 
-	OrderPayStatusPendingCheck = 1
-	OrderPayStatusChecked      = 2
-	OrderPayStatusRejected     = 3
+	OrderPayStatusPending  = 1
+	OrderPayStatusChecked  = 2
+	OrderPayStatusRejected = 3
 
 	OrderPayModePay     = 1
 	OrderPayModePayback = 2
@@ -125,4 +124,9 @@ type OrderPayRequest struct {
 	OrderID int    `json:"order_id"`
 	Amount  int    `json:"amount"`
 	Title   string `json:"title"`
+}
+
+type OrderMarkRequest struct {
+	OrderID int `json:"order_id"`
+	Content string `json:"content"`
 }

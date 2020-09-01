@@ -22,7 +22,7 @@ func main() {
 
 	//迁移数据库
 	da.AutoMigrate()
-	da.InitData(true)
+	da.InitData(false)
 
 	engine.Run(":8088")
 }

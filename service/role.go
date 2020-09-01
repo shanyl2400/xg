@@ -33,18 +33,11 @@ func (r *RoleService) ListRole(ctx context.Context) ([]*entity.Role, error) {
 		if err != nil {
 			return nil, err
 		}
-		authList := make([]*entity.Auth, len(authInfo.AuthIDs))
-		for i := range authInfo.AuthIDs {
-			authList[i] = &entity.Auth{
-				ID:   authInfo.AuthIDs[i],
-				Name: authInfo.AuthNames[i],
-			}
-		}
 
 		res[i] = &entity.Role{
 			ID:       roles[i].ID,
 			Name:     roles[i].Name,
-			AuthList: authList,
+			AuthList: authInfo.Auth,
 		}
 	}
 	return res, nil
@@ -53,13 +46,13 @@ func (r *RoleService) SetRoleAuth(ctx context.Context, id int, ids []int) error 
 	return da.GetRoleModel().SetRoleAuth(ctx, id, ids)
 }
 
-func (r *RoleService) GetRoleAuth(ctx context.Context, id int) ([]string, error) {
+func (r *RoleService) GetRoleAuth(ctx context.Context, id int) ([]*entity.Auth, error) {
 	res, err := da.GetRoleModel().ListRoleAuth(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	return res.AuthNames, nil
+	return res.Auth, nil
 }
 
 var (

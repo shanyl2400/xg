@@ -93,3 +93,18 @@ func (s *Server) searchPrivateStudents(c *gin.Context) {
 		Students: students,
 	})
 }
+
+
+func (s *Server) searchStudents(c *gin.Context) {
+	condition := buildCondition(c)
+	user := s.getJWTUser(c)
+	total, students, err := service.GetStudentService().SearchStudents(c.Request.Context(), condition, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccessWithData(c, "result", entity.StudentInfoList{
+		Total:    total,
+		Students: students,
+	})
+}

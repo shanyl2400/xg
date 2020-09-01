@@ -82,7 +82,7 @@ func (s *Server) getOrderByID(c *gin.Context) {
 func (s *Server) searchPendingPayRecord(c *gin.Context) {
 	req := buildSearchPayRecordCondition(c)
 	user := s.getJWTUser(c)
-	req.StatusList = []int{entity.OrderPayStatusPendingCheck}
+	req.StatusList = []int{entity.OrderPayStatusPending}
 
 	records, err := service.GetOrderService().SearchOrderPayRecords(c.Request.Context(), req, user)
 	if err != nil {
@@ -90,6 +90,119 @@ func (s *Server) searchPendingPayRecord(c *gin.Context) {
 		return
 	}
 	s.responseSuccessWithData(c, "data", records)
+}
+
+func (s *Server) signupOrder(c *gin.Context) {
+	req := new(entity.OrderPayRequest)
+	err := c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	user := s.getJWTUser(c)
+	err = service.GetOrderService().SignUpOrder(c.Request.Context(), req, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
+func (s *Server) revokeOrder(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	user := s.getJWTUser(c)
+	err = service.GetOrderService().RevokeOrder(c.Request.Context(), id, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
+
+func (s *Server) payOrder(c *gin.Context) {
+	req := new(entity.OrderPayRequest)
+	err := c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	user := s.getJWTUser(c)
+	err = service.GetOrderService().PayOrder(c.Request.Context(), req, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
+func (s *Server) paybackOrder(c *gin.Context) {
+	req := new(entity.OrderPayRequest)
+	err := c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	user := s.getJWTUser(c)
+	err = service.GetOrderService().PaybackOrder(c.Request.Context(), req, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
+func (s *Server) acceptPayment(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	user := s.getJWTUser(c)
+	err = service.GetOrderService().ConfirmOrderPay(c.Request.Context(), id, entity.OrderPayStatusChecked , user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
+func (s *Server) rejectPayment(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	user := s.getJWTUser(c)
+	err = service.GetOrderService().ConfirmOrderPay(c.Request.Context(), id, entity.OrderPayStatusRejected , user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
+func (s *Server) addOrderMark(c *gin.Context) {
+	req := new(entity.OrderMarkRequest)
+	err := c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	user := s.getJWTUser(c)
+	err = service.GetOrderService().AddOrderRemark(c.Request.Context(), req.OrderID, req.Content, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
 }
 
 func buildSearchPayRecordCondition(c *gin.Context) *entity.SearchPayRecordCondition {

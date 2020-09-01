@@ -1,7 +1,6 @@
 package route
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"strconv"
@@ -9,6 +8,10 @@ import (
 	"xg/service"
 
 	"github.com/gin-gonic/gin"
+)
+
+var(
+	ErrNoAuth = errors.New("no authorization")
 )
 
 func (s *Server) login(c *gin.Context) {
@@ -96,18 +99,4 @@ func (s *Server) createUser(c *gin.Context) {
 		return
 	}
 	s.responseSuccessWithData(c, "id", id)
-}
-
-func (s *Server) hasPermission(ctx context.Context, user *entity.JWTUser, permission string) error {
-	authList, err := service.GetRoleService().GetRoleAuth(ctx, user.RoleId)
-	if err != nil {
-		return err
-	}
-	for i := range authList {
-		if authList[i] == permission {
-
-		}
-	}
-
-	return nil
 }
