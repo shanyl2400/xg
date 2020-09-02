@@ -21,7 +21,9 @@ type IOrderModel interface {
 
 	GetOrderById(ctx context.Context, id int) (*OrderInfo, error)
 	SearchOrder(ctx context.Context, s SearchOrderCondition) (int, []*Order, error)
+	CountOrder(ctx context.Context, s SearchOrderCondition) (int, error)
 
+	CountPayRecord(ctx context.Context, s SearchPayRecordCondition) (int, error)
 	SearchPayRecord(ctx context.Context, s SearchPayRecordCondition) (int, []*OrderPayRecord, error)
 }
 
@@ -129,7 +131,7 @@ type SearchOrderCondition struct {
 	IntentSubjects string
 	PublisherID    int
 
-	Status int
+	Status []int
 
 	OrderBy string
 
@@ -161,8 +163,8 @@ func (s SearchOrderCondition) GetConditions() (string, []interface{}) {
 		wheres = append(wheres, "publisher_id = ?")
 		values = append(values, s.PublisherID)
 	}
-	if s.Status > 0 {
-		wheres = append(wheres, "status = ?")
+	if len(s.Status) > 0 {
+		wheres = append(wheres, "status IN (?)")
 		values = append(values, s.Status)
 	}
 
@@ -264,6 +266,18 @@ func (d *DBOrderModel) GetOrderById(ctx context.Context, id int) (*OrderInfo, er
 	return orderInfo, nil
 }
 
+func (d *DBOrderModel) CountPayRecord(ctx context.Context, s SearchPayRecordCondition) (int, error) {
+	where, values := s.GetConditions()
+
+	//获取数量
+	var total int
+	err := db.Get().Model(Order{}).Where(where, values...).Count(&total).Error
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
+}
+
 func (d *DBOrderModel) SearchPayRecord(ctx context.Context, s SearchPayRecordCondition) (int, []*OrderPayRecord, error) {
 	where, values := s.GetConditions()
 
@@ -289,6 +303,17 @@ func (d *DBOrderModel) SearchPayRecord(ctx context.Context, s SearchPayRecordCon
 		return 0, nil, err
 	}
 	return total, records, nil
+}
+
+func (d *DBOrderModel) CountOrder(ctx context.Context, s SearchOrderCondition) (int, error) {
+	where, values := s.GetConditions()
+	//获取数量
+	var total int
+	err := db.Get().Model(Order{}).Where(where, values...).Count(&total).Error
+	if err != nil {
+		return 0, err
+	}
+	return total, nil
 }
 
 func (d *DBOrderModel) SearchOrder(ctx context.Context, s SearchOrderCondition) (int, []*Order, error) {

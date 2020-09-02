@@ -13,6 +13,7 @@ type IStudentsModel interface {
 	UpdateStudent(ctx context.Context, id int, student Student) error
 	GetStudentById(ctx context.Context, id int) (*Student, error)
 	SearchStudents(ctx context.Context, s SearchStudentCondition) (int, []*Student, error)
+	CountStudents(ctx context.Context) (int, error)
 }
 
 type Student struct {
@@ -100,6 +101,17 @@ func (d *DBStudentsModel) SearchStudents(ctx context.Context, s SearchStudentCon
 	}
 	return total, students, nil
 }
+
+
+func (d *DBStudentsModel) CountStudents(ctx context.Context) (int, error) {
+	count := 0
+	err := db.Get().Model(Student{}).Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 
 func parsePage(page, pageSize int) (int, int) {
 	return (page - 1) * pageSize, pageSize

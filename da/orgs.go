@@ -13,8 +13,9 @@ type IOrgModel interface {
 	GetOrgById(ctx context.Context, id int) (*Org, error)
 	ListOrgs(ctx context.Context) ([]*Org, error)
 	UpdateOrg(ctx context.Context, id int, org Org) error
+	CountOrgs(ctx context.Context) (int, error)
 
-	SearchOrgs(ctx context.Context, s SearchOrgsCondition) ([]*Org, error)
+	SearchOrgs(ctx context.Context, s SearchOrgsCondition) (int, []*Org, error)
 }
 
 type Org struct {
@@ -71,14 +72,29 @@ func (d *DBOrgModel) ListOrgs(ctx context.Context) ([]*Org, error) {
 	return result, nil
 }
 
-func (d *DBOrgModel) SearchOrgs(ctx context.Context, s SearchOrgsCondition) ([]*Org, error) {
-	where, values := s.GetConditions()
-	result := make([]*Org, 0)
-	err := db.Get().Where(where, values...).Find(&result).Error
+func (d *DBOrgModel) CountOrgs(ctx context.Context) (int, error) {
+	count := 0
+	err := db.Get().Model(Org{}).Count(&count).Error
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
-	return result, nil
+	return count, nil
+}
+
+func (d *DBOrgModel) SearchOrgs(ctx context.Context, s SearchOrgsCondition) (int, []*Org, error) {
+	where, values := s.GetConditions()
+	count := 0
+	err := db.Get().Model(Org{}).Count(&count).Error
+	if err != nil {
+		return 0, nil, err
+	}
+
+	result := make([]*Org, 0)
+	err = db.Get().Where(where, values...).Find(&result).Error
+	if err != nil {
+		return 0, nil, err
+	}
+	return count, result, nil
 }
 
 type SearchOrgsCondition struct {
@@ -87,6 +103,7 @@ type SearchOrgsCondition struct {
 	Status   []int
 
 	ParentIDs []int
+	IsSubOrg bool
 }
 
 func (s SearchOrgsCondition) GetConditions() (string, []interface{}) {
@@ -110,6 +127,9 @@ func (s SearchOrgsCondition) GetConditions() (string, []interface{}) {
 	if len(s.ParentIDs) > 0 {
 		wheres = append(wheres, "parent_id IN (?)")
 		values = append(values, s.ParentIDs)
+	}
+	if s.IsSubOrg{
+		wheres = append(wheres, "parent_id != 0")
 	}
 
 	//wheres = append(wheres, "deleted_at IS NULL")

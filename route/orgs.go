@@ -3,28 +3,52 @@ package route
 import (
 	"net/http"
 	"strconv"
+	"xg/da"
 	"xg/entity"
 	"xg/service"
 
 	"github.com/gin-gonic/gin"
 )
 
+type OrgListResponse struct {
+	Orgs []*entity.Org `json:"orgs"`
+	Total int `json:"total"`
+}
+
 func (s *Server) listOrgs(c *gin.Context) {
-	orgs, err := service.GetOrgService().ListOrgs(c.Request.Context())
+	count, orgs, err := service.GetOrgService().ListOrgs(c.Request.Context())
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "orgs", orgs)
+	s.responseSuccessWithData(c, "data", OrgListResponse{
+		Total: count,
+		Orgs: orgs,
+	})
 }
 
 func (s *Server) listPendingOrgs(c *gin.Context) {
-	orgs, err := service.GetOrgService().ListOrgsByStatus(c.Request.Context(), []int{entity.OrgStatusCreated})
+	count, orgs, err := service.GetOrgService().ListOrgsByStatus(c.Request.Context(), []int{entity.OrgStatusCreated})
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "orgs", orgs)
+	s.responseSuccessWithData(c, "data", OrgListResponse{
+		Total: count,
+		Orgs: orgs,
+	})
+}
+
+func (s *Server) searchSubOrgs(c *gin.Context) {
+	count, orgs, err := service.GetOrgService().SearchSubOrgs(c.Request.Context(), buildOrgsSearchCondition(c))
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccessWithData(c, "data", OrgListResponse{
+		Total: count,
+		Orgs: orgs,
+	})
 }
 
 func (s *Server) getOrgById(c *gin.Context) {
@@ -89,4 +113,11 @@ func (s *Server) RejectOrg(c *gin.Context) {
 		return
 	}
 	s.responseSuccess(c)
+}
+
+func buildOrgsSearchCondition(c *gin.Context) da.SearchOrgsCondition{
+	return da.SearchOrgsCondition{
+		Subjects:  c.Query("subjects"),
+		Address:   c.Query("address"),
+	}
 }

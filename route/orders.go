@@ -245,7 +245,7 @@ func buildOrderCondition(c *gin.Context) *entity.SearchOrderCondition {
 		IntentSubjects: intentSubjects,
 		PublisherID:    parseInt(publisherID),
 
-		Status:  parseInt(status),
+		Status:  parseInts(status),
 		OrderBy: orderBy,
 
 		PageSize: parseInt(pageSize),

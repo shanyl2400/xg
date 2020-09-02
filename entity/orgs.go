@@ -12,6 +12,8 @@ type Org struct {
 	ID       int      `json:"id"`
 	Name     string   `json:"name"`
 	Subjects []string `json:"subjects"`
+	Address string `json:"address"`
+	ParentID int `json:"parent_id"`
 
 	Status int `json:"status"`
 }
@@ -19,6 +21,7 @@ type Org struct {
 type CreateOrgRequest struct {
 	Name     string   `json:"name"`
 	Subjects []string `json:"subjects"`
+	Address string `json:"address"`
 
 	Status   int `json:"status"`
 	ParentID int `json:"parent_id"`
@@ -27,6 +30,7 @@ type CreateOrgRequest struct {
 type UpdateOrgRequest struct {
 	ID       int      `json:"id"`
 	Subjects []string `json:"subjects"`
+	Address string `json:"address"`
 
 	Status int `json:"status"`
 }

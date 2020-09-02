@@ -30,7 +30,7 @@ type SearchOrderCondition struct {
 	IntentSubjects string `json:"intent_subjects"`
 	PublisherID    int    `json:"publisher_id"`
 
-	Status  int    `json:"status"`
+	Status  []int    `json:"status"`
 	OrderBy string `json:"order_by"`
 
 	PageSize int `json:"page_size"`

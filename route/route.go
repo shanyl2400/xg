@@ -78,6 +78,7 @@ func Get() *gin.Engine {
 	{
 		orgs.GET("/", s.mustLogin, s.listOrgs)
 		orgs.GET("/pending", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.listPendingOrgs)
+		orgs.GET("/campus", s.mustLogin, s.searchSubOrgs)
 	}
 
 	order := route.Group("/order")
@@ -112,6 +113,12 @@ func Get() *gin.Engine {
 	orderSources := route.Group("/order_sources")
 	{
 		orderSources.GET("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageOrderSource}), s.listOrderSources)
+	}
+
+	statistics := route.Group("/graph")
+	{
+		statistics.GET("/summary", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.summary)
+		statistics.GET("/graph", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.graph)
 	}
 
 	return route

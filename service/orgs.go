@@ -29,6 +29,8 @@ func (s *OrgService) CreateOrg(ctx context.Context, req *entity.CreateOrgRequest
 		Name:     req.Name,
 		Subjects: strings.Join(req.Subjects, ","),
 		Status:   req.Status,
+		Address: req.Address,
+		ParentID: req.ParentID,
 	})
 }
 
@@ -43,6 +45,7 @@ func (s *OrgService) UpdateOrgById(ctx context.Context, req *entity.UpdateOrgReq
 
 	return da.GetOrgModel().UpdateOrg(ctx, req.ID, da.Org{
 		Subjects: strings.Join(req.Subjects, ","),
+		Address: req.Address,
 		Status:   req.Status,
 	})
 }
@@ -81,17 +84,19 @@ func (s *OrgService) GetOrgById(ctx context.Context, orgId int) (*entity.Org, er
 		Name:     org.Name,
 		Subjects: subjects,
 		Status:   org.Status,
+		Address: org.Address,
+		ParentID: org.ParentID,
 	}, nil
 }
 
-func (s *OrgService) ListOrgs(ctx context.Context) ([]*entity.Org, error) {
-	orgs, err := da.GetOrgModel().SearchOrgs(ctx, da.SearchOrgsCondition{
+func (s *OrgService) ListOrgs(ctx context.Context) (int, []*entity.Org, error) {
+	count, orgs, err := da.GetOrgModel().SearchOrgs(ctx, da.SearchOrgsCondition{
 		Status: []int{
 			entity.OrgStatusCertified,
 		},
 	})
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 	res := make([]*entity.Org, len(orgs))
 
@@ -105,17 +110,19 @@ func (s *OrgService) ListOrgs(ctx context.Context) ([]*entity.Org, error) {
 			Name:     orgs[i].Name,
 			Subjects: subjects,
 			Status:   orgs[i].Status,
+			Address: orgs[i].Address,
+			ParentID: orgs[i].ParentID,
 		}
 	}
-	return res, nil
+	return count, res, nil
 }
 
-func (s *OrgService) ListOrgsByStatus(ctx context.Context, status []int) ([]*entity.Org, error) {
-	orgs, err := da.GetOrgModel().SearchOrgs(ctx, da.SearchOrgsCondition{
+func (s *OrgService) ListOrgsByStatus(ctx context.Context, status []int) (int, []*entity.Org, error) {
+	count, orgs, err := da.GetOrgModel().SearchOrgs(ctx, da.SearchOrgsCondition{
 		Status: status,
 	})
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 	res := make([]*entity.Org, len(orgs))
 
@@ -129,9 +136,39 @@ func (s *OrgService) ListOrgsByStatus(ctx context.Context, status []int) ([]*ent
 			Name:     orgs[i].Name,
 			Subjects: subjects,
 			Status:   orgs[i].Status,
+			Address: orgs[i].Address,
+			ParentID: orgs[i].ParentID,
 		}
 	}
-	return res, nil
+	return count, res, nil
+}
+
+
+
+func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error) {
+	condition.Status = []int{entity.OrgStatusCertified}
+	condition.IsSubOrg = true
+	count, orgs, err := da.GetOrgModel().SearchOrgs(ctx, condition)
+	if err != nil {
+		return 0, nil, err
+	}
+	res := make([]*entity.Org, len(orgs))
+
+	for i := range orgs {
+		var subjects []string
+		if len(orgs[i].Subjects) > 0 {
+			subjects = strings.Split(orgs[i].Subjects, ",")
+		}
+		res[i] = &entity.Org{
+			ID:       orgs[i].ID,
+			Name:     orgs[i].Name,
+			Subjects: subjects,
+			Status:   orgs[i].Status,
+			Address: orgs[i].Address,
+			ParentID: orgs[i].ParentID,
+		}
+	}
+	return count, res, nil
 }
 
 var (

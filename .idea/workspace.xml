@@ -5,20 +5,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b8a8d727-203e-411b-95ea-92ca3a9ffbff" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/da/statistics.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/entity/statistics.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/route/statistics.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/da/roles.go" beforeDir="false" afterPath="$PROJECT_DIR$/da/roles.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/da/orders.go" beforeDir="false" afterPath="$PROJECT_DIR$/da/orders.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/da/orgs.go" beforeDir="false" afterPath="$PROJECT_DIR$/da/orgs.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/da/students.go" beforeDir="false" afterPath="$PROJECT_DIR$/da/students.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/entity/orders.go" beforeDir="false" afterPath="$PROJECT_DIR$/entity/orders.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/entity/users.go" beforeDir="false" afterPath="$PROJECT_DIR$/entity/users.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/route/middleware.go" beforeDir="false" afterPath="$PROJECT_DIR$/route/middleware.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/entity/orgs.go" beforeDir="false" afterPath="$PROJECT_DIR$/entity/orgs.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/route/orders.go" beforeDir="false" afterPath="$PROJECT_DIR$/route/orders.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/route/orgs.go" beforeDir="false" afterPath="$PROJECT_DIR$/route/orgs.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/route/route.go" beforeDir="false" afterPath="$PROJECT_DIR$/route/route.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/route/students.go" beforeDir="false" afterPath="$PROJECT_DIR$/route/students.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/route/users.go" beforeDir="false" afterPath="$PROJECT_DIR$/route/users.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/orders.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/orders.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/role.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/role.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/users.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/users.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/orgs.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/orgs.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/service/statistics.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/statistics.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -105,13 +105,23 @@
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
     <state x="461" y="170" key="SettingsEditor/0.0.1920.1050/1920.0.1920.1050@0.0.1920.1050" timestamp="1597024427679" />
-    <state x="974" y="266" width="585" height="592" key="find.popup" timestamp="1597304038473">
+    <state x="974" y="266" width="585" height="592" key="find.popup" timestamp="1599014904185">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
-    <state x="974" y="266" width="585" height="592" key="find.popup/0.0.1920.1050/1920.0.1920.1050@0.0.1920.1050" timestamp="1597304038473" />
+    <state x="974" y="266" width="585" height="592" key="find.popup/0.0.1920.1050/1920.0.1920.1050@0.0.1920.1050" timestamp="1599014904185" />
     <state x="623" y="227" width="672" height="678" key="search.everywhere.popup" timestamp="1598939424625">
       <screen x="0" y="0" width="1920" height="1050" />
     </state>
     <state x="623" y="227" width="672" height="678" key="search.everywhere.popup/0.0.1920.1050/1920.0.1920.1050@0.0.1920.1050" timestamp="1598939424625" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="DlvLineBreakpoint">
+          <url>file://$PROJECT_DIR$/entity/statistics.go</url>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
