@@ -5,26 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b8a8d727-203e-411b-95ea-92ca3a9ffbff" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/start.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/da/migrate.go" beforeDir="false" afterPath="$PROJECT_DIR$/da/migrate.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/da/orders.go" beforeDir="false" afterPath="$PROJECT_DIR$/da/orders.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/da/orgs.go" beforeDir="false" afterPath="$PROJECT_DIR$/da/orgs.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/da/statistics.go" beforeDir="false" afterPath="$PROJECT_DIR$/da/statistics.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/da/students.go" beforeDir="false" afterPath="$PROJECT_DIR$/da/students.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/da/users.go" beforeDir="false" afterPath="$PROJECT_DIR$/da/users.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/entity/orgs.go" beforeDir="false" afterPath="$PROJECT_DIR$/entity/orgs.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/entity/subjects.go" beforeDir="false" afterPath="$PROJECT_DIR$/entity/subjects.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/route/orders.go" beforeDir="false" afterPath="$PROJECT_DIR$/route/orders.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/route/route.go" beforeDir="false" afterPath="$PROJECT_DIR$/route/route.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/route/students.go" beforeDir="false" afterPath="$PROJECT_DIR$/route/students.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/route/users.go" beforeDir="false" afterPath="$PROJECT_DIR$/route/users.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/orders.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/orders.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/orgs.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/orgs.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/statistics.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/statistics.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/students.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/students.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/subjects.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/subjects.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/service/users.go" beforeDir="false" afterPath="$PROJECT_DIR$/service/users.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
