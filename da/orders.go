@@ -24,6 +24,7 @@ type IOrderModel interface {
 	CountOrder(ctx context.Context, s SearchOrderCondition) (int, error)
 
 	CountPayRecord(ctx context.Context, s SearchPayRecordCondition) (int, error)
+	GetPayRecordById(ctx context.Context, id int) (*OrderPayRecord, error)
 	SearchPayRecord(ctx context.Context, s SearchPayRecordCondition) (int, []*OrderPayRecord, error)
 }
 
@@ -100,7 +101,7 @@ func (s SearchPayRecordCondition) GetConditions() (string, []interface{}) {
 
 	if len(s.PayRecordIDList) > 0 {
 		wheres = append(wheres, "id IN (?)")
-		values = append(values, s.OrderIDList)
+		values = append(values, s.PayRecordIDList)
 	}
 	if len(s.AuthorIDList) > 0 {
 		wheres = append(wheres, "author IN (?)")
@@ -116,7 +117,7 @@ func (s SearchPayRecordCondition) GetConditions() (string, []interface{}) {
 	}
 	if len(s.StatusList) > 0 {
 		wheres = append(wheres, "status IN (?)")
-		values = append(values, s.Mode)
+		values = append(values, s.StatusList)
 	}
 
 	where := strings.Join(wheres, " and ")
@@ -222,7 +223,7 @@ func (d *DBOrderModel) AddRemarkRecord(ctx context.Context, o *OrderRemarkRecord
 
 func (d *DBOrderModel) UpdateOrderStatusTx(ctx context.Context, tx *gorm.DB, id, status int) error {
 	now := time.Now()
-	err := tx.Where(&Order{ID: id}).Updates(Order{Status: status, UpdatedAt: &now}).Error
+	err := tx.Model(Order{}).Where(&Order{ID: id}).Updates(Order{Status: status, UpdatedAt: &now}).Error
 	if err != nil {
 		return err
 	}
@@ -231,7 +232,7 @@ func (d *DBOrderModel) UpdateOrderStatusTx(ctx context.Context, tx *gorm.DB, id,
 
 func (d *DBOrderModel) UpdateOrderPayRecordTx(ctx context.Context, tx *gorm.DB, id, status int) error {
 	now := time.Now()
-	err := tx.Where(&OrderPayRecord{ID: id}).Updates(OrderPayRecord{Status: status, UpdatedAt: &now}).Error
+	err := tx.Model(OrderPayRecord{}).Where(&OrderPayRecord{ID: id}).Updates(OrderPayRecord{Status: status, UpdatedAt: &now}).Error
 	if err != nil {
 		return err
 	}
@@ -256,7 +257,7 @@ func (d *DBOrderModel) GetOrderById(ctx context.Context, id int) (*OrderInfo, er
 	}
 
 	payRecords := make([]*OrderPayRecord, 0)
-	err = db.Get().Where(OrderRemarkRecord{OrderID: id}).Find(&payRecords).Error
+	err = db.Get().Where(OrderPayRecord{OrderID: id}).Find(&payRecords).Error
 	if err != nil {
 		fmt.Println("Get order pay record failed, err:", err)
 	} else {
@@ -278,12 +279,20 @@ func (d *DBOrderModel) CountPayRecord(ctx context.Context, s SearchPayRecordCond
 	return total, nil
 }
 
+func (d *DBOrderModel) GetPayRecordById(ctx context.Context, id int) (*OrderPayRecord, error) {
+	record := new(OrderPayRecord)
+	err := db.Get().Where(&OrderPayRecord{ID: id}).First(&record).Error
+	if err != nil {
+		return nil, err
+	}
+	return record, nil
+}
 func (d *DBOrderModel) SearchPayRecord(ctx context.Context, s SearchPayRecordCondition) (int, []*OrderPayRecord, error) {
 	where, values := s.GetConditions()
 
 	//获取数量
 	var total int
-	err := db.Get().Model(Order{}).Where(where, values...).Count(&total).Error
+	err := db.Get().Model(OrderPayRecord{}).Where(where, values...).Count(&total).Error
 	if err != nil {
 		return 0, nil, err
 	}

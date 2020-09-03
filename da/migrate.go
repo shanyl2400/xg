@@ -20,6 +20,7 @@ func AutoMigrate() {
 	db.Get().AutoMigrate(StudentNote{})
 	db.Get().AutoMigrate(Subject{})
 	db.Get().AutoMigrate(User{})
+	db.Get().AutoMigrate(StatisticsRecord{})
 }
 
 func InitData(flag bool) {
@@ -168,6 +169,15 @@ func initRole() {
 		panic(err)
 	}
 	err = GetRoleModel().SetRoleAuth(context.Background(), checkId, []int{4, 5})
+	if err != nil {
+		panic(err)
+	}
+
+	outOrgId, err := GetRoleModel().CreateRoleWithID(context.Background(), 6, "机构账号")
+	if err != nil {
+		panic(err)
+	}
+	err = GetRoleModel().SetRoleAuth(context.Background(), outOrgId, []int{6})
 	if err != nil {
 		panic(err)
 	}

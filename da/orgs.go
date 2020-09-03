@@ -2,6 +2,7 @@ package da
 
 import (
 	"context"
+	"github.com/jinzhu/gorm"
 	"strings"
 	"sync"
 	"time"
@@ -12,8 +13,8 @@ type IOrgModel interface {
 	CreateOrg(ctx context.Context, org Org) (int, error)
 	GetOrgById(ctx context.Context, id int) (*Org, error)
 	ListOrgs(ctx context.Context) ([]*Org, error)
-	UpdateOrg(ctx context.Context, id int, org Org) error
-	CountOrgs(ctx context.Context) (int, error)
+	UpdateOrg(ctx context.Context, tx *gorm.DB, id int, org Org) error
+	CountOrgs(ctx context.Context, s SearchOrgsCondition) (int, error)
 
 	SearchOrgs(ctx context.Context, s SearchOrgsCondition) (int, []*Org, error)
 }
@@ -45,9 +46,9 @@ func (d *DBOrgModel) CreateOrg(ctx context.Context, org Org) (int, error) {
 	return org.ID, nil
 }
 
-func (d *DBOrgModel) UpdateOrg(ctx context.Context, id int, org Org) error {
+func (d *DBOrgModel) UpdateOrg(ctx context.Context, tx *gorm.DB, id int, org Org) error {
 	now := time.Now()
-	err := db.Get().Where(&Org{ID: id}).Updates(Org{Status: org.Status, Subjects: org.Subjects, Address: org.Address, UpdatedAt: &now}).Error
+	err := db.Get().Model(Org{}).Where(&Org{ID: id}).Updates(Org{Status: org.Status, Subjects: org.Subjects, Address: org.Address, UpdatedAt: &now}).Error
 	if err != nil {
 		return err
 	}
@@ -72,9 +73,10 @@ func (d *DBOrgModel) ListOrgs(ctx context.Context) ([]*Org, error) {
 	return result, nil
 }
 
-func (d *DBOrgModel) CountOrgs(ctx context.Context) (int, error) {
+func (d *DBOrgModel) CountOrgs(ctx context.Context, s SearchOrgsCondition) (int, error) {
+	where, values := s.GetConditions()
 	count := 0
-	err := db.Get().Model(Org{}).Count(&count).Error
+	err := db.Get().Model(Org{}).Where(where, values...).Count(&count).Error
 	if err != nil {
 		return 0, err
 	}
@@ -84,7 +86,7 @@ func (d *DBOrgModel) CountOrgs(ctx context.Context) (int, error) {
 func (d *DBOrgModel) SearchOrgs(ctx context.Context, s SearchOrgsCondition) (int, []*Org, error) {
 	where, values := s.GetConditions()
 	count := 0
-	err := db.Get().Model(Org{}).Count(&count).Error
+	err := db.Get().Model(Org{}).Where(where, values...).Count(&count).Error
 	if err != nil {
 		return 0, nil, err
 	}

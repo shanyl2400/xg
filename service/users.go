@@ -20,6 +20,9 @@ var (
 	ErrNoNeedToOperate      = errors.New("no need to operate")
 
 	ErrInvalidOrgStatus = errors.New("invalid org status")
+	ErrNotSuperOrg = errors.New("not super org")
+
+	ErrDuplicateUserName = errors.New("duplicate user name")
 )
 
 type UserService struct {
@@ -140,6 +143,17 @@ func (u *UserService) CreateUser(ctx context.Context, req *entity.CreateUserRequ
 	if err != nil {
 		return -1, err
 	}
+
+	users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
+		Name:       req.Name,
+	})
+	if err != nil {
+		return -1, err
+	}
+	if len(users) > 0 {
+		return -1, ErrDuplicateUserName
+	}
+
 	return da.GetUsersModel().CreateUser(ctx, da.User{
 		Name:     req.Name,
 		Password: crypto.Hash("123456"),

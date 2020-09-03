@@ -2,17 +2,17 @@ package da
 
 import (
 	"context"
+	"github.com/jinzhu/gorm"
 	"strings"
 	"sync"
 	"time"
-	"xg/db"
 )
 
 type IStatisticsModel interface {
-	CreateStatisticsRecord(ctx context.Context, c *StatisticsRecord) (int ,error)
-	UpdateStatisticsRecord(ctx context.Context, rid int, value int) error
+	CreateStatisticsRecord(ctx context.Context, tx *gorm.DB, c *StatisticsRecord) (int ,error)
+	UpdateStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value int) error
 
-	SearchStatisticsRecord(ctx context.Context, c SearchStatisticsRecordCondition)([]*StatisticsRecord, error)
+	SearchStatisticsRecord(ctx context.Context, tx *gorm.DB, c SearchStatisticsRecordCondition)([]*StatisticsRecord, error)
 }
 
 type StatisticsRecord struct {
@@ -43,19 +43,19 @@ func (s SearchStatisticsRecordCondition) GetConditions() (string, []interface{})
 	values := make([]interface{}, 0)
 
 	if s.Key != "" {
-		wheres = append(wheres, "key = ?")
+		wheres = append(wheres, "`key` = ?")
 		values = append(values, s.Key)
 	}
 	if s.Year > 0 {
-		wheres = append(wheres, "year = ?")
+		wheres = append(wheres, "`year` = ?")
 		values = append(values, s.Year)
 	}
 	if s.Month > 0 {
-		wheres = append(wheres, "month = ?")
+		wheres = append(wheres, "`month` = ?")
 		values = append(values, s.Month)
 	}
 	if s.Author > 0 {
-		wheres = append(wheres, "author = ?")
+		wheres = append(wheres, "`author` = ?")
 		values = append(values, s.Month)
 	}
 
@@ -68,23 +68,23 @@ type DBStatisticsModel struct {
 
 }
 
-func (s *DBStatisticsModel) CreateStatisticsRecord(ctx context.Context, c *StatisticsRecord) (int ,error){
+func (s *DBStatisticsModel) CreateStatisticsRecord(ctx context.Context, tx *gorm.DB, c *StatisticsRecord) (int ,error){
 	now := time.Now()
 	c.CreatedAt = &now
 	c.UpdatedAt = &now
-	err := db.Get().Create(&c).Error
+	err := tx.Create(&c).Error
 	if err != nil {
 		return -1, err
 	}
 	return c.ID, nil
 }
-func (s *DBStatisticsModel) UpdateStatisticsRecord(ctx context.Context, rid int, value int) error{
+func (s *DBStatisticsModel) UpdateStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value int) error{
 	record := new(StatisticsRecord)
 	now := time.Now()
 	record.UpdatedAt = &now
-	record.ID = rid
 	record.Value = value
-	err := db.Get().Updates(&record).Error
+	whereRecord := &StatisticsRecord{ID: rid}
+	err := tx.Model(StatisticsRecord{}).Where(whereRecord).Updates(&record).Error
 	if err != nil {
 		return err
 	}
@@ -92,10 +92,10 @@ func (s *DBStatisticsModel) UpdateStatisticsRecord(ctx context.Context, rid int,
 
 }
 
-func (s *DBStatisticsModel) SearchStatisticsRecord(ctx context.Context, c SearchStatisticsRecordCondition)([]*StatisticsRecord, error){
+func (s *DBStatisticsModel) SearchStatisticsRecord(ctx context.Context, tx *gorm.DB, c SearchStatisticsRecordCondition)([]*StatisticsRecord, error){
 	records := make([]*StatisticsRecord, 0)
 	where, values := c.GetConditions()
-	err := db.Get().Where(where, values).Find(&records).Error
+	err := tx.Where(where, values...).Find(&records).Error
 	if err != nil {
 		return nil, err
 	}

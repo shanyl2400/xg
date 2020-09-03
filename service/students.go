@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 	"xg/da"
+	"xg/db"
 	"xg/entity"
 )
 
@@ -44,8 +45,9 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 		}
 	}
 
+	tx := db.Get().Begin()
 	//添加学生记录
-	id, err := da.GetStudentModel().CreateStudent(ctx, da.Student{
+	id, err := da.GetStudentModel().CreateStudent(ctx, tx, da.Student{
 		Name:          c.Name,
 		Gender:        c.Gender,
 		Telephone:     c.Telephone,
@@ -58,8 +60,15 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 		Note:          c.Note,
 	})
 	if err != nil {
+		tx.Rollback()
 		return -1, -1, err
 	}
+	err = GetStatisticsService().AddStudent(ctx, tx, 1)
+	if err != nil {
+		tx.Rollback()
+		return -1, -1, err
+	}
+	tx.Commit()
 	return id, status, nil
 }
 

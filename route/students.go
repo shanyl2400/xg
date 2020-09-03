@@ -70,11 +70,16 @@ func buildCondition(c *gin.Context) *entity.SearchStudentRequest {
 		authorId = temp
 	}
 
+	authorIdList := make([]int, 0)
+	if authorId > 0 {
+		authorIdList = append(authorIdList, authorId)
+	}
+
 	return &entity.SearchStudentRequest{
 		Name:         name,
 		Telephone:    telephone,
 		Address:      address,
-		AuthorIDList: []int{authorId},
+		AuthorIDList: authorIdList,
 		OrderBy:      orderBy,
 		PageSize:     pageSize,
 		Page:         page,

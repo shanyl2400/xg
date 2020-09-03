@@ -99,6 +99,11 @@ func (s *Server) signupOrder(c *gin.Context) {
 		s.responseErr(c, http.StatusBadRequest, err)
 		return
 	}
+	id, ok := s.getParamInt(c, "id")
+	if !ok {
+		return
+	}
+	req.OrderID = id
 	user := s.getJWTUser(c)
 	err = service.GetOrderService().SignUpOrder(c.Request.Context(), req, user)
 	if err != nil {
@@ -132,6 +137,11 @@ func (s *Server) payOrder(c *gin.Context) {
 		s.responseErr(c, http.StatusBadRequest, err)
 		return
 	}
+	id, ok := s.getParamInt(c, "id")
+	if !ok {
+		return
+	}
+	req.OrderID = id
 	user := s.getJWTUser(c)
 	err = service.GetOrderService().PayOrder(c.Request.Context(), req, user)
 	if err != nil {
@@ -148,6 +158,11 @@ func (s *Server) paybackOrder(c *gin.Context) {
 		s.responseErr(c, http.StatusBadRequest, err)
 		return
 	}
+	id, ok := s.getParamInt(c, "id")
+	if !ok {
+		return
+	}
+	req.OrderID = id
 	user := s.getJWTUser(c)
 	err = service.GetOrderService().PaybackOrder(c.Request.Context(), req, user)
 	if err != nil {

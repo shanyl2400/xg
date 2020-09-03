@@ -32,7 +32,7 @@ func Get() *gin.Engine {
 		user.POST("/login", s.login)
 		user.PUT("/password", s.mustLogin, s.updatePassword)
 		user.POST("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageUser}), s.createUser)
-		user.PUT("/reset", s.mustLogin, s.hasPermission([]int{entity.AuthManageUser}), s.resetPassword)
+		user.PUT("/reset/:id", s.mustLogin, s.hasPermission([]int{entity.AuthManageUser}), s.resetPassword)
 	}
 	users := route.Group("/users")
 	{
@@ -55,7 +55,7 @@ func Get() *gin.Engine {
 	}
 	students := route.Group("/students")
 	{
-		student.GET("/", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.searchStudents)
+		students.GET("/", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.searchStudents)
 		students.GET("/private", s.mustLogin, s.hasPermission([]int{entity.AuthEnterStudent}), s.searchPrivateStudents)
 	}
 

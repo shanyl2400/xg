@@ -3,7 +3,6 @@ package route
 import (
 	"errors"
 	"net/http"
-	"strconv"
 	"xg/entity"
 	"xg/service"
 
@@ -71,14 +70,12 @@ func (s *Server) listUsers(c *gin.Context) {
 }
 
 func (s *Server) resetPassword(c *gin.Context) {
-	idStr := c.Param("id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		s.responseErr(c, http.StatusBadRequest, err)
+	id, ok := s.getParamInt(c, "id")
+	if !ok {
 		return
 	}
 	user := s.getJWTUser(c)
-	err = service.GetUserService().ResetPassword(c.Request.Context(), id, user)
+	err := service.GetUserService().ResetPassword(c.Request.Context(), id, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return

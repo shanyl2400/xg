@@ -61,7 +61,7 @@ func (s SearchUserCondition) GetConditions() (string, []interface{}) {
 		values = append(values, s.Password)
 	}
 
-	wheres = append(wheres, "deleted_at IS NULL")
+	//wheres = append(wheres, "deleted_at IS NULL")
 	where := strings.Join(wheres, " and ")
 
 	return where, values

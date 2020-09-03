@@ -31,15 +31,22 @@ func (s *SubjectService) ListSubjects(ctx context.Context, parentID int) ([]*ent
 }
 
 func (s *SubjectService) CreateSubject(ctx context.Context, req entity.CreateSubjectRequest) (int, error) {
+	level := 1
+	if req.ParentId > 0 {
+		parentSubject ,err := da.GetSubjectModel().GetSubjectById(ctx, req.ParentId)
+		if err != nil{
+			return 0, err
+		}
+		level = parentSubject.Level + 1
+	}
 	now := time.Now()
 	id, err := da.GetSubjectModel().CreateSubject(ctx, da.Subject{
-		Level:    req.Level,
+		Level:    level,
 		ParentId: req.ParentId,
 		Name:     req.Name,
 
 		UpdatedAt: &now,
 		CreatedAt: &now,
-		DeletedAt: &now,
 	})
 	return id, err
 }

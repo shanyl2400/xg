@@ -2,6 +2,7 @@ package da
 
 import (
 	"context"
+	"github.com/jinzhu/gorm"
 	"strings"
 	"sync"
 	"time"
@@ -9,7 +10,7 @@ import (
 )
 
 type IStudentsModel interface {
-	CreateStudent(ctx context.Context, student Student) (int, error)
+	CreateStudent(ctx context.Context, tx *gorm.DB, student Student) (int, error)
 	UpdateStudent(ctx context.Context, id int, student Student) error
 	GetStudentById(ctx context.Context, id int) (*Student, error)
 	SearchStudents(ctx context.Context, s SearchStudentCondition) (int, []*Student, error)
@@ -46,11 +47,11 @@ type StudentNote struct {
 
 type DBStudentsModel struct{}
 
-func (d *DBStudentsModel) CreateStudent(ctx context.Context, student Student) (int, error) {
+func (d *DBStudentsModel) CreateStudent(ctx context.Context, tx *gorm.DB, student Student) (int, error) {
 	now := time.Now()
 	student.CreatedAt = &now
 	student.UpdatedAt = &now
-	err := db.Get().Create(&student).Error
+	err := tx.Create(&student).Error
 	if err != nil {
 		return -1, err
 	}

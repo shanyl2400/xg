@@ -8,7 +8,6 @@ type Subject struct {
 }
 
 type CreateSubjectRequest struct {
-	Level    int    `json:"level"`
 	ParentId int    `json:"parent_id"`
 	Name     string `json:"name"`
 }

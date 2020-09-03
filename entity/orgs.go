@@ -16,6 +16,8 @@ type Org struct {
 	ParentID int `json:"parent_id"`
 
 	Status int `json:"status"`
+
+	SubOrgs []*Org `json:"sub_orgs"`
 }
 
 type CreateOrgRequest struct {

@@ -24,10 +24,13 @@ func (o *OrderService) checkEntity(ctx context.Context, orderEntity orderEntity)
 		return err
 	}
 
-	_, err = da.GetOrgModel().GetOrgById(ctx, orderEntity.ToOrgID)
+	org, err := da.GetOrgModel().GetOrgById(ctx, orderEntity.ToOrgID)
 	if err != nil {
 		fmt.Println("Can't find org when check entity")
 		return err
+	}
+	if org.Status != entity.OrgStatusCertified {
+		return ErrInvalidOrgStatus
 	}
 
 	return nil
@@ -43,6 +46,7 @@ func (o *OrderService) CreateOrder(ctx context.Context, req *entity.CreateOrderR
 	}
 
 	//TODO:检查重复订单？
+
 
 	id, err := da.GetOrderModel().CreateOrder(ctx, da.Order{
 		StudentID:      req.StudentID,
@@ -65,9 +69,13 @@ func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequ
 	if err != nil {
 		return err
 	}
-	if orderObj.Order.ToOrgID != operator.OrgId {
-		return ErrNoAuthorizeToOperate
+
+	//检查是否为本机构的订单
+	err = o.checkOrderOrg(ctx, operator.OrgId, orderObj.Order.ToOrgID)
+	if err != nil {
+		return err
 	}
+
 	if orderObj.Order.Status != entity.OrderStatusCreated {
 		return ErrNoAuthToOperateOrder
 	}
@@ -99,10 +107,15 @@ func (o *OrderService) RevokeOrder(ctx context.Context, orderId int, operator *e
 	if err != nil {
 		return err
 	}
-	if orderObj.Order.ToOrgID != operator.OrgId {
-		return ErrNoAuthorizeToOperate
+
+	//检查是否为本机构的订单
+	err = o.checkOrderOrg(ctx, operator.OrgId, orderObj.Order.ToOrgID)
+	if err != nil {
+		return err
 	}
-	if orderObj.Order.Status != entity.OrderStatusRevoked {
+
+
+	if orderObj.Order.Status != entity.OrderStatusCreated {
 		return nil
 	}
 	err = da.GetOrderModel().UpdateOrderStatusTx(ctx, db.Get(), orderId, entity.OrderStatusRevoked)
@@ -118,8 +131,10 @@ func (o *OrderService) payOrder(ctx context.Context, mode int, req *entity.Order
 	if err != nil {
 		return err
 	}
-	if orderObj.Order.ToOrgID != operator.OrgId {
-		return ErrNoAuthorizeToOperate
+	//检查是否为本机构的订单
+	err = o.checkOrderOrg(ctx, operator.OrgId, orderObj.Order.ToOrgID)
+	if err != nil {
+		return err
 	}
 
 	//增加orderPay
@@ -157,7 +172,24 @@ func (o *OrderService) ConfirmOrderPay(ctx context.Context, orderPayId int, stat
 		tx.Rollback()
 		return err
 	}
+	if status == entity.OrderPayStatusChecked {
+		payment, err := da.GetOrderModel().GetPayRecordById(ctx, orderPayId)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+		performance := payment.Amount
+		if payment.Mode == entity.OrderPayModePayback {
+			performance = -performance
+		}
+		err = GetStatisticsService().AddPerformance(ctx, tx, performance)
+		if err != nil{
+			tx.Rollback()
+			return err
+		}
+	}
 
+	tx.Commit()
 	return nil
 }
 
@@ -244,7 +276,18 @@ func (o *OrderService) SearchOrderWithAuthor(ctx context.Context, condition *ent
 }
 
 func (o *OrderService) SearchOrderWithOrgId(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) (*entity.OrderInfoList, error) {
-	condition.ToOrgIDList = []int{operator.OrgId}
+	_, subOrgs, err := da.GetOrgModel().SearchOrgs(ctx, da.SearchOrgsCondition{
+		ParentIDs: []int{operator.OrgId},
+	})
+	if err != nil{
+		return nil, err
+	}
+	orgIds := []int {operator.OrgId}
+	for i := range subOrgs {
+		orgIds = append(orgIds, subOrgs[i].ID)
+	}
+
+	condition.ToOrgIDList = orgIds
 	//查询订单
 	return o.SearchOrders(ctx, condition, operator)
 }
@@ -431,6 +474,27 @@ func (o *OrderService) checkOrderAuthorize(ctx context.Context, order *da.OrderI
 	}
 	if operator.OrgId != order.Order.ToOrgID {
 		return ErrNoAuthorizeToOperate
+	}
+	return nil
+}
+
+
+func (o *OrderService) checkOrderOrg(ctx context.Context, orgId, toOrgId int) error {
+	if toOrgId != orgId {
+		orgs, err := GetOrgService().GetSubOrgs(ctx, orgId)
+		if err != nil {
+			return err
+		}
+		flag := false
+		for i := range orgs {
+			if orgs[i].ID == toOrgId {
+				flag = true
+				break
+			}
+		}
+		if !flag{
+			return ErrNoAuthorizeToOperate
+		}
 	}
 	return nil
 }
