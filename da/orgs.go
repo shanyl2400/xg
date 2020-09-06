@@ -2,16 +2,17 @@ package da
 
 import (
 	"context"
-	"github.com/jinzhu/gorm"
 	"strings"
 	"sync"
 	"time"
 	"xg/db"
+
+	"github.com/jinzhu/gorm"
 )
 
 type IOrgModel interface {
-	CreateOrg(ctx context.Context, org Org) (int, error)
-	GetOrgById(ctx context.Context, id int) (*Org, error)
+	CreateOrg(ctx context.Context, tx *gorm.DB, org Org) (int, error)
+	GetOrgById(ctx context.Context, tx *gorm.DB, id int) (*Org, error)
 	ListOrgs(ctx context.Context) ([]*Org, error)
 	UpdateOrg(ctx context.Context, tx *gorm.DB, id int, org Org) error
 	CountOrgs(ctx context.Context, s SearchOrgsCondition) (int, error)
@@ -20,11 +21,12 @@ type IOrgModel interface {
 }
 
 type Org struct {
-	ID       int    `gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
-	Name     string `gorm:"type:varchar(128);NOT NULL;column:name"`
-	Subjects string `gorm:"type:varchar(255);NOT NULL;column:subjects"`
-	Address  string `gorm:"type:varchar(255);NOT NULL; column:address"`
-	ParentID int    `gorm:"type:int;NOT NULL;column:parent_id"`
+	ID        int    `gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
+	Name      string `gorm:"type:varchar(128);NOT NULL;column:name"`
+	Subjects  string `gorm:"type:varchar(255);NOT NULL;column:subjects"`
+	Address   string `gorm:"type:varchar(255);NOT NULL; column:address"`
+	ParentID  int    `gorm:"type:int;NOT NULL;column:parent_id"`
+	Telephone string `gorm:"type:varchar(64);NOT NULL; column:telephone"`
 
 	Status int `gorm:"type:int;NOT NULL;column:status"`
 
@@ -35,11 +37,11 @@ type Org struct {
 
 type DBOrgModel struct{}
 
-func (d *DBOrgModel) CreateOrg(ctx context.Context, org Org) (int, error) {
+func (d *DBOrgModel) CreateOrg(ctx context.Context, tx *gorm.DB, org Org) (int, error) {
 	now := time.Now()
 	org.CreatedAt = &now
 	org.UpdatedAt = &now
-	err := db.Get().Create(&org).Error
+	err := tx.Create(&org).Error
 	if err != nil {
 		return -1, err
 	}
@@ -55,9 +57,9 @@ func (d *DBOrgModel) UpdateOrg(ctx context.Context, tx *gorm.DB, id int, org Org
 	return nil
 }
 
-func (d *DBOrgModel) GetOrgById(ctx context.Context, id int) (*Org, error) {
+func (d *DBOrgModel) GetOrgById(ctx context.Context, tx *gorm.DB, id int) (*Org, error) {
 	org := new(Org)
-	err := db.Get().Where(&Org{ID: id}).First(&org).Error
+	err := tx.Where(&Org{ID: id}).First(&org).Error
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +107,7 @@ type SearchOrgsCondition struct {
 	Status   []int
 
 	ParentIDs []int
-	IsSubOrg bool
+	IsSubOrg  bool
 }
 
 func (s SearchOrgsCondition) GetConditions() (string, []interface{}) {
@@ -130,7 +132,7 @@ func (s SearchOrgsCondition) GetConditions() (string, []interface{}) {
 		wheres = append(wheres, "parent_id IN (?)")
 		values = append(values, s.ParentIDs)
 	}
-	if s.IsSubOrg{
+	if s.IsSubOrg {
 		wheres = append(wheres, "parent_id != 0")
 	}
 

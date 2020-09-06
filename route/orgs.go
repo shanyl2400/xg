@@ -11,8 +11,8 @@ import (
 )
 
 type OrgListResponse struct {
-	Orgs []*entity.Org `json:"orgs"`
-	Total int `json:"total"`
+	Orgs  []*entity.Org `json:"orgs"`
+	Total int           `json:"total"`
 }
 
 func (s *Server) listOrgs(c *gin.Context) {
@@ -23,7 +23,7 @@ func (s *Server) listOrgs(c *gin.Context) {
 	}
 	s.responseSuccessWithData(c, "data", OrgListResponse{
 		Total: count,
-		Orgs: orgs,
+		Orgs:  orgs,
 	})
 }
 
@@ -35,7 +35,7 @@ func (s *Server) listPendingOrgs(c *gin.Context) {
 	}
 	s.responseSuccessWithData(c, "data", OrgListResponse{
 		Total: count,
-		Orgs: orgs,
+		Orgs:  orgs,
 	})
 }
 
@@ -47,7 +47,7 @@ func (s *Server) searchSubOrgs(c *gin.Context) {
 	}
 	s.responseSuccessWithData(c, "data", OrgListResponse{
 		Total: count,
-		Orgs: orgs,
+		Orgs:  orgs,
 	})
 }
 
@@ -67,15 +67,31 @@ func (s *Server) getOrgById(c *gin.Context) {
 	s.responseSuccessWithData(c, "org", org)
 }
 
+func (s *Server) getOrgSubjectsById(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+
+	org, err := service.GetOrgService().GetOrgSubjectsById(c.Request.Context(), id)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccessWithData(c, "subjects", org)
+}
+
 func (s *Server) createOrg(c *gin.Context) {
-	req := new(entity.CreateOrgRequest)
+	req := new(entity.CreateOrgWithSubOrgsRequest)
 	err := c.ShouldBind(req)
 	if err != nil {
 		s.responseErr(c, http.StatusBadRequest, err)
 		return
 	}
 	user := s.getJWTUser(c)
-	id, err := service.GetOrgService().CreateOrg(c.Request.Context(), req, user)
+	id, err := service.GetOrgService().CreateOrgWithSubOrgs(c.Request.Context(), req, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
@@ -107,7 +123,7 @@ func (s *Server) RejectOrg(c *gin.Context) {
 		return
 	}
 	user := s.getJWTUser(c)
-	err = service.GetOrgService().CheckOrgById(c.Request.Context(), id, entity.OrgStatusRevoked, user)
+	err = service.GetOrgService().CheckOrgById(c.Request.Context(), id, entity.OrgStatusRejected, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
@@ -115,9 +131,25 @@ func (s *Server) RejectOrg(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
-func buildOrgsSearchCondition(c *gin.Context) da.SearchOrgsCondition{
+func (s *Server) RevokeOrg(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	user := s.getJWTUser(c)
+	err = service.GetOrgService().RevokeOrgById(c.Request.Context(), id, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
+func buildOrgsSearchCondition(c *gin.Context) da.SearchOrgsCondition {
 	return da.SearchOrgsCondition{
-		Subjects:  c.Query("subjects"),
-		Address:   c.Query("address"),
+		Subjects: c.Query("subjects"),
+		Address:  c.Query("address"),
 	}
 }

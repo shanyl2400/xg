@@ -18,6 +18,23 @@ func (s *SubjectService) ListSubjects(ctx context.Context, parentID int) ([]*ent
 	if err != nil {
 		return nil, err
 	}
+
+	parentIds := make([]int, 0)
+	for i := range subjects {
+		parentIds = append(parentIds, subjects[i].ParentId)
+	}
+
+	parentSubjects, err := da.GetSubjectModel().SearchSubject(ctx, da.SearchSubjectCondition{
+		IDList: parentIds,
+	})
+	if err != nil {
+		return nil, err
+	}
+	parentMap := make(map[int]*da.Subject)
+	for i := range parentSubjects {
+		parentMap[parentSubjects[i].ID] = parentSubjects[i]
+	}
+
 	res := make([]*entity.Subject, len(subjects))
 	for i := range res {
 		res[i] = &entity.Subject{
@@ -25,6 +42,7 @@ func (s *SubjectService) ListSubjects(ctx context.Context, parentID int) ([]*ent
 			Level:    subjects[i].Level,
 			ParentId: subjects[i].ParentId,
 			Name:     subjects[i].Name,
+			Parent:   convertSubject(parentMap[subjects[i].ParentId]),
 		}
 	}
 	return res, nil
@@ -33,8 +51,8 @@ func (s *SubjectService) ListSubjects(ctx context.Context, parentID int) ([]*ent
 func (s *SubjectService) CreateSubject(ctx context.Context, req entity.CreateSubjectRequest) (int, error) {
 	level := 1
 	if req.ParentId > 0 {
-		parentSubject ,err := da.GetSubjectModel().GetSubjectById(ctx, req.ParentId)
-		if err != nil{
+		parentSubject, err := da.GetSubjectModel().GetSubjectById(ctx, req.ParentId)
+		if err != nil {
 			return 0, err
 		}
 		level = parentSubject.Level + 1
@@ -49,6 +67,19 @@ func (s *SubjectService) CreateSubject(ctx context.Context, req entity.CreateSub
 		CreatedAt: &now,
 	})
 	return id, err
+}
+
+func convertSubject(subject *da.Subject) *entity.Subject {
+	if subject == nil {
+		return nil
+	}
+	res := &entity.Subject{
+		ID:       subject.ID,
+		Level:    subject.Level,
+		ParentId: subject.ParentId,
+		Name:     subject.Name,
+	}
+	return res
 }
 
 var (

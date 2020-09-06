@@ -11,11 +11,11 @@ type UserLoginResponse struct {
 	Token string `json:"token"`
 }
 type UserDetailsInfo struct {
-	UserId   int      `json:"user_id"`
-	RoleId   int      `json:"role_id"`
-	OrgId    int      `json:"org_id"`
-	RoleName string   `json:"role_name"`
-	OrgName  string   `json:"org_name"`
+	UserId   int     `json:"user_id"`
+	RoleId   int     `json:"role_id"`
+	OrgId    int     `json:"org_id"`
+	RoleName string  `json:"role_name"`
+	OrgName  string  `json:"org_name"`
 	Auths    []*Auth `json:"auths"`
 }
 
@@ -25,6 +25,7 @@ type UserInfo struct {
 	OrgId    int    `json:"org_id"`
 	RoleName string `json:"role_name"`
 	OrgName  string `json:"org_name"`
+	Name     string `json:"name"`
 }
 
 type UserLoginRequest struct {

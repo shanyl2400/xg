@@ -24,7 +24,7 @@ func (o *OrderService) checkEntity(ctx context.Context, orderEntity orderEntity)
 		return err
 	}
 
-	org, err := da.GetOrgModel().GetOrgById(ctx, orderEntity.ToOrgID)
+	org, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), orderEntity.ToOrgID)
 	if err != nil {
 		fmt.Println("Can't find org when check entity")
 		return err
@@ -46,7 +46,6 @@ func (o *OrderService) CreateOrder(ctx context.Context, req *entity.CreateOrderR
 	}
 
 	//TODO:检查重复订单？
-
 
 	id, err := da.GetOrderModel().CreateOrder(ctx, da.Order{
 		StudentID:      req.StudentID,
@@ -113,7 +112,6 @@ func (o *OrderService) RevokeOrder(ctx context.Context, orderId int, operator *e
 	if err != nil {
 		return err
 	}
-
 
 	if orderObj.Order.Status != entity.OrderStatusCreated {
 		return nil
@@ -183,7 +181,7 @@ func (o *OrderService) ConfirmOrderPay(ctx context.Context, orderPayId int, stat
 			performance = -performance
 		}
 		err = GetStatisticsService().AddPerformance(ctx, tx, performance)
-		if err != nil{
+		if err != nil {
 			tx.Rollback()
 			return err
 		}
@@ -235,10 +233,14 @@ func (o *OrderService) SearchOrderPayRecords(ctx context.Context, condition *ent
 	if err != nil {
 		return nil, err
 	}
+	res, err := o.getPayRecordInfo(ctx, records)
+	if err != nil {
+		return nil, err
+	}
 
 	return &entity.PayRecordInfoList{
 		Total:   total,
-		Records: o.getPayRecordInfo(ctx, records),
+		Records: res,
 	}, nil
 }
 
@@ -279,10 +281,10 @@ func (o *OrderService) SearchOrderWithOrgId(ctx context.Context, condition *enti
 	_, subOrgs, err := da.GetOrgModel().SearchOrgs(ctx, da.SearchOrgsCondition{
 		ParentIDs: []int{operator.OrgId},
 	})
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
-	orgIds := []int {operator.OrgId}
+	orgIds := []int{operator.OrgId}
 	for i := range subOrgs {
 		orgIds = append(orgIds, subOrgs[i].ID)
 	}
@@ -292,9 +294,30 @@ func (o *OrderService) SearchOrderWithOrgId(ctx context.Context, condition *enti
 	return o.SearchOrders(ctx, condition, operator)
 }
 
-func (o *OrderService) getPayRecordInfo(ctx context.Context, records []*da.OrderPayRecord) []*entity.PayRecordInfo {
+func (o *OrderService) getPayRecordInfo(ctx context.Context, records []*da.OrderPayRecord) ([]*entity.PayRecordInfo, error) {
 	res := make([]*entity.PayRecordInfo, len(records))
+	orderIdsList := make([]int, len(records))
 	for i := range records {
+		orderIdsList[i] = records[i].OrderID
+	}
+	_, orders, err := da.GetOrderModel().SearchOrder(ctx, da.SearchOrderCondition{
+		OrderIDList: orderIdsList,
+	})
+	if err != nil {
+		return nil, err
+	}
+	ordersInfo, err := o.getOrderInfoDetails(ctx, orders)
+	if err != nil {
+		return nil, err
+	}
+
+	ordersMap := make(map[int]*entity.OrderInfoDetails)
+	for i := range ordersInfo {
+		ordersMap[ordersInfo[i].ID] = ordersInfo[i]
+	}
+
+	for i := range records {
+		order := ordersMap[records[i].OrderID]
 		res[i] = &entity.PayRecordInfo{
 			ID:      records[i].ID,
 			OrderID: records[i].OrderID,
@@ -302,10 +325,18 @@ func (o *OrderService) getPayRecordInfo(ctx context.Context, records []*da.Order
 			Title:   records[i].Title,
 			Amount:  records[i].Amount,
 
+			StudentID:     order.StudentID,
+			ToOrgID:       order.ToOrgID,
+			IntentSubject: order.IntentSubject,
+			PublisherID:   order.PublisherID,
+			StudentName:   order.StudentName,
+			OrgName:       order.OrgName,
+			PublisherName: order.PublisherName,
+
 			Status: records[i].Status,
 		}
 	}
-	return res
+	return res, nil
 }
 
 func (o *OrderService) getOrderInfoDetails(ctx context.Context, orders []*da.Order) ([]*entity.OrderInfoDetails, error) {
@@ -448,6 +479,7 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 			Status:    orderObj.PaymentInfo[i].Status,
 			UpdatedAt: orderObj.PaymentInfo[i].UpdatedAt,
 			CreatedAt: orderObj.PaymentInfo[i].CreatedAt,
+			Title:     orderObj.PaymentInfo[i].Title,
 		}
 	}
 	remarkRecords := make([]*entity.OrderRemarkRecord, len(orderObj.RemarkInfo))
@@ -478,7 +510,6 @@ func (o *OrderService) checkOrderAuthorize(ctx context.Context, order *da.OrderI
 	return nil
 }
 
-
 func (o *OrderService) checkOrderOrg(ctx context.Context, orgId, toOrgId int) error {
 	if toOrgId != orgId {
 		orgs, err := GetOrgService().GetSubOrgs(ctx, orgId)
@@ -492,7 +523,7 @@ func (o *OrderService) checkOrderOrg(ctx context.Context, orgId, toOrgId int) er
 				break
 			}
 		}
-		if !flag{
+		if !flag {
 			return ErrNoAuthorizeToOperate
 		}
 	}

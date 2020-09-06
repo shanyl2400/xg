@@ -6,6 +6,7 @@ import (
 	"sync"
 	"xg/crypto"
 	"xg/da"
+	"xg/db"
 	"xg/entity"
 )
 
@@ -20,9 +21,13 @@ var (
 	ErrNoNeedToOperate      = errors.New("no need to operate")
 
 	ErrInvalidOrgStatus = errors.New("invalid org status")
-	ErrNotSuperOrg = errors.New("not super org")
+	ErrNotSuperOrg      = errors.New("not super org")
 
 	ErrDuplicateUserName = errors.New("duplicate user name")
+	ErrOperateOnRootOrg  = errors.New("Can't operate on root org")
+
+	ErrInvalidUserRoleOrg = errors.New("invalid user role & org")
+	ErrCreateSuperUser    = errors.New("can't create super user")
 )
 
 type UserService struct {
@@ -76,7 +81,7 @@ func (u *UserService) fillUserInfo(ctx context.Context, user *da.User) (*entity.
 		return nil, err
 	}
 
-	orgInfo, err := da.GetOrgModel().GetOrgById(ctx, user.OrgId)
+	orgInfo, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), user.OrgId)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +131,7 @@ func (u *UserService) ListUserAuthority(ctx context.Context, operator *entity.JW
 }
 
 func (u *UserService) checkUserEntity(ctx context.Context, req *entity.CreateUserRequest) error {
-	_, err := da.GetOrgModel().GetOrgById(ctx, req.OrgId)
+	_, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), req.OrgId)
 	if err != nil {
 		return err
 	}
@@ -134,6 +139,16 @@ func (u *UserService) checkUserEntity(ctx context.Context, req *entity.CreateUse
 	if err != nil {
 		return err
 	}
+
+	if (req.OrgId != 1 && req.RoleId != 7) ||
+		(req.OrgId == 1 && req.RoleId == 7) {
+		return ErrInvalidUserRoleOrg
+	}
+
+	if req.RoleId == 1 {
+		return ErrCreateSuperUser
+	}
+
 	return nil
 }
 
@@ -145,7 +160,7 @@ func (u *UserService) CreateUser(ctx context.Context, req *entity.CreateUserRequ
 	}
 
 	users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
-		Name:       req.Name,
+		Name: req.Name,
 	})
 	if err != nil {
 		return -1, err
@@ -187,6 +202,7 @@ func (u *UserService) ListUsers(ctx context.Context) ([]*entity.UserInfo, error)
 	for i := range users {
 		userList[i] = &entity.UserInfo{
 			UserId:   users[i].ID,
+			Name:     users[i].Name,
 			RoleId:   users[i].RoleId,
 			OrgId:    users[i].OrgId,
 			RoleName: roleMap[users[i].RoleId],

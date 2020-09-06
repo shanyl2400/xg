@@ -1,21 +1,21 @@
 package entity
 
-const(
-	StudentStatisticsKey = "students"
+const (
+	StudentStatisticsKey     = "students"
 	PerformanceStatisticsKey = "performance"
 )
 
 type SummaryInfo struct {
-	OrgsTotal int `json:"orgs_total"`
-	StudentsTotal int `json:"students_total"`
+	OrgsTotal        int `json:"orgs_total"`
+	StudentsTotal    int `json:"students_total"`
 	PerformanceTotal int `json:"performance_total"`
-	SuccessRate int `json:"success_rate"`
+	SuccessRate      int `json:"success_rate"`
 }
 type StatisticRecord struct {
-	Key     string `json:"key"`
-	Value int `json:"value"`
+	Key   string `json:"key"`
+	Value int    `json:"value"`
 
-	Year int `json:"year"`
+	Year  int `json:"year"`
 	Month int `json:"month"`
 }
 

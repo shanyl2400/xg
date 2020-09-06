@@ -1,10 +1,11 @@
 package route
 
 import (
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 	"time"
 	"xg/entity"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
@@ -48,14 +49,19 @@ func Get() *gin.Engine {
 		roles.GET("/", s.mustLogin, s.listRoles)
 	}
 
+	auth := route.Group("/auths")
+	{
+		auth.GET("/", s.mustLogin, s.listAuth)
+	}
+
 	student := route.Group("/student")
 	{
 		student.POST("/", s.mustLogin, s.hasPermission([]int{entity.AuthEnterStudent}), s.createStudent)
-		student.GET("/:id", s.mustLogin, s.hasPermission([]int{entity.AuthEnterStudent, entity.AuthListAllOrder}), s.getStudentById)
+		student.GET("/:id", s.mustLogin, s.hasPermission([]int{entity.AuthEnterStudent, entity.AuthListAllOrder, entity.AuthDispatchOrder}), s.getStudentById)
 	}
 	students := route.Group("/students")
 	{
-		students.GET("/", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.searchStudents)
+		students.GET("/", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder, entity.AuthDispatchOrder}), s.searchStudents)
 		students.GET("/private", s.mustLogin, s.hasPermission([]int{entity.AuthEnterStudent}), s.searchPrivateStudents)
 	}
 
@@ -71,6 +77,8 @@ func Get() *gin.Engine {
 	{
 		org.POST("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageOrg}), s.createOrg)
 		org.GET("/:id", s.mustLogin, s.getOrgById)
+		org.GET("/:id/subjects", s.mustLogin, s.getOrgSubjectsById)
+		org.PUT("/:id/revoke", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.RevokeOrg)
 		org.PUT("/:id/review/reject", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.RejectOrg)
 		org.PUT("/:id/review/approve", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.ApproveOrg)
 	}
@@ -84,7 +92,7 @@ func Get() *gin.Engine {
 	order := route.Group("/order")
 	{
 		order.POST("/", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchSelfOrder, entity.AuthDispatchOrder}), s.createOrder)
-		order.GET("/:id", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchSelfOrder, entity.AuthDispatchOrder, entity.AuthListAllOrder}), s.getOrderByID)
+		order.GET("/:id", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchSelfOrder, entity.AuthDispatchOrder, entity.AuthListAllOrder, entity.AuthListOrgOrder}), s.getOrderByID)
 		order.PUT("/:id/signup", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.signupOrder)
 		order.PUT("/:id/revoke", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.revokeOrder)
 	}
@@ -106,16 +114,16 @@ func Get() *gin.Engine {
 	{
 		payments.GET("/pending", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrder}), s.searchPendingPayRecord)
 	}
-	orderSource := route.Group("/order_sources")
+	orderSource := route.Group("/order_source")
 	{
 		orderSource.POST("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageOrderSource}), s.createOrderSource)
 	}
 	orderSources := route.Group("/order_sources")
 	{
-		orderSources.GET("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageOrderSource}), s.listOrderSources)
+		orderSources.GET("/", s.mustLogin, s.listOrderSources)
 	}
 
-	statistics := route.Group("/graph")
+	statistics := route.Group("/statistics")
 	{
 		statistics.GET("/summary", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.summary)
 		statistics.GET("/graph", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.graph)

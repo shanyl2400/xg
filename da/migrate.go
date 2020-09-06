@@ -27,13 +27,13 @@ func InitData(flag bool) {
 	if !flag {
 		return
 	}
-	o, _ := GetOrgModel().GetOrgById(context.Background(), 1)
+	o, _ := GetOrgModel().GetOrgById(context.Background(), db.Get(), 1)
 	if o != nil {
 		return
 	}
 
 	//主机构
-	orgId, err := GetOrgModel().CreateOrg(context.Background(), Org{
+	orgId, err := GetOrgModel().CreateOrg(context.Background(), db.Get(), Org{
 		Name:     "学果网",
 		Subjects: "",
 		Status:   entity.OrgStatusCertified,
@@ -141,7 +141,7 @@ func initRole() {
 	if err != nil {
 		panic(err)
 	}
-	err = GetRoleModel().SetRoleAuth(context.Background(), dispatchId, []int{3, 5})
+	err = GetRoleModel().SetRoleAuth(context.Background(), dispatchId, []int{3})
 	if err != nil {
 		panic(err)
 	}
@@ -173,7 +173,7 @@ func initRole() {
 		panic(err)
 	}
 
-	outOrgId, err := GetRoleModel().CreateRoleWithID(context.Background(), 6, "机构账号")
+	outOrgId, err := GetRoleModel().CreateRoleWithID(context.Background(), 7, "机构账号")
 	if err != nil {
 		panic(err)
 	}

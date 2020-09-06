@@ -30,7 +30,7 @@ type SearchOrderCondition struct {
 	IntentSubjects string `json:"intent_subjects"`
 	PublisherID    int    `json:"publisher_id"`
 
-	Status  []int    `json:"status"`
+	Status  []int  `json:"status"`
 	OrderBy string `json:"order_by"`
 
 	PageSize int `json:"page_size"`
@@ -67,6 +67,14 @@ type PayRecordInfo struct {
 	Title   string `json:"title"`
 	Amount  int    `json:"amount"`
 
+	StudentID     int      `json:"student_id"`
+	ToOrgID       int      `json:"to_org_id"`
+	IntentSubject []string `json:"intent_subject"`
+	PublisherID   int      `json:"publisher_id"`
+	StudentName   string   `json:"student_name"`
+	OrgName       string   `json:"org_name"`
+	PublisherName string   `json:"publisher_name"`
+
 	Status int `json:"status"`
 }
 
@@ -98,10 +106,11 @@ type OrderInfoWithRecords struct {
 }
 
 type OrderPayRecord struct {
-	ID      int `json:"id"`
-	OrderID int `json:"order_id"`
-	Mode    int `json:"mode"`
-	Amount  int `json:"amount"`
+	ID      int    `json:"id"`
+	OrderID int    `json:"order_id"`
+	Mode    int    `json:"mode"`
+	Amount  int    `json:"amount"`
+	Title   string `json:"title"`
 
 	Status int `json:"status"`
 
@@ -127,6 +136,6 @@ type OrderPayRequest struct {
 }
 
 type OrderMarkRequest struct {
-	OrderID int `json:"order_id"`
+	OrderID int    `json:"order_id"`
 	Content string `json:"content"`
 }

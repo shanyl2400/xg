@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var(
+var (
 	ErrNoAuth = errors.New("no authorization")
 )
 
