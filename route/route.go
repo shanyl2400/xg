@@ -1,6 +1,7 @@
 package route
 
 import (
+	"net/http"
 	"time"
 	"xg/entity"
 
@@ -128,6 +129,14 @@ func Get() *gin.Engine {
 		statistics.GET("/summary", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.summary)
 		statistics.GET("/graph", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.graph)
 	}
+
+	uploader := api.Group("/upload")
+	{
+		uploader.POST("/:partition", s.uploadFile)
+	}
+
+	//访问上传文件
+	route.StaticFS("/data", http.Dir("./uploads"))
 
 	return route
 }
