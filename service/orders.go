@@ -2,12 +2,12 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"sync"
 	"xg/da"
 	"xg/db"
 	"xg/entity"
+	"xg/log"
 )
 
 type OrderService struct {
@@ -20,13 +20,13 @@ type orderEntity struct {
 func (o *OrderService) checkEntity(ctx context.Context, orderEntity orderEntity) error {
 	_, err := da.GetStudentModel().GetStudentById(ctx, orderEntity.StudentID)
 	if err != nil {
-		fmt.Println("Can't find student when check entity")
+		log.Error.Println("Can't find student when check entity")
 		return err
 	}
 
 	org, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), orderEntity.ToOrgID)
 	if err != nil {
-		fmt.Println("Can't find org when check entity")
+		log.Error.Println("Can't find org when check entity")
 		return err
 	}
 	if org.Status != entity.OrgStatusCertified {

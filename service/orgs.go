@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"sync"
 	"xg/da"
@@ -172,14 +171,11 @@ func (s *OrgService) GetOrgSubjectsById(ctx context.Context, orgId int) ([]strin
 	_, subOrgs, err := da.GetOrgModel().SearchOrgs(ctx, da.SearchOrgsCondition{
 		ParentIDs: []int{orgId},
 	})
-	fmt.Println(subjects)
 	for i := range subOrgs {
-		fmt.Println(subOrgs[i].Subjects)
 		if len(subOrgs[i].Subjects) > 0 {
 			subjects = append(subjects, strings.Split(subOrgs[i].Subjects, ",")...)
 		}
 	}
-	fmt.Println(subjects)
 	return subjects, nil
 }
 

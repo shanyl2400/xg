@@ -2,11 +2,11 @@ package da
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"sync"
 	"time"
 	"xg/db"
+	"xg/log"
 
 	"github.com/jinzhu/gorm"
 )
@@ -251,7 +251,7 @@ func (d *DBOrderModel) GetOrderById(ctx context.Context, id int) (*OrderInfo, er
 	remarks := make([]*OrderRemarkRecord, 0)
 	err = db.Get().Where(OrderRemarkRecord{OrderID: id}).Find(&remarks).Error
 	if err != nil {
-		fmt.Println("Get order remark record failed, err:", err)
+		log.Error.Println("Get order remark record failed, err:", err)
 	} else {
 		orderInfo.RemarkInfo = remarks
 	}
@@ -259,7 +259,7 @@ func (d *DBOrderModel) GetOrderById(ctx context.Context, id int) (*OrderInfo, er
 	payRecords := make([]*OrderPayRecord, 0)
 	err = db.Get().Where(OrderPayRecord{OrderID: id}).Find(&payRecords).Error
 	if err != nil {
-		fmt.Println("Get order pay record failed, err:", err)
+		log.Error.Println("Get order pay record failed, err:", err)
 	} else {
 		orderInfo.PaymentInfo = payRecords
 	}

@@ -4,6 +4,7 @@ import (
 	"os"
 	"xg/conf"
 	"xg/da"
+	_ "xg/log"
 	"xg/route"
 )
 

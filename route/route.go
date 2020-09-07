@@ -16,7 +16,7 @@ func Get() *gin.Engine {
 	s := new(Server)
 
 	route.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost"},
+		AllowOrigins:     []string{"http://localhost", "http://localhost:3000"},
 		AllowMethods:     []string{"PUT", "GET", "POST", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Cookie"},
 		ExposeHeaders:    []string{"Content-Length"},
