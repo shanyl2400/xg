@@ -5,6 +5,7 @@ import (
 	"sync"
 	"xg/da"
 	"xg/entity"
+	"xg/log"
 )
 
 type OrderSourceService struct {
@@ -14,6 +15,7 @@ type OrderSourceService struct {
 func (o *OrderSourceService) ListOrderService(ctx context.Context)([]*entity.OrderSource, error){
 	os, err := da.GetOrderSourceModel().ListOrderSources(ctx)
 	if err != nil{
+		log.Warning.Printf("Get order source failed, err: %v\n", err)
 		return nil, err
 	}
 	res := make([]*entity.OrderSource, len(os))

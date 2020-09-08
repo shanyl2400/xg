@@ -17,6 +17,7 @@ type IOrgModel interface {
 	UpdateOrg(ctx context.Context, tx *gorm.DB, id int, org Org) error
 	CountOrgs(ctx context.Context, s SearchOrgsCondition) (int, error)
 
+	GetOrgsByParentId(ctx context.Context, parentId int) ([]*Org, error)
 	SearchOrgs(ctx context.Context, s SearchOrgsCondition) (int, []*Org, error)
 }
 
@@ -85,6 +86,19 @@ func (d *DBOrgModel) CountOrgs(ctx context.Context, s SearchOrgsCondition) (int,
 	return count, nil
 }
 
+func (d *DBOrgModel) GetOrgsByParentId(ctx context.Context, parentId int) ([]*Org, error) {
+	condition := SearchOrgsCondition{
+		ParentIDs: []int{parentId},
+	}
+	where, values := condition.GetConditions()
+	result := make([]*Org, 0)
+	err := db.Get().Where(where, values...).Find(&result).Error
+	if err != nil{
+		return nil, err
+	}
+	return result, nil
+}
+
 func (d *DBOrgModel) SearchOrgs(ctx context.Context, s SearchOrgsCondition) (int, []*Org, error) {
 	where, values := s.GetConditions()
 	count := 0
@@ -102,7 +116,7 @@ func (d *DBOrgModel) SearchOrgs(ctx context.Context, s SearchOrgsCondition) (int
 }
 
 type SearchOrgsCondition struct {
-	Subjects string
+	Subjects []string
 	Address  string
 	Status   []int
 
@@ -119,9 +133,11 @@ func (s SearchOrgsCondition) GetConditions() (string, []interface{}) {
 		values = append(values, s.Status)
 	}
 
-	if s.Subjects != "" {
-		wheres = append(wheres, "subjects LIKE ?")
-		values = append(values, "%"+s.Subjects+"%")
+	if len(s.Subjects) != 0 {
+		for i := range s.Subjects {
+			wheres = append(wheres, "subjects LIKE ?")
+			values = append(values, "%"+s.Subjects[i]+"%")
+		}
 	}
 	if s.Address != "" {
 		wheres = append(wheres, "address LIKE ?")

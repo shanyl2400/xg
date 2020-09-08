@@ -20,13 +20,13 @@ type orderEntity struct {
 func (o *OrderService) checkEntity(ctx context.Context, orderEntity orderEntity) error {
 	_, err := da.GetStudentModel().GetStudentById(ctx, orderEntity.StudentID)
 	if err != nil {
-		log.Error.Println("Can't find student when check entity")
+		log.Warning.Println("Can't find student when check entity, orderEntity:", orderEntity)
 		return err
 	}
 
 	org, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), orderEntity.ToOrgID)
 	if err != nil {
-		log.Error.Println("Can't find org when check entity")
+		log.Warning.Println("Can't find org when check entity, orderEntity:", orderEntity)
 		return err
 	}
 	if org.Status != entity.OrgStatusCertified {
@@ -42,19 +42,21 @@ func (o *OrderService) CreateOrder(ctx context.Context, req *entity.CreateOrderR
 		ToOrgID:   req.ToOrgID,
 	})
 	if err != nil {
+		log.Warning.Printf("Create order failed, req: %#v, err: %v\n", req, err)
 		return -1, err
 	}
 
 	//TODO:检查重复订单？
-
-	id, err := da.GetOrderModel().CreateOrder(ctx, da.Order{
+	data := da.Order{
 		StudentID:      req.StudentID,
 		ToOrgID:        req.ToOrgID,
 		IntentSubjects: strings.Join(req.IntentSubjects, ","),
 		PublisherID:    operator.UserId,
 		Status:         entity.OrderStatusCreated,
-	})
+	}
+	id, err := da.GetOrderModel().CreateOrder(ctx, data)
 	if err != nil {
+		log.Warning.Printf("Create order failed, data: %#v, err: %v\n", data, err)
 		return -1, err
 	}
 
@@ -66,34 +68,40 @@ func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequ
 	//检查order状态
 	orderObj, err := da.GetOrderModel().GetOrderById(ctx, req.OrderID)
 	if err != nil {
+		log.Warning.Printf("Get org failed, req: %#v, err: %v\n", req, err)
 		return err
 	}
 
 	//检查是否为本机构的订单
 	err = o.checkOrderOrg(ctx, operator.OrgId, orderObj.Order.ToOrgID)
 	if err != nil {
+		log.Warning.Printf("Check org order failed, req: %#v, operator: %#v, err: %v\n", req, operator, err)
 		return err
 	}
 
 	if orderObj.Order.Status != entity.OrderStatusCreated {
+		log.Warning.Printf("Check order status failed, req: %#v, order: %#v, err: %v\n", req, orderObj, err)
 		return ErrNoAuthToOperateOrder
 	}
 	tx := db.Get().Begin()
 	//修改order状态
 	err = da.GetOrderModel().UpdateOrderStatusTx(ctx, tx, req.OrderID, entity.OrderStatusSigned)
 	if err != nil {
+		log.Warning.Printf("Update order status failed, req: %#v, operator: %#v, err: %v\n", req, operator, err)
 		tx.Rollback()
 		return err
 	}
 	//增加orderPay
-	_, err = da.GetOrderModel().AddOrderPayRecordTx(ctx, tx, &da.OrderPayRecord{
+	payData := &da.OrderPayRecord{
 		OrderID: req.OrderID,
 		Mode:    entity.OrderPayModePay,
 		Title:   req.Title,
 		Amount:  req.Amount,
 		Status:  entity.OrderPayStatusPending,
-	})
+	}
+	_, err = da.GetOrderModel().AddOrderPayRecordTx(ctx, tx, payData)
 	if err != nil {
+		log.Warning.Printf("Add order pay failed, req: %#v, payData: %#v, err: %v\n", req, payData, err)
 		tx.Rollback()
 		return err
 	}
@@ -104,20 +112,24 @@ func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequ
 func (o *OrderService) RevokeOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error {
 	orderObj, err := da.GetOrderModel().GetOrderById(ctx, orderId)
 	if err != nil {
+		log.Warning.Printf("Revoke order failed, orderId: %#v, err: %v\n", orderId, err)
 		return err
 	}
 
 	//检查是否为本机构的订单
 	err = o.checkOrderOrg(ctx, operator.OrgId, orderObj.Order.ToOrgID)
 	if err != nil {
+		log.Warning.Printf("Check order org failed, order: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
 		return err
 	}
 
 	if orderObj.Order.Status != entity.OrderStatusCreated {
+		log.Warning.Printf("Check order status failed, order: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
 		return nil
 	}
 	err = da.GetOrderModel().UpdateOrderStatusTx(ctx, db.Get(), orderId, entity.OrderStatusRevoked)
 	if err != nil {
+		log.Warning.Printf("Update order status failed, order: %#v, orderId: %#v, err: %v\n", orderObj, orderId, err)
 		return err
 	}
 	return nil
@@ -127,23 +139,27 @@ func (o *OrderService) payOrder(ctx context.Context, mode int, req *entity.Order
 	//检查order状态
 	orderObj, err := da.GetOrderModel().GetOrderById(ctx, req.OrderID)
 	if err != nil {
+		log.Warning.Printf("Get order failed, req: %#v, err: %v\n", req, err)
 		return err
 	}
 	//检查是否为本机构的订单
 	err = o.checkOrderOrg(ctx, operator.OrgId, orderObj.Order.ToOrgID)
 	if err != nil {
+		log.Warning.Printf("Check order org failed, order: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
 		return err
 	}
 
 	//增加orderPay
-	_, err = da.GetOrderModel().AddOrderPayRecordTx(ctx, db.Get(), &da.OrderPayRecord{
+	payData := &da.OrderPayRecord{
 		OrderID: req.OrderID,
 		Mode:    mode,
 		Title:   req.Title,
 		Amount:  req.Amount,
 		Status:  entity.OrderPayStatusPending,
-	})
+	}
+	_, err = da.GetOrderModel().AddOrderPayRecordTx(ctx, db.Get(), payData)
 	if err != nil {
+		log.Warning.Printf("Add order payment failed, order: %#v, payData: %#v, err: %v\n", orderObj, payData, err)
 		return err
 	}
 	return nil
@@ -167,12 +183,14 @@ func (o *OrderService) ConfirmOrderPay(ctx context.Context, orderPayId int, stat
 	//修改支付记录状态
 	err := da.GetOrderModel().UpdateOrderPayRecordTx(ctx, tx, orderPayId, status)
 	if err != nil {
+		log.Warning.Printf("Update order pay record failed, orderPayId: %#v, err: %v\n", orderPayId, err)
 		tx.Rollback()
 		return err
 	}
 	if status == entity.OrderPayStatusChecked {
 		payment, err := da.GetOrderModel().GetPayRecordById(ctx, orderPayId)
 		if err != nil {
+			log.Warning.Printf("Get pay record failed, orderPayId: %#v, err: %v\n", orderPayId, err)
 			tx.Rollback()
 			return err
 		}
@@ -182,6 +200,7 @@ func (o *OrderService) ConfirmOrderPay(ctx context.Context, orderPayId int, stat
 		}
 		err = GetStatisticsService().AddPerformance(ctx, tx, performance)
 		if err != nil {
+			log.Warning.Printf("Add performance failed, payment: %#v, performance: %#v, err: %v\n", payment, performance, err)
 			tx.Rollback()
 			return err
 		}
@@ -195,23 +214,28 @@ func (o *OrderService) ConfirmOrderPay(ctx context.Context, orderPayId int, stat
 func (o *OrderService) AddOrderRemark(ctx context.Context, orderId int, content string, operator *entity.JWTUser) error {
 	orderObj, err := da.GetOrderModel().GetOrderById(ctx, orderId)
 	if err != nil {
+		log.Warning.Printf("Get order failed, orderId: %#v, err: %v\n", orderId, err)
 		return err
 	}
 	err = o.checkOrderAuthorize(ctx, orderObj, operator)
 	if err != nil {
+		log.Warning.Printf("Check order authorize failed, order: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
 		return err
 	}
 	mode := entity.OrderRemarkModeClient
 	if operator.OrgId == entity.RootOrgId {
 		mode = entity.OrderRemarkModeServer
 	}
-	_, err = da.GetOrderModel().AddRemarkRecord(ctx, &da.OrderRemarkRecord{
+
+	data := &da.OrderRemarkRecord{
 		OrderID: orderId,
 		Author:  operator.UserId,
 		Mode:    mode,
 		Content: content,
-	})
+	}
+	_, err = da.GetOrderModel().AddRemarkRecord(ctx, data)
 	if err != nil {
+		log.Warning.Printf("Add remark record failed, order: %#v, data: %#v, operator: %#v, err: %v\n", orderObj, data, operator, err)
 		return err
 	}
 	return nil
@@ -231,10 +255,12 @@ func (o *OrderService) SearchOrderPayRecords(ctx context.Context, condition *ent
 		Page:     condition.Page,
 	})
 	if err != nil {
+		log.Warning.Printf("Search order failed, condition: %#v, err: %v\n", condition, err)
 		return nil, err
 	}
 	res, err := o.getPayRecordInfo(ctx, records)
 	if err != nil {
+		log.Warning.Printf("Get order payment failed, condition: %#v, records: %#v, err: %v\n", condition, records, err)
 		return nil, err
 	}
 
@@ -257,11 +283,13 @@ func (o *OrderService) SearchOrders(ctx context.Context, condition *entity.Searc
 		PageSize:       condition.PageSize,
 	})
 	if err != nil {
+		log.Warning.Printf("Search order failed, condition: %#v, err: %v\n", condition, err)
 		return nil, err
 	}
 	//添加具体信息
 	orderInfos, err := o.getOrderInfoDetails(ctx, orders)
 	if err != nil {
+		log.Warning.Printf("Get order detailed failed, condition: %#v, orders: %#v, err: %v\n", condition, orders, err)
 		return nil, err
 	}
 
@@ -278,10 +306,9 @@ func (o *OrderService) SearchOrderWithAuthor(ctx context.Context, condition *ent
 }
 
 func (o *OrderService) SearchOrderWithOrgId(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) (*entity.OrderInfoList, error) {
-	_, subOrgs, err := da.GetOrgModel().SearchOrgs(ctx, da.SearchOrgsCondition{
-		ParentIDs: []int{operator.OrgId},
-	})
+	subOrgs, err := da.GetOrgModel().GetOrgsByParentId(ctx, operator.OrgId)
 	if err != nil {
+		log.Warning.Printf("Get order parent failed, condition: %#v, operator: %#v, err: %v\n", condition, operator, err)
 		return nil, err
 	}
 	orgIds := []int{operator.OrgId}
@@ -300,14 +327,17 @@ func (o *OrderService) getPayRecordInfo(ctx context.Context, records []*da.Order
 	for i := range records {
 		orderIdsList[i] = records[i].OrderID
 	}
-	_, orders, err := da.GetOrderModel().SearchOrder(ctx, da.SearchOrderCondition{
+	condition := da.SearchOrderCondition{
 		OrderIDList: orderIdsList,
-	})
+	}
+	_, orders, err := da.GetOrderModel().SearchOrder(ctx, condition)
 	if err != nil {
+		log.Warning.Printf("Search order failed, condition: %#v, records: %#v, err: %v\n", condition, records, err)
 		return nil, err
 	}
 	ordersInfo, err := o.getOrderInfoDetails(ctx, orders)
 	if err != nil {
+		log.Warning.Printf("Search order failed, condition: %#v, orders: %#v, err: %v\n", condition, orders, err)
 		return nil, err
 	}
 
@@ -351,10 +381,12 @@ func (o *OrderService) getOrderInfoDetails(ctx context.Context, orders []*da.Ord
 		StudentIDList: studentIds,
 	})
 	if err != nil {
+		log.Warning.Printf("Search students failed, students: %#v, orders: %#v, err: %v\n", studentIds, orders, err)
 		return nil, err
 	}
 	orgs, err := da.GetOrgModel().ListOrgs(ctx)
 	if err != nil {
+		log.Warning.Printf("Search students failed, orders: %#v, err: %v\n", orders, err)
 		return nil, err
 	}
 
@@ -362,6 +394,7 @@ func (o *OrderService) getOrderInfoDetails(ctx context.Context, orders []*da.Ord
 		IDList: userIds,
 	})
 	if err != nil {
+		log.Warning.Printf("Search students failed, userIds: %#v, orders: %#v, err: %v\n", userIds, orders, err)
 		return nil, err
 	}
 
@@ -402,10 +435,12 @@ func (o *OrderService) getOrderInfoDetails(ctx context.Context, orders []*da.Ord
 func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *entity.JWTUser) (*entity.OrderInfoWithRecords, error) {
 	orderObj, err := da.GetOrderModel().GetOrderById(ctx, orderId)
 	if err != nil {
+		log.Warning.Printf("Get order failed, orderId: %#v, operator: %#v, err: %v\n", orderId, operator, err)
 		return nil, err
 	}
 	err = o.checkOrderAuthorize(ctx, orderObj, operator)
 	if err != nil {
+		log.Warning.Printf("Check order authorize failed, order: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
 		return nil, err
 	}
 
@@ -416,6 +451,7 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 		StudentIDList: []int{orderObj.Order.StudentID},
 	})
 	if err != nil {
+		log.Warning.Printf("Search students failed, orderObj: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
 		return nil, err
 	}
 	if len(students) < 1 {
@@ -425,6 +461,7 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 
 	orgs, err := da.GetOrgModel().ListOrgs(ctx)
 	if err != nil {
+		log.Warning.Printf("Search orgs failed, orderObj: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
 		return nil, err
 	}
 	for i := range orgs {
@@ -433,6 +470,7 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 		}
 	}
 	if org == nil {
+		log.Warning.Printf("Invalid to Org, orgs: %#v, org: %#v, err: %v\n", orgs, org, ErrInvalidToOrgID)
 		return nil, ErrInvalidToOrgID
 	}
 
@@ -440,9 +478,11 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 		IDList: []int{orderObj.Order.PublisherID},
 	})
 	if err != nil {
+		log.Warning.Printf("Search users failed, orderObj: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
 		return nil, err
 	}
 	if len(users) < 1 {
+		log.Warning.Printf("Invalid to users, users: %#v, err: %v\n", users, ErrInvalidPublisherID)
 		return nil, ErrInvalidPublisherID
 	}
 	user = users[0]
@@ -505,6 +545,7 @@ func (o *OrderService) checkOrderAuthorize(ctx context.Context, order *da.OrderI
 		return nil
 	}
 	if operator.OrgId != order.Order.ToOrgID {
+		log.Warning.Printf("checkOrderAuthorize failed, order: %#v, operator: %#v, err: %v\n", order, operator, ErrNoAuthorizeToOperate)
 		return ErrNoAuthorizeToOperate
 	}
 	return nil
@@ -514,6 +555,7 @@ func (o *OrderService) checkOrderOrg(ctx context.Context, orgId, toOrgId int) er
 	if toOrgId != orgId {
 		orgs, err := GetOrgService().GetSubOrgs(ctx, orgId)
 		if err != nil {
+			log.Warning.Printf("Get sub orgs failed, orgId: %#v, toOrgId: %#v, err: %v\n", orgId, toOrgId, err)
 			return err
 		}
 		flag := false
@@ -524,6 +566,7 @@ func (o *OrderService) checkOrderOrg(ctx context.Context, orgId, toOrgId int) er
 			}
 		}
 		if !flag {
+			log.Warning.Printf("Get sub orgs failed, orgs: %#v, toOrgId: %#v, err: %v\n", orgs, toOrgId, ErrNoAuthorizeToOperate)
 			return ErrNoAuthorizeToOperate
 		}
 	}

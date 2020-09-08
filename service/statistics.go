@@ -7,6 +7,7 @@ import (
 	"xg/da"
 	"xg/db"
 	"xg/entity"
+	"xg/log"
 
 	"github.com/jinzhu/gorm"
 )
@@ -19,18 +20,22 @@ func (s *StatisticsService) Summary(ctx context.Context) (*entity.SummaryInfo, e
 		ParentIDs: []int{0},
 	})
 	if err != nil {
+		log.Warning.Printf("CountOrgs failed, err: %v\n", err)
 		return nil, err
 	}
 	studentsCount, err := da.GetStudentModel().CountStudents(ctx)
 	if err != nil {
+		log.Warning.Printf("CountStudents failed, err: %v\n", err)
 		return nil, err
 	}
-	_, payRecords, err := da.GetOrderModel().SearchPayRecord(ctx, da.SearchPayRecordCondition{
+	payCondition :=  da.SearchPayRecordCondition{
 		// Mode:       entity.OrderPayModePay,
 		StatusList: []int{entity.OrderPayStatusChecked},
 		PageSize:   1000000,
-	})
+	}
+	_, payRecords, err := da.GetOrderModel().SearchPayRecord(ctx, payCondition)
 	if err != nil {
+		log.Warning.Printf("Search pay records failed, condition: %#v, err: %v\n", payCondition, err)
 		return nil, err
 	}
 	performanceTotal := 0
@@ -42,11 +47,13 @@ func (s *StatisticsService) Summary(ctx context.Context) (*entity.SummaryInfo, e
 		}
 	}
 
-	total, orders, err := da.GetOrderModel().SearchOrder(ctx, da.SearchOrderCondition{
+	orderCondition := da.SearchOrderCondition{
 		Status: []int{entity.OrderStatusSigned, entity.OrderStatusRevoked, entity.OrderStatusCreated},
 		Page:   1000000,
-	})
+	}
+	total, orders, err := da.GetOrderModel().SearchOrder(ctx, orderCondition)
 	if err != nil {
+		log.Warning.Printf("Search orders failed, condition: %#v, err: %v\n", orderCondition, err)
 		return nil, err
 	}
 	successTotal := 0
@@ -72,11 +79,13 @@ func (s *StatisticsService) Summary(ctx context.Context) (*entity.SummaryInfo, e
 
 func (s *StatisticsService) SearchYearRecords(ctx context.Context, key string) ([]*entity.StatisticRecord, error) {
 	year := time.Now().Year()
-	records, err := da.GetStatisticsRecordModel().SearchStatisticsRecord(ctx, db.Get(), da.SearchStatisticsRecordCondition{
+	condition := da.SearchStatisticsRecordCondition{
 		Key:  key,
 		Year: year,
-	})
+	}
+	records, err := da.GetStatisticsRecordModel().SearchStatisticsRecord(ctx, db.Get(), condition)
 	if err != nil {
+		log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
 		return nil, err
 	}
 	monthRecord := make(map[int]*da.StatisticsRecord)
@@ -115,13 +124,15 @@ func (s *StatisticsService) AddPerformance(ctx context.Context, tx *gorm.DB, per
 
 func (s *StatisticsService) addValue(ctx context.Context, tx *gorm.DB, key string, value int) error {
 	now := time.Now()
-	records, err := da.GetStatisticsRecordModel().SearchStatisticsRecord(ctx, tx, da.SearchStatisticsRecordCondition{
+	condition := da.SearchStatisticsRecordCondition{
 		Key:    key,
 		Year:   now.Year(),
 		Month:  int(now.Month()),
 		Author: 0,
-	})
+	}
+	records, err := da.GetStatisticsRecordModel().SearchStatisticsRecord(ctx, tx, condition)
 	if err != nil {
+		log.Warning.Printf("add graph value failed, condition: %#v, err: %v\n", condition, err)
 		return err
 	}
 	if len(records) > 0 {
@@ -129,19 +140,22 @@ func (s *StatisticsService) addValue(ctx context.Context, tx *gorm.DB, key strin
 		record.Value = record.Value + value
 		err = da.GetStatisticsRecordModel().UpdateStatisticsRecord(ctx, tx, record.ID, record.Value)
 		if err != nil {
+			log.Warning.Printf("UpdateStatisticsRecord failed, record: %#v, err: %v\n", record, err)
 			return err
 		}
 		return nil
 	}
 
-	_, err = da.GetStatisticsRecordModel().CreateStatisticsRecord(ctx, tx, &da.StatisticsRecord{
+	record := &da.StatisticsRecord{
 		Key:    key,
 		Value:  value,
 		Year:   now.Year(),
 		Month:  int(now.Month()),
 		Author: 0,
-	})
+	}
+	_, err = da.GetStatisticsRecordModel().CreateStatisticsRecord(ctx, tx, record)
 	if err != nil {
+		log.Warning.Printf("CreateStatisticsRecord failed, record: %#v, err: %v\n", record, err)
 		return err
 	}
 	return nil

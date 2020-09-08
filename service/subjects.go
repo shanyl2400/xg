@@ -6,6 +6,7 @@ import (
 	"time"
 	"xg/da"
 	"xg/entity"
+	"xg/log"
 )
 
 type SubjectService struct {
@@ -16,6 +17,7 @@ func (s *SubjectService) ListSubjects(ctx context.Context, parentID int) ([]*ent
 		ParentId: parentID,
 	})
 	if err != nil {
+		log.Warning.Printf("Search subjects failed, parentID: %#v, err: %v\n", parentID, err)
 		return nil, err
 	}
 
@@ -28,6 +30,7 @@ func (s *SubjectService) ListSubjects(ctx context.Context, parentID int) ([]*ent
 		IDList: parentIds,
 	})
 	if err != nil {
+		log.Warning.Printf("Search subjects from sub orgs failed, parentIds: %#v, err: %v\n", parentIds, err)
 		return nil, err
 	}
 	parentMap := make(map[int]*da.Subject)
@@ -53,20 +56,26 @@ func (s *SubjectService) CreateSubject(ctx context.Context, req entity.CreateSub
 	if req.ParentId > 0 {
 		parentSubject, err := da.GetSubjectModel().GetSubjectById(ctx, req.ParentId)
 		if err != nil {
+			log.Warning.Printf("Search subjects from sub orgs failed, req: %#v, err: %v\n", req, err)
 			return 0, err
 		}
 		level = parentSubject.Level + 1
 	}
 	now := time.Now()
-	id, err := da.GetSubjectModel().CreateSubject(ctx, da.Subject{
+	data := da.Subject{
 		Level:    level,
 		ParentId: req.ParentId,
 		Name:     req.Name,
 
 		UpdatedAt: &now,
 		CreatedAt: &now,
-	})
-	return id, err
+	}
+	id, err := da.GetSubjectModel().CreateSubject(ctx, data)
+	if err != nil{
+		log.Warning.Printf("Search subjects from sub orgs failed, req: %#v, data: %#v, err: %v\n", req, data, err)
+		return -1, err
+	}
+	return id, nil
 }
 
 func convertSubject(subject *da.Subject) *entity.Subject {

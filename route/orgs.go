@@ -3,6 +3,7 @@ package route
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"xg/da"
 	"xg/entity"
 	"xg/service"
@@ -148,8 +149,13 @@ func (s *Server) RevokeOrg(c *gin.Context) {
 }
 
 func buildOrgsSearchCondition(c *gin.Context) da.SearchOrgsCondition {
+	subjects := make([]string, 0)
+	subjectsParam := c.Query("subjects")
+	if subjectsParam != "" {
+		subjects = strings.Split(subjectsParam, ",")
+	}
 	return da.SearchOrgsCondition{
-		Subjects: c.Query("subjects"),
+		Subjects: subjects,
 		Address:  c.Query("address"),
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"sync"
 	"xg/da"
 	"xg/entity"
+	"xg/log"
 )
 
 type AuthService struct {
@@ -14,6 +15,7 @@ type AuthService struct {
 func (a *AuthService) ListAuths(ctx context.Context) ([]*entity.Auth, error){
 	auths, err := da.GetAuthModel().ListAuth(ctx)
 	if err != nil{
+		log.Warning.Printf("List auth failed, err: %v\n", err)
 		return nil, err
 	}
 	res := make([]*entity.Auth, len(auths))
