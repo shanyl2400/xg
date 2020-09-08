@@ -272,7 +272,7 @@ func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsC
 		log.Warning.Printf("Search org failed, condition: %#v, err: %v\n", condition, err)
 		return 0, nil, err
 	}
-	res := make([]*entity.Org, len(orgs))
+	res := make([]*entity.Org, 0)
 
 	for i := range orgs {
 		var subjects []string
@@ -280,7 +280,10 @@ func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsC
 			allSubjects := s.filterSubjects(orgs[i].Subjects)
 			subjects = s.filterTargetSubjects(allSubjects, condition.Subjects)
 		}
-		res[i] = &entity.Org{
+		if len(orgs[i].Subjects) > 0 && len(subjects) == 0 {
+			continue
+		}
+		res = append(res, &entity.Org{
 			ID:        orgs[i].ID,
 			Name:      orgs[i].Name,
 			Subjects:  subjects,
@@ -288,7 +291,7 @@ func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsC
 			Address:   orgs[i].Address,
 			ParentID:  orgs[i].ParentID,
 			Telephone: orgs[i].Telephone,
-		}
+		})
 	}
 	return count, res, nil
 }
