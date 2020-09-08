@@ -277,7 +277,8 @@ func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsC
 	for i := range orgs {
 		var subjects []string
 		if len(orgs[i].Subjects) > 0 {
-			subjects = strings.Split(orgs[i].Subjects, ",")
+			allSubjects := s.filterSubjects(orgs[i].Subjects)
+			subjects = s.filterTargetSubjects(allSubjects, condition.Subjects)
 		}
 		res[i] = &entity.Org{
 			ID:        orgs[i].ID,
@@ -291,6 +292,55 @@ func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsC
 	}
 	return count, res, nil
 }
+
+func (o *OrgService) filterSubjects(subject string) []string {
+	var subjects []string
+	if len(subject) > 0 {
+		subjects = strings.Split(subject, ",")
+	}
+	return subjects
+}
+
+func (o *OrgService) filterTargetSubjects(subjects []string, targetSubjects []string) []string {
+	ret := make([]string, 0)
+	for i := range subjects {
+		for j := range targetSubjects {
+			if o.compareSubject(subjects[i], targetSubjects[j]) {
+				ret = append(ret, subjects[i])
+			}
+		}
+	}
+
+	return ret
+}
+
+func (o *OrgService) compareSubject(subjectA, subjectB string) bool {
+	subjectAPairs := strings.Split(subjectA, "-")
+	subjectBPairs := strings.Split(subjectB, "-")
+	subjectALen := len(subjectAPairs)
+	subjectBLen := len(subjectBPairs)
+
+	//超过2段，比较前2段
+	if subjectALen >= 2 && subjectBLen >= 2 {
+		if subjectAPairs[0] == subjectBPairs[0] &&
+			subjectAPairs[1] == subjectBPairs[1] {
+			return true
+		}
+		return false
+	}
+	minLen := subjectALen
+	if subjectBLen < subjectALen {
+		minLen = subjectBLen
+	}
+	//不足2段，比较短的
+	for i := 0; i < minLen; i ++ {
+		if subjectAPairs[i] != subjectBPairs[i] {
+			return false
+		}
+	}
+	return true
+}
+
 func (o *OrgService) GetSubOrgs(ctx context.Context, orgId int) ([]*da.Org, error) {
 	subOrgs, err := da.GetOrgModel().GetOrgsByParentId(ctx, orgId)
 	if err != nil {
