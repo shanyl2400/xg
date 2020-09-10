@@ -4,10 +4,25 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"xg/log"
 
 	"github.com/gin-gonic/gin"
 )
+
+type Response struct {
+	ErrMsg string `json:"err_msg"`
+}
+
+type IdResponse struct {
+	ID string `json:"id"`
+	ErrMsg string `json:"err_msg"`
+}
+
+type SubjectsResponse struct {
+	Subjects []string `json:"subjects"`
+	ErrMsg string `json:"err_msg"`
+}
 
 func (s *Server) responseErr(c *gin.Context, code int, err error) {
 	c.JSON(code, gin.H{
@@ -40,4 +55,26 @@ func (s *Server) getParamInt(c *gin.Context, key string) (int, bool) {
 		return -1, false
 	}
 	return value, true
+}
+
+func parseInt(str string) int {
+	id, err := strconv.Atoi(str)
+	if err == nil {
+		return 0
+	}
+	return id
+}
+func parseInts(str string) []int {
+	strList := strings.Split(str, ",")
+	ret := make([]int, 0)
+	for i := range strList {
+		id, err := strconv.Atoi(strList[i])
+		if err == nil {
+			ret = append(ret, id)
+		}
+	}
+	if len(ret) < 1 {
+		return nil
+	}
+	return ret
 }

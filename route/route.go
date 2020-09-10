@@ -79,9 +79,9 @@ func Get() *gin.Engine {
 		org.POST("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageOrg}), s.createOrg)
 		org.GET("/:id", s.mustLogin, s.getOrgById)
 		org.GET("/:id/subjects", s.mustLogin, s.getOrgSubjectsById)
-		org.PUT("/:id/revoke", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.RevokeOrg)
-		org.PUT("/:id/review/reject", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.RejectOrg)
-		org.PUT("/:id/review/approve", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.ApproveOrg)
+		org.PUT("/:id/revoke", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.revokeOrg)
+		org.PUT("/:id/review/reject", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.rejectOrg)
+		org.PUT("/:id/review/approve", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.approveOrg)
 	}
 	orgs := api.Group("/orgs")
 	{

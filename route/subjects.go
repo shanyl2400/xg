@@ -8,6 +8,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// @Summary listRoles
+// @Description list all roles
+// @Accept mpfd
+// @Produce json
+// @Param parent_id path string true "subject parent id"
+// @Tags subject
+// @Success 200 {array} entity.Subject
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/subjects [get]
 func (s *Server) listSubjects(c *gin.Context) {
 	parentID, ok := s.getParamInt(c, "parent_id")
 	if !ok {
@@ -21,6 +31,16 @@ func (s *Server) listSubjects(c *gin.Context) {
 	}
 	s.responseSuccessWithData(c, "subjects", subjects)
 }
+// @Summary createSubject
+// @Description create a new subject
+// @Accept json
+// @Produce json
+// @Param request body entity.CreateSubjectRequest true "create subject request"
+// @Tags subject
+// @Success 200 {object} IdResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/subject [post]
 func (s *Server) createSubject(c *gin.Context) {
 	req := new(entity.CreateSubjectRequest)
 	err := c.ShouldBind(req)

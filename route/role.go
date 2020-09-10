@@ -8,6 +8,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// @Summary createRole
+// @Description create a new role
+// @Accept json
+// @Produce json
+// @Param request body entity.CreateRoleRequest true "create role request"
+// @Tags role
+// @Success 200 {object} IdResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/role [post]
 func (s *Server) createRole(c *gin.Context) {
 	req := new(entity.CreateRoleRequest)
 	err := c.ShouldBind(req)
@@ -23,6 +33,15 @@ func (s *Server) createRole(c *gin.Context) {
 	s.responseSuccessWithData(c, "id", id)
 }
 
+// @Summary listRoles
+// @Description list all roles
+// @Accept json
+// @Produce json
+// @Tags role
+// @Success 200 {array} entity.Role
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/roles [get]
 func (s *Server) listRoles(c *gin.Context) {
 	roles, err := service.GetRoleService().ListRole(c.Request.Context())
 	if err != nil {

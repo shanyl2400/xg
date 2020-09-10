@@ -3,13 +3,22 @@ package route
 import (
 	"net/http"
 	"strconv"
-	"strings"
 	"xg/entity"
 	"xg/service"
 
 	"github.com/gin-gonic/gin"
 )
 
+// @Summary createOrder
+// @Description create an order
+// @Accept json
+// @Produce json
+// @Param request body entity.CreateOrderRequest true "create request"
+// @Tags order
+// @Success 200 {object} IdResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/order [post]
 func (s *Server) createOrder(c *gin.Context) {
 	req := new(entity.CreateOrderRequest)
 	err := c.ShouldBind(req)
@@ -26,6 +35,23 @@ func (s *Server) createOrder(c *gin.Context) {
 	s.responseSuccessWithData(c, "id", id)
 }
 
+// @Summary searchOrder
+// @Description search order with condition
+// @Accept json
+// @Produce json
+// @Param student_ids query string false "search order with student_ids"
+// @Param to_org_ids query string false "search order with to_org_ids"
+// @Param intent_subjects query string false "search order with intent_subjects"
+// @Param publisher_id query int  false "search order with publisher_id"
+// @Param status query string  false "search order with status"
+// @Param order_by query string false "search order order by column name"
+// @Param page_size query int true "order list page size"
+// @Param page query int false "order list page index"
+// @Tags order
+// @Success 200 {object} entity.OrderInfoList
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/orders [get]
 func (s *Server) searchOrder(c *gin.Context) {
 	req := buildOrderCondition(c)
 	user := s.getJWTUser(c)
@@ -38,6 +64,22 @@ func (s *Server) searchOrder(c *gin.Context) {
 	s.responseSuccessWithData(c, "data", orders)
 }
 
+// @Summary searchOrderWithAuthor
+// @Description search order in author with condition
+// @Accept json
+// @Produce json
+// @Param student_ids query string false "search order with student_ids"
+// @Param to_org_ids query string false "search order with to_org_ids"
+// @Param intent_subjects query string false "search order with intent_subjects"
+// @Param status query string  false "search order with status"
+// @Param order_by query string false "search order order by column name"
+// @Param page_size query int true "order list page size"
+// @Param page query int false "order list page index"
+// @Tags order
+// @Success 200 {object} entity.OrderInfoList
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/orders/author [get]
 func (s *Server) searchOrderWithAuthor(c *gin.Context) {
 	req := buildOrderCondition(c)
 	user := s.getJWTUser(c)
@@ -50,6 +92,22 @@ func (s *Server) searchOrderWithAuthor(c *gin.Context) {
 	s.responseSuccessWithData(c, "data", orders)
 }
 
+// @Summary searchOrderWithOrgID
+// @Description search order in org with condition
+// @Accept json
+// @Produce json
+// @Param student_ids query string false "search order with student_ids"
+// @Param intent_subjects query string false "search order with intent_subjects"
+// @Param status query string  false "search order with status"
+// @Param publisher_id query int  false "search order with publisher_id"
+// @Param order_by query string false "search order order by column name"
+// @Param page_size query int true "order list page size"
+// @Param page query int false "order list page index"
+// @Tags order
+// @Success 200 {object} entity.OrderInfoList
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/orders/org [get]
 func (s *Server) searchOrderWithOrgID(c *gin.Context) {
 	req := buildOrderCondition(c)
 	user := s.getJWTUser(c)
@@ -62,6 +120,16 @@ func (s *Server) searchOrderWithOrgID(c *gin.Context) {
 	s.responseSuccessWithData(c, "data", orders)
 }
 
+// @Summary getOrderByID
+// @Description get order by id
+// @Accept json
+// @Produce json
+// @Param id path string true "order id"
+// @Tags order
+// @Success 200 {object} entity.OrderInfoWithRecords
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/order/{id} [get]
 func (s *Server) getOrderByID(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -79,6 +147,23 @@ func (s *Server) getOrderByID(c *gin.Context) {
 	s.responseSuccessWithData(c, "data", order)
 }
 
+// @Summary searchPendingPayRecord
+// @Description search pending order pay record with condition
+// @Accept json
+// @Produce json
+// @Param pay_record_ids query string false "search order pay record with pay_record_ids"
+// @Param order_ids query string false "search order pay record with order_ids"
+// @Param author_ids query string false "search order pay record with author_ids"
+// @Param mode query int false "search order pay record with mode"
+// @Param status query string  false "search order pay record with status"
+// @Param order_by query string false "search order pay record by column name"
+// @Param page_size query int true "order pay record list page size"
+// @Param page query int true "order pay record list page index"
+// @Tags order
+// @Success 200 {object} entity.PayRecordInfoList
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/orders/pending [get]
 func (s *Server) searchPendingPayRecord(c *gin.Context) {
 	req := buildSearchPayRecordCondition(c)
 	user := s.getJWTUser(c)
@@ -92,6 +177,17 @@ func (s *Server) searchPendingPayRecord(c *gin.Context) {
 	s.responseSuccessWithData(c, "data", records)
 }
 
+// @Summary signupOrder
+// @Description signup order by id
+// @Accept json
+// @Produce json
+// @Param id path string true "order id"
+// @Param request body entity.OrderPayRequest true "order signup request"
+// @Tags order
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/order/{id}/signup [put]
 func (s *Server) signupOrder(c *gin.Context) {
 	req := new(entity.OrderPayRequest)
 	err := c.ShouldBind(req)
@@ -113,6 +209,16 @@ func (s *Server) signupOrder(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
+// @Summary revokeOrder
+// @Description revoke order by id
+// @Accept json
+// @Produce json
+// @Param id path string true "order id"
+// @Tags order
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/order/{id}/revoke [put]
 func (s *Server) revokeOrder(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -129,7 +235,17 @@ func (s *Server) revokeOrder(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
-
+// @Summary payOrder
+// @Description pay order by id
+// @Accept json
+// @Produce json
+// @Param id path string true "order id"
+// @Param request body entity.OrderPayRequest true "order pay request"
+// @Tags order
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/order/{id}/pay [put]
 func (s *Server) payOrder(c *gin.Context) {
 	req := new(entity.OrderPayRequest)
 	err := c.ShouldBind(req)
@@ -151,6 +267,17 @@ func (s *Server) payOrder(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
+// @Summary paybackOrder
+// @Description payback order by id
+// @Accept json
+// @Produce json
+// @Param id path string true "order id"
+// @Param request body entity.OrderPayRequest true "order payback request"
+// @Tags order
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/order/{id}/payback [put]
 func (s *Server) paybackOrder(c *gin.Context) {
 	req := new(entity.OrderPayRequest)
 	err := c.ShouldBind(req)
@@ -172,6 +299,16 @@ func (s *Server) paybackOrder(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
+// @Summary acceptPayment
+// @Description accept payment by id
+// @Accept json
+// @Produce json
+// @Param id path string true "payment id"
+// @Tags order
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/payment/{id}/review/accept [put]
 func (s *Server) acceptPayment(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -188,6 +325,16 @@ func (s *Server) acceptPayment(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
+// @Summary rejectPayment
+// @Description reject payment by id
+// @Accept json
+// @Produce json
+// @Param id path string true "payment id"
+// @Tags order
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/payment/{id}/review/reject [put]
 func (s *Server) rejectPayment(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -204,6 +351,17 @@ func (s *Server) rejectPayment(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
+// @Summary addOrderMark
+// @Description add mark to order by id
+// @Accept json
+// @Produce json
+// @Param id path string true "order id"
+// @Param request body entity.OrderMarkRequest true "create mark"
+// @Tags order
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/order/{id}/mark [post]
 func (s *Server) addOrderMark(c *gin.Context) {
 	req := new(entity.OrderMarkRequest)
 	err := c.ShouldBind(req)
@@ -211,6 +369,11 @@ func (s *Server) addOrderMark(c *gin.Context) {
 		s.responseErr(c, http.StatusBadRequest, err)
 		return
 	}
+	id, ok := s.getParamInt(c, "id")
+	if !ok {
+		return
+	}
+	req.OrderID = id
 	user := s.getJWTUser(c)
 	err = service.GetOrderService().AddOrderRemark(c.Request.Context(), req.OrderID, req.Content, user)
 	if err != nil {
@@ -266,26 +429,4 @@ func buildOrderCondition(c *gin.Context) *entity.SearchOrderCondition {
 		PageSize: parseInt(pageSize),
 		Page:     parseInt(page),
 	}
-}
-
-func parseInt(str string) int {
-	id, err := strconv.Atoi(str)
-	if err == nil {
-		return 0
-	}
-	return id
-}
-func parseInts(str string) []int {
-	strList := strings.Split(str, ",")
-	ret := make([]int, 0)
-	for i := range strList {
-		id, err := strconv.Atoi(strList[i])
-		if err == nil {
-			ret = append(ret, id)
-		}
-	}
-	if len(ret) < 1 {
-		return nil
-	}
-	return ret
 }

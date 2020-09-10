@@ -15,7 +15,15 @@ type OrgListResponse struct {
 	Orgs  []*entity.Org `json:"orgs"`
 	Total int           `json:"total"`
 }
-
+// @Summary listOrgs
+// @Description list all organizations
+// @Accept json
+// @Produce json
+// @Tags organization
+// @Success 200 {object} OrgListResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/orgs [get]
 func (s *Server) listOrgs(c *gin.Context) {
 	count, orgs, err := service.GetOrgService().ListOrgs(c.Request.Context())
 	if err != nil {
@@ -28,6 +36,15 @@ func (s *Server) listOrgs(c *gin.Context) {
 	})
 }
 
+// @Summary listPendingOrgs
+// @Description list pending organizations to check
+// @Accept json
+// @Produce json
+// @Tags organization
+// @Success 200 {object} OrgListResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/orgs/pending [get]
 func (s *Server) listPendingOrgs(c *gin.Context) {
 	count, orgs, err := service.GetOrgService().ListOrgsByStatus(c.Request.Context(), []int{entity.OrgStatusCreated})
 	if err != nil {
@@ -40,6 +57,17 @@ func (s *Server) listPendingOrgs(c *gin.Context) {
 	})
 }
 
+// @Summary searchSubOrgs
+// @Description search sub organizations with condition
+// @Accept json
+// @Produce json
+// @Tags organization
+// @Param subjects query string false "search organizations with subjects"
+// @Param address query string false "search organizations with address"
+// @Success 200 {object} OrgListResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/orgs/campus [get]
 func (s *Server) searchSubOrgs(c *gin.Context) {
 	count, orgs, err := service.GetOrgService().SearchSubOrgs(c.Request.Context(), buildOrgsSearchCondition(c))
 	if err != nil {
@@ -52,6 +80,16 @@ func (s *Server) searchSubOrgs(c *gin.Context) {
 	})
 }
 
+// @Summary getOrgById
+// @Description get org by id
+// @Accept json
+// @Produce json
+// @Param id path string true "org id"
+// @Tags organization
+// @Success 200 {object} entity.Org
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/org/{id} [get]
 func (s *Server) getOrgById(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -68,6 +106,17 @@ func (s *Server) getOrgById(c *gin.Context) {
 	s.responseSuccessWithData(c, "org", org)
 }
 
+
+// @Summary getOrgSubjectsById
+// @Description get org subjects by id
+// @Accept json
+// @Produce json
+// @Param id path string true "org id"
+// @Tags organization
+// @Success 200 {object} SubjectsResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/org/{id}/subjects [get]
 func (s *Server) getOrgSubjectsById(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -84,6 +133,16 @@ func (s *Server) getOrgSubjectsById(c *gin.Context) {
 	s.responseSuccessWithData(c, "subjects", org)
 }
 
+// @Summary createOrg
+// @Description create org
+// @Accept json
+// @Produce json
+// @Param request body entity.CreateOrgWithSubOrgsRequest true "create org request"
+// @Tags organization
+// @Success 200 {object} IdResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/org [post]
 func (s *Server) createOrg(c *gin.Context) {
 	req := new(entity.CreateOrgWithSubOrgsRequest)
 	err := c.ShouldBind(req)
@@ -100,7 +159,17 @@ func (s *Server) createOrg(c *gin.Context) {
 	s.responseSuccessWithData(c, "id", id)
 }
 
-func (s *Server) ApproveOrg(c *gin.Context) {
+// @Summary approveOrg
+// @Description approve org
+// @Accept json
+// @Produce json
+// @Param id path string true "org id"
+// @Tags organization
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/org/{id}/review/approve [put]
+func (s *Server) approveOrg(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -116,7 +185,17 @@ func (s *Server) ApproveOrg(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
-func (s *Server) RejectOrg(c *gin.Context) {
+// @Summary rejectOrg
+// @Description reject org
+// @Accept json
+// @Produce json
+// @Param id path string true "org id"
+// @Tags organization
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/org/{id}/review/reject [put]
+func (s *Server) rejectOrg(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -132,7 +211,17 @@ func (s *Server) RejectOrg(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
-func (s *Server) RevokeOrg(c *gin.Context) {
+// @Summary revokeOrg
+// @Description revoke org
+// @Accept json
+// @Produce json
+// @Param id path string true "org id"
+// @Tags organization
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/org/{id}/revoke [put]
+func (s *Server) revokeOrg(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {

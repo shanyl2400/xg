@@ -13,6 +13,16 @@ var (
 	ErrNoAuth = errors.New("no authorization")
 )
 
+// @Summary login
+// @Description login system
+// @Accept json
+// @Produce json
+// @Param request body entity.UserLoginRequest true "user login request"
+// @Tags user
+// @Success 200 {object} entity.UserLoginResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/user/login [post]
 func (s *Server) login(c *gin.Context) {
 	userLoginReq := new(entity.UserLoginRequest)
 	err := c.ShouldBind(userLoginReq)
@@ -33,6 +43,16 @@ func (s *Server) login(c *gin.Context) {
 	s.responseSuccessWithData(c, "data", data)
 }
 
+// @Summary updatePassword
+// @Description update user password
+// @Accept json
+// @Produce json
+// @Param request body entity.UserUpdatePasswordRequest true "password to update"
+// @Tags user
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/user/password [post]
 func (s *Server) updatePassword(c *gin.Context) {
 	newPasswordReq := new(entity.UserUpdatePasswordRequest)
 	err := c.ShouldBind(newPasswordReq)
@@ -50,6 +70,15 @@ func (s *Server) updatePassword(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
+// @Summary listUserAuthority
+// @Description list user all authority
+// @Accept json
+// @Produce json
+// @Tags user
+// @Success 200 {array} entity.Auth
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/user/authority [get]
 func (s *Server) listUserAuthority(c *gin.Context) {
 	user := s.getJWTUser(c)
 	auth, err := service.GetUserService().ListUserAuthority(c.Request.Context(), user)
@@ -60,6 +89,15 @@ func (s *Server) listUserAuthority(c *gin.Context) {
 	s.responseSuccessWithData(c, "authority", auth)
 }
 
+// @Summary listUsers
+// @Description list all users
+// @Accept json
+// @Produce json
+// @Tags user
+// @Success 200 {array} entity.UserInfo
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/users [get]
 func (s *Server) listUsers(c *gin.Context) {
 	users, err := service.GetUserService().ListUsers(c.Request.Context())
 	if err != nil {
@@ -69,6 +107,16 @@ func (s *Server) listUsers(c *gin.Context) {
 	s.responseSuccessWithData(c, "users", users)
 }
 
+// @Summary resetPassword
+// @Description reset user password
+// @Accept json
+// @Produce json
+// @Param id path string true "user id"
+// @Tags user
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/user/reset/{id} [post]
 func (s *Server) resetPassword(c *gin.Context) {
 	id, ok := s.getParamInt(c, "id")
 	if !ok {
@@ -83,6 +131,16 @@ func (s *Server) resetPassword(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
+// @Summary createUser
+// @Description create a new user
+// @Accept json
+// @Produce json
+// @Param request body entity.CreateUserRequest true "create user request"
+// @Tags user
+// @Success 200 {object} IdResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/user [post]
 func (s *Server) createUser(c *gin.Context) {
 	req := new(entity.CreateUserRequest)
 	err := c.ShouldBind(req)

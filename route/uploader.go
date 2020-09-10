@@ -41,7 +41,16 @@ func FileName(fileName string) string {
 	ext := parts[len(parts)-1]
 	return id.Hex() + "." + ext
 }
-
+// @Summary uploadFile
+// @Description upload a file
+// @Accept json
+// @Produce json
+// @Param partition path string true "upload file partition"
+// @Tags upload
+// @Success 200 {object} IdResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/upload/{partition} [post]
 func (s *Server) uploadFile(c *gin.Context) {
 	partition, err := NewPartition(c.Param("partition"))
 	if err != nil {

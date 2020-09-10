@@ -17,6 +17,10 @@ func loadConfig() {
 	conf.Set(c)
 }
 
+// @title xg REST API
+// @version 0.1 alpha
+// @description  xg backend rest api
+// @termsOfService https://localhost:8088/v1
 func main() {
 	engine := route.Get()
 	loadConfig()
