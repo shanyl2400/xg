@@ -14,6 +14,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param request body entity.CreateOrderRequest true "create request"
+// @Param Authorization header string true "With the bearer"
 // @Tags order
 // @Success 200 {object} IdResponse
 // @Failure 500 {object} Response
@@ -32,13 +33,17 @@ func (s *Server) createOrder(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "id", id)
+	c.JSON(http.StatusOK, IdResponse{
+		ID:     id,
+		ErrMsg: "success",
+	})
 }
 
 // @Summary searchOrder
 // @Description search order with condition
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param student_ids query string false "search order with student_ids"
 // @Param to_org_ids query string false "search order with to_org_ids"
 // @Param intent_subjects query string false "search order with intent_subjects"
@@ -61,13 +66,17 @@ func (s *Server) searchOrder(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "data", orders)
+	c.JSON(http.StatusOK, OrderInfoListResponse{
+		Data:     orders,
+		ErrMsg: "success",
+	})
 }
 
 // @Summary searchOrderWithAuthor
 // @Description search order in author with condition
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param student_ids query string false "search order with student_ids"
 // @Param to_org_ids query string false "search order with to_org_ids"
 // @Param intent_subjects query string false "search order with intent_subjects"
@@ -89,13 +98,17 @@ func (s *Server) searchOrderWithAuthor(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "data", orders)
+	c.JSON(http.StatusOK, OrderInfoListResponse{
+		Data:     orders,
+		ErrMsg: "success",
+	})
 }
 
 // @Summary searchOrderWithOrgID
 // @Description search order in org with condition
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param student_ids query string false "search order with student_ids"
 // @Param intent_subjects query string false "search order with intent_subjects"
 // @Param status query string  false "search order with status"
@@ -117,13 +130,17 @@ func (s *Server) searchOrderWithOrgID(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "data", orders)
+	c.JSON(http.StatusOK, OrderInfoListResponse{
+		Data:     orders,
+		ErrMsg: "success",
+	})
 }
 
 // @Summary getOrderByID
 // @Description get order by id
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param id path string true "order id"
 // @Tags order
 // @Success 200 {object} entity.OrderInfoWithRecords
@@ -144,13 +161,17 @@ func (s *Server) getOrderByID(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "data", order)
+	c.JSON(http.StatusOK, OrderRecordResponse{
+		Data:     order,
+		ErrMsg: "success",
+	})
 }
 
 // @Summary searchPendingPayRecord
 // @Description search pending order pay record with condition
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param pay_record_ids query string false "search order pay record with pay_record_ids"
 // @Param order_ids query string false "search order pay record with order_ids"
 // @Param author_ids query string false "search order pay record with author_ids"
@@ -174,13 +195,17 @@ func (s *Server) searchPendingPayRecord(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "data", records)
+	c.JSON(http.StatusOK, OrderPaymentRecordListResponse{
+		Data:     records,
+		ErrMsg: "success",
+	})
 }
 
 // @Summary signupOrder
 // @Description signup order by id
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param id path string true "order id"
 // @Param request body entity.OrderPayRequest true "order signup request"
 // @Tags order
@@ -213,6 +238,7 @@ func (s *Server) signupOrder(c *gin.Context) {
 // @Description revoke order by id
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param id path string true "order id"
 // @Tags order
 // @Success 200 {object} Response
@@ -239,6 +265,7 @@ func (s *Server) revokeOrder(c *gin.Context) {
 // @Description pay order by id
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param id path string true "order id"
 // @Param request body entity.OrderPayRequest true "order pay request"
 // @Tags order
@@ -271,6 +298,7 @@ func (s *Server) payOrder(c *gin.Context) {
 // @Description payback order by id
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param id path string true "order id"
 // @Param request body entity.OrderPayRequest true "order payback request"
 // @Tags order
@@ -303,6 +331,7 @@ func (s *Server) paybackOrder(c *gin.Context) {
 // @Description accept payment by id
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param id path string true "payment id"
 // @Tags order
 // @Success 200 {object} Response
@@ -329,6 +358,7 @@ func (s *Server) acceptPayment(c *gin.Context) {
 // @Description reject payment by id
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param id path string true "payment id"
 // @Tags order
 // @Success 200 {object} Response
@@ -355,6 +385,7 @@ func (s *Server) rejectPayment(c *gin.Context) {
 // @Description add mark to order by id
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param id path string true "order id"
 // @Param request body entity.OrderMarkRequest true "create mark"
 // @Tags order

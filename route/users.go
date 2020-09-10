@@ -17,11 +17,13 @@ var (
 // @Description login system
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param request body entity.UserLoginRequest true "user login request"
 // @Tags user
 // @Success 200 {object} entity.UserLoginResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
+// @Failure 406 {object} Response
 // @Router /api/user/login [post]
 func (s *Server) login(c *gin.Context) {
 	userLoginReq := new(entity.UserLoginRequest)
@@ -40,19 +42,23 @@ func (s *Server) login(c *gin.Context) {
 		s.responseErr(c, http.StatusNotAcceptable, err)
 		return
 	}
-	s.responseSuccessWithData(c, "data", data)
+	c.JSON(http.StatusOK, UserLoginResponse{
+		Data: data,
+		ErrMsg:  "success",
+	})
 }
 
 // @Summary updatePassword
 // @Description update user password
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param request body entity.UserUpdatePasswordRequest true "password to update"
 // @Tags user
 // @Success 200 {object} Response
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
-// @Router /api/user/password [post]
+// @Router /api/user/password [put]
 func (s *Server) updatePassword(c *gin.Context) {
 	newPasswordReq := new(entity.UserUpdatePasswordRequest)
 	err := c.ShouldBind(newPasswordReq)
@@ -74,6 +80,7 @@ func (s *Server) updatePassword(c *gin.Context) {
 // @Description list user all authority
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Tags user
 // @Success 200 {array} entity.Auth
 // @Failure 500 {object} Response
@@ -86,13 +93,17 @@ func (s *Server) listUserAuthority(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "authority", auth)
+	c.JSON(http.StatusOK, AuthorizationListResponse{
+		AuthList: auth,
+		ErrMsg:  "success",
+	})
 }
 
 // @Summary listUsers
 // @Description list all users
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Tags user
 // @Success 200 {array} entity.UserInfo
 // @Failure 500 {object} Response
@@ -104,19 +115,23 @@ func (s *Server) listUsers(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "users", users)
+	c.JSON(http.StatusOK, UserListResponse{
+		Users: users,
+		ErrMsg:  "success",
+	})
 }
 
 // @Summary resetPassword
 // @Description reset user password
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param id path string true "user id"
 // @Tags user
 // @Success 200 {object} Response
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
-// @Router /api/user/reset/{id} [post]
+// @Router /api/user/reset/{id} [put]
 func (s *Server) resetPassword(c *gin.Context) {
 	id, ok := s.getParamInt(c, "id")
 	if !ok {
@@ -135,6 +150,7 @@ func (s *Server) resetPassword(c *gin.Context) {
 // @Description create a new user
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param request body entity.CreateUserRequest true "create user request"
 // @Tags user
 // @Success 200 {object} IdResponse
@@ -153,5 +169,8 @@ func (s *Server) createUser(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "id", id)
+	c.JSON(http.StatusOK, IdResponse{
+		ID: id,
+		ErrMsg:  "success",
+	})
 }

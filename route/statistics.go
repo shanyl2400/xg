@@ -11,6 +11,7 @@ import (
 // @Description get system data summary
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Tags statistics
 // @Success 200 {object} entity.SummaryInfo
 // @Failure 500 {object} Response
@@ -22,18 +23,22 @@ func (s *Server) summary(c *gin.Context){
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "summary", summary)
+	c.JSON(http.StatusOK, SummaryResponse{
+		Summary: summary,
+		ErrMsg:   "success",
+	})
 }
 
 // @Summary graph
 // @Description get system data graph
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Tags statistics
 // @Success 200 {object} entity.StatisticGraph
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
-// @Router /api/statistics/summary [get]
+// @Router /api/statistics/graph [get]
 func (s *Server) graph(c *gin.Context) {
 	studentsRecords, err := service.GetStatisticsService().SearchYearRecords(c.Request.Context(), entity.StudentStatisticsKey)
 	if err != nil {
@@ -45,8 +50,11 @@ func (s *Server) graph(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "graph", entity.StatisticGraph{
-		StudentsGraph:     studentsRecords,
-		PerformancesGraph: performanceRecords,
+	c.JSON(http.StatusOK, GraphResponse{
+		Graph: &entity.StatisticGraph{
+			StudentsGraph:     studentsRecords,
+			PerformancesGraph: performanceRecords,
+		},
+		ErrMsg:   "success",
 	})
 }

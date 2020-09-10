@@ -12,6 +12,7 @@ import (
 // @Description list all roles
 // @Accept mpfd
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param parent_id path string true "subject parent id"
 // @Tags subject
 // @Success 200 {array} entity.Subject
@@ -29,12 +30,16 @@ func (s *Server) listSubjects(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "subjects", subjects)
+	c.JSON(http.StatusOK, SubjectsObjResponse{
+		Subjects: subjects,
+		ErrMsg:  "success",
+	})
 }
 // @Summary createSubject
 // @Description create a new subject
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param request body entity.CreateSubjectRequest true "create subject request"
 // @Tags subject
 // @Success 200 {object} IdResponse
@@ -54,5 +59,8 @@ func (s *Server) createSubject(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "id", id)
+	c.JSON(http.StatusOK, IdResponse{
+		ID: id,
+		ErrMsg:  "success",
+	})
 }

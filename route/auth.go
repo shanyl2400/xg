@@ -12,14 +12,19 @@ import (
 // @Accept json
 // @Produce json
 // @Tags auth
+// @Param Authorization header string true "With the bearer"
+// @Success 200 {object} entity.Auth
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
-// @Router /api/auth [get]
+// @Router /api/auths [get]
 func (s *Server) listAuth(c *gin.Context) {
 	auths, err := service.GetAuthService().ListAuths(c.Request.Context())
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "auths", auths)
+	c.JSON(http.StatusOK, &AuthsListResponse{
+		ErrMsg:   "success",
+		AuthList: auths,
+	})
 }

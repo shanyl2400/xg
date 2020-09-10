@@ -220,6 +220,7 @@ func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchSt
 		Telephone:    ss.Telephone,
 		Address:      ss.Address,
 		AuthorIDList: ss.AuthorIDList,
+		IntentString: ss.IntentSubject,
 		OrderBy:      ss.OrderBy,
 		PageSize:     ss.PageSize,
 		Page:         ss.Page,

@@ -13,6 +13,7 @@ import (
 // @Description create a new student
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param request body entity.CreateStudentRequest true "create student request"
 // @Tags student
 // @Success 200 {object} IdResponse
@@ -32,9 +33,13 @@ func (s *Server) createStudent(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "result", entity.CreateStudentResponse{
-		ID:     id,
-		Status: status,
+
+	c.JSON(http.StatusOK, IDStatusResponse{
+		Result: entity.CreateStudentResponse{
+			ID:     id,
+			Status: status,
+		},
+		ErrMsg: "success",
 	})
 }
 
@@ -42,6 +47,7 @@ func (s *Server) createStudent(c *gin.Context) {
 // @Description create a new student
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param id path string true "student id"
 // @Tags student
 // @Success 200 {object} entity.StudentInfosWithOrders
@@ -59,15 +65,21 @@ func (s *Server) getStudentById(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "student", student)
+
+	c.JSON(http.StatusOK, StudentWithDetailsListResponse{
+		Student: student,
+		ErrMsg:  "success",
+	})
 }
 
 // @Summary searchPrivateStudents
 // @Description search private students of user with condition
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param name query string false "search student with name"
 // @Param telephone query string false "search student with telephone"
+// @Param intent_subjects query string false "search student with intent_subjects"
 // @Param address query string false "search student with address"
 // @Param order_by query string false "search student order by column name"
 // @Param page_size query int true "student list page size"
@@ -85,9 +97,12 @@ func (s *Server) searchPrivateStudents(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "result", entity.StudentInfoList{
-		Total:    total,
-		Students: students,
+	c.JSON(http.StatusOK, StudentListResponse{
+		Result: &entity.StudentInfoList{
+			Total:    total,
+			Students: students,
+		},
+		ErrMsg:  "success",
 	})
 }
 
@@ -96,9 +111,11 @@ func (s *Server) searchPrivateStudents(c *gin.Context) {
 // @Description search students with condition
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param name query string false "search student with name"
 // @Param telephone query string false "search student with telephone"
 // @Param address query string false "search student with address"
+// @Param intent_subjects query string false "search student with intent_subjects"
 // @Param author_id query string false "search student with author_id"
 // @Param order_by query string false "search student order by column name"
 // @Param page_size query int true "student list page size"
@@ -107,7 +124,7 @@ func (s *Server) searchPrivateStudents(c *gin.Context) {
 // @Success 200 {object} entity.StudentInfoList
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
-// @Router /api/students/private [get]
+// @Router /api/students [get]
 func (s *Server) searchStudents(c *gin.Context) {
 	condition := buildCondition(c)
 	user := s.getJWTUser(c)
@@ -116,9 +133,12 @@ func (s *Server) searchStudents(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "result", entity.StudentInfoList{
-		Total:    total,
-		Students: students,
+	c.JSON(http.StatusOK, StudentListResponse{
+		Result: &entity.StudentInfoList{
+			Total:    total,
+			Students: students,
+		},
+		ErrMsg:  "success",
 	})
 }
 
@@ -127,6 +147,7 @@ func buildCondition(c *gin.Context) *entity.SearchStudentRequest {
 	telephone := c.Query("telephone")
 	address := c.Query("address")
 	authorIdStr := c.Query("author_id")
+	intentSubjects := c.Query("intent_subjects")
 
 	orderBy := c.Query("order_by")
 
@@ -160,6 +181,7 @@ func buildCondition(c *gin.Context) *entity.SearchStudentRequest {
 		Telephone:    telephone,
 		Address:      address,
 		AuthorIDList: authorIdList,
+		IntentSubject: intentSubjects,
 		OrderBy:      orderBy,
 		PageSize:     pageSize,
 		Page:         page,

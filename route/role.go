@@ -12,6 +12,7 @@ import (
 // @Description create a new role
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param request body entity.CreateRoleRequest true "create role request"
 // @Tags role
 // @Success 200 {object} IdResponse
@@ -30,13 +31,17 @@ func (s *Server) createRole(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "id", id)
+	c.JSON(http.StatusOK, IdResponse{
+		ID: id,
+		ErrMsg:   "success",
+	})
 }
 
 // @Summary listRoles
 // @Description list all roles
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Tags role
 // @Success 200 {array} entity.Role
 // @Failure 500 {object} Response
@@ -48,5 +53,8 @@ func (s *Server) listRoles(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "roles", roles)
+	c.JSON(http.StatusOK, RolesResponse{
+		Roles: roles,
+		ErrMsg:   "success",
+	})
 }

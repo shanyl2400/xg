@@ -12,6 +12,7 @@ import (
 // @Description list all order sources
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Tags orderSource
 // @Success 200 {array} entity.OrderSource
 // @Failure 500 {object} Response
@@ -23,7 +24,11 @@ func (s *Server) listOrderSources(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "sources", sources)
+
+	c.JSON(http.StatusOK, OrderSourcesListResponse{
+		Sources:     sources,
+		ErrMsg: "success",
+	})
 }
 
 // @Summary createOrderSource
@@ -31,6 +36,7 @@ func (s *Server) listOrderSources(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Tags orderSource
+// @Param Authorization header string true "With the bearer"
 // @Param request body entity.CreateOrderSourceRequest true "create order source"
 // @Success 200 {object} Response
 // @Failure 500 {object} Response
@@ -49,5 +55,8 @@ func (s *Server) createOrderSource(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "id", id)
+	c.JSON(http.StatusOK, IdResponse{
+		ID:     id,
+		ErrMsg: "success",
+	})
 }

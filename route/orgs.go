@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type OrgListResponse struct {
+type OrgListInfo struct {
 	Orgs  []*entity.Org `json:"orgs"`
 	Total int           `json:"total"`
 }
@@ -19,8 +19,9 @@ type OrgListResponse struct {
 // @Description list all organizations
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Tags organization
-// @Success 200 {object} OrgListResponse
+// @Success 200 {object} OrgListInfo
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/orgs [get]
@@ -30,9 +31,12 @@ func (s *Server) listOrgs(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "data", OrgListResponse{
-		Total: count,
-		Orgs:  orgs,
+	c.JSON(http.StatusOK, OrgsListResponse{
+		Sources: &OrgListInfo{
+			Orgs:  orgs,
+			Total: count,
+		},
+		ErrMsg:  "success",
 	})
 }
 
@@ -40,8 +44,9 @@ func (s *Server) listOrgs(c *gin.Context) {
 // @Description list pending organizations to check
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Tags organization
-// @Success 200 {object} OrgListResponse
+// @Success 200 {object} OrgListInfo
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/orgs/pending [get]
@@ -51,9 +56,12 @@ func (s *Server) listPendingOrgs(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "data", OrgListResponse{
-		Total: count,
-		Orgs:  orgs,
+	c.JSON(http.StatusOK, OrgsListResponse{
+		Sources: &OrgListInfo{
+			Orgs:  orgs,
+			Total: count,
+		},
+		ErrMsg:  "success",
 	})
 }
 
@@ -62,9 +70,10 @@ func (s *Server) listPendingOrgs(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Tags organization
+// @Param Authorization header string true "With the bearer"
 // @Param subjects query string false "search organizations with subjects"
 // @Param address query string false "search organizations with address"
-// @Success 200 {object} OrgListResponse
+// @Success 200 {object} OrgListInfo
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/orgs/campus [get]
@@ -74,9 +83,12 @@ func (s *Server) searchSubOrgs(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "data", OrgListResponse{
-		Total: count,
-		Orgs:  orgs,
+	c.JSON(http.StatusOK, OrgsListResponse{
+		Sources: &OrgListInfo{
+			Orgs:  orgs,
+			Total: count,
+		},
+		ErrMsg:  "success",
 	})
 }
 
@@ -84,6 +96,7 @@ func (s *Server) searchSubOrgs(c *gin.Context) {
 // @Description get org by id
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param id path string true "org id"
 // @Tags organization
 // @Success 200 {object} entity.Org
@@ -103,7 +116,10 @@ func (s *Server) getOrgById(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "org", org)
+	c.JSON(http.StatusOK, OrgInfoResponse{
+		Org:    org,
+		ErrMsg: "success",
+	})
 }
 
 
@@ -111,6 +127,7 @@ func (s *Server) getOrgById(c *gin.Context) {
 // @Description get org subjects by id
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param id path string true "org id"
 // @Tags organization
 // @Success 200 {object} SubjectsResponse
@@ -125,18 +142,22 @@ func (s *Server) getOrgSubjectsById(c *gin.Context) {
 		return
 	}
 
-	org, err := service.GetOrgService().GetOrgSubjectsById(c.Request.Context(), id)
+	subjects, err := service.GetOrgService().GetOrgSubjectsById(c.Request.Context(), id)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "subjects", org)
+	c.JSON(http.StatusOK, OrgSubjectsResponse{
+		Subjects: subjects,
+		ErrMsg:   "success",
+	})
 }
 
 // @Summary createOrg
 // @Description create org
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param request body entity.CreateOrgWithSubOrgsRequest true "create org request"
 // @Tags organization
 // @Success 200 {object} IdResponse
@@ -156,13 +177,17 @@ func (s *Server) createOrg(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "id", id)
+	c.JSON(http.StatusOK, IdResponse{
+		ID: id,
+		ErrMsg:   "success",
+	})
 }
 
 // @Summary approveOrg
 // @Description approve org
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param id path string true "org id"
 // @Tags organization
 // @Success 200 {object} Response
@@ -189,6 +214,7 @@ func (s *Server) approveOrg(c *gin.Context) {
 // @Description reject org
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param id path string true "org id"
 // @Tags organization
 // @Success 200 {object} Response
@@ -215,6 +241,7 @@ func (s *Server) rejectOrg(c *gin.Context) {
 // @Description revoke org
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param id path string true "org id"
 // @Tags organization
 // @Success 200 {object} Response

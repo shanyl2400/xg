@@ -45,9 +45,10 @@ func FileName(fileName string) string {
 // @Description upload a file
 // @Accept json
 // @Produce json
+// @Param Authorization header string true "With the bearer"
 // @Param partition path string true "upload file partition"
 // @Tags upload
-// @Success 200 {object} IdResponse
+// @Success 200 {object} FileNameResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/upload/{partition} [post]
@@ -72,5 +73,8 @@ func (s *Server) uploadFile(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	s.responseSuccessWithData(c, "id", name)
+	c.JSON(http.StatusOK, FileNameResponse{
+		Name: name,
+		ErrMsg:  "success",
+	})
 }
