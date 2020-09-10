@@ -2,16 +2,31 @@ package tests
 
 import (
 	"context"
+	"encoding/json"
 	"xg/da"
 	"xg/entity"
+	"xg/route"
 )
 
 type APIClient struct {
-
 }
 
-func (a *APIClient) ListAuths(ctx context.Context) ([]*entity.Auth, error) {
-	panic("implement me")
+func (a *APIClient) ListAuths(ctx context.Context, token string) (*route.AuthsListResponse, error) {
+	req := JSONRequest{
+		URL:      "/api/auths",
+		Method:   "GET",
+		Token:    token,
+	}
+	resp, err := req.DoRequest(ctx)
+	if err != nil {
+		return nil, err
+	}
+	responseObj := new(route.AuthsListResponse)
+	err = json.Unmarshal(resp, responseObj)
+	if err != nil {
+		return nil, err
+	}
+	return responseObj, nil
 }
 
 func (a *APIClient) CreateOrder(ctx context.Context, req *entity.CreateOrderRequest, operator *entity.JWTUser) (int, error) {

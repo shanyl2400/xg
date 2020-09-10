@@ -11,6 +11,7 @@ import (
 )
 var (
 	HttpTimeout = time.Second * 5
+	BaseURL = "http://localhost:8088/"
 )
 
 type JSONRequest struct {
@@ -42,7 +43,7 @@ func (jr JSONRequest) DoRequest(ctx context.Context) ([]byte, error){
 		}
 		reqBody = bytes.NewBuffer(jsonData)
 	}
-	request, err := http.NewRequest(jr.Method, jr.URL + queryStr, reqBody)
+	request, err := http.NewRequest(jr.Method, BaseURL + jr.URL + queryStr, reqBody)
 	if err != nil{
 		return nil, err
 	}
