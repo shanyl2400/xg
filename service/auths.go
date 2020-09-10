@@ -8,8 +8,11 @@ import (
 	"xg/log"
 )
 
-type AuthService struct {
+type IAuthService interface{
+	ListAuths(ctx context.Context) ([]*entity.Auth, error)
+}
 
+type AuthService struct {
 }
 
 func (a *AuthService) ListAuths(ctx context.Context) ([]*entity.Auth, error){

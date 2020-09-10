@@ -10,6 +10,13 @@ import (
 	"xg/log"
 )
 
+type IRoleService interface{
+	CreateRole(ctx context.Context, name string, authList []int) (int, error)
+	ListRole(ctx context.Context) ([]*entity.Role, error)
+	SetRoleAuth(ctx context.Context, id int, ids []int) error
+	GetRoleAuth(ctx context.Context, id int) ([]*entity.Auth, error)
+}
+
 type RoleService struct {
 }
 

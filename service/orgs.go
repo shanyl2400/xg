@@ -12,6 +12,19 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+type IOrgService interface{
+	CreateOrg(ctx context.Context, req *entity.CreateOrgRequest, operator *entity.JWTUser) (int, error)
+	CreateOrgWithSubOrgs(ctx context.Context, req *entity.CreateOrgWithSubOrgsRequest, operator *entity.JWTUser) (int, error)
+	UpdateOrgById(ctx context.Context, req *entity.UpdateOrgRequest, operator *entity.JWTUser) error
+	RevokeOrgById(ctx context.Context, id int, operator *entity.JWTUser) error
+	CheckOrgById(ctx context.Context, id, status int, operator *entity.JWTUser) error
+	GetOrgById(ctx context.Context, orgId int) (*entity.Org, error)
+	GetOrgSubjectsById(ctx context.Context, orgId int) ([]string, error)
+	ListOrgs(ctx context.Context) (int, []*entity.Org, error)
+	ListOrgsByStatus(ctx context.Context, status []int) (int, []*entity.Org, error)
+	SearchSubOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error)
+}
+
 type OrgService struct {
 }
 

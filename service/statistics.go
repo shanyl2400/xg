@@ -12,6 +12,10 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+type IStatisticsService interface{
+	Summary(ctx context.Context) (*entity.SummaryInfo, error)
+	SearchYearRecords(ctx context.Context, key string) ([]*entity.StatisticRecord, error)
+}
 type StatisticsService struct {
 }
 

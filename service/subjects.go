@@ -9,6 +9,11 @@ import (
 	"xg/log"
 )
 
+type ISubjectService interface{
+	ListSubjects(ctx context.Context, parentID int) ([]*entity.Subject, error)
+	CreateSubject(ctx context.Context, req entity.CreateSubjectRequest) (int, error)
+}
+
 type SubjectService struct {
 }
 

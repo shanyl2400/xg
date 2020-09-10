@@ -8,8 +8,12 @@ import (
 	"xg/log"
 )
 
-type OrderSourceService struct {
+type IOrderSourceService interface{
+	ListOrderService(ctx context.Context)([]*entity.OrderSource, error)
+	CreateOrderService(ctx context.Context, name string)(int, error)
+}
 
+type OrderSourceService struct {
 }
 
 func (o *OrderSourceService) ListOrderService(ctx context.Context)([]*entity.OrderSource, error){

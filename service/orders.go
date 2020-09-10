@@ -11,6 +11,21 @@ import (
 	"xg/log"
 )
 
+type IOrderService interface{
+	CreateOrder(ctx context.Context, req *entity.CreateOrderRequest, operator *entity.JWTUser) (int, error)
+	SignUpOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error
+	RevokeOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error
+	PayOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error
+	PaybackOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error
+	ConfirmOrderPay(ctx context.Context, orderPayId int, status int, operator *entity.JWTUser) error
+	AddOrderRemark(ctx context.Context, orderId int, content string, operator *entity.JWTUser) error
+	SearchOrderPayRecords(ctx context.Context, condition *entity.SearchPayRecordCondition, operator *entity.JWTUser) (*entity.PayRecordInfoList, error)
+	SearchOrders(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) (*entity.OrderInfoList, error)
+	SearchOrderWithAuthor(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) (*entity.OrderInfoList, error)
+	SearchOrderWithOrgId(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) (*entity.OrderInfoList, error)
+	GetOrderById(ctx context.Context, orderId int, operator *entity.JWTUser) (*entity.OrderInfoWithRecords, error)
+}
+
 type OrderService struct {
 }
 type orderEntity struct {
@@ -18,24 +33,6 @@ type orderEntity struct {
 	ToOrgID   int `json:"to_org_id"`
 }
 
-func (o *OrderService) checkEntity(ctx context.Context, orderEntity orderEntity) error {
-	_, err := da.GetStudentModel().GetStudentById(ctx, orderEntity.StudentID)
-	if err != nil {
-		log.Warning.Println("Can't find student when check entity, orderEntity:", orderEntity)
-		return err
-	}
-
-	org, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), orderEntity.ToOrgID)
-	if err != nil {
-		log.Warning.Println("Can't find org when check entity, orderEntity:", orderEntity)
-		return err
-	}
-	if org.Status != entity.OrgStatusCertified {
-		return ErrInvalidOrgStatus
-	}
-
-	return nil
-}
 func (o *OrderService) CreateOrder(ctx context.Context, req *entity.CreateOrderRequest, operator *entity.JWTUser) (int, error) {
 	//Check entity
 	err := o.checkEntity(ctx, orderEntity{
@@ -113,7 +110,6 @@ func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequ
 
 	return nil
 }
-
 func (o *OrderService) RevokeOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error {
 	orderObj, err := da.GetOrderModel().GetOrderById(ctx, orderId)
 	if err != nil {
@@ -135,36 +131,6 @@ func (o *OrderService) RevokeOrder(ctx context.Context, orderId int, operator *e
 	err = da.GetOrderModel().UpdateOrderStatusTx(ctx, db.Get(), orderId, entity.OrderStatusRevoked)
 	if err != nil {
 		log.Warning.Printf("Update order status failed, order: %#v, orderId: %#v, err: %v\n", orderObj, orderId, err)
-		return err
-	}
-	return nil
-}
-
-func (o *OrderService) payOrder(ctx context.Context, mode int, req *entity.OrderPayRequest, operator *entity.JWTUser) error {
-	//检查order状态
-	orderObj, err := da.GetOrderModel().GetOrderById(ctx, req.OrderID)
-	if err != nil {
-		log.Warning.Printf("Get order failed, req: %#v, err: %v\n", req, err)
-		return err
-	}
-	//检查是否为本机构的订单
-	err = o.checkOrderOrg(ctx, operator.OrgId, orderObj.Order.ToOrgID)
-	if err != nil {
-		log.Warning.Printf("Check order org failed, order: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
-		return err
-	}
-
-	//增加orderPay
-	payData := &da.OrderPayRecord{
-		OrderID: req.OrderID,
-		Mode:    mode,
-		Title:   req.Title,
-		Amount:  req.Amount,
-		Status:  entity.OrderPayStatusPending,
-	}
-	_, err = da.GetOrderModel().AddOrderPayRecordTx(ctx, db.Get(), payData)
-	if err != nil {
-		log.Warning.Printf("Add order payment failed, order: %#v, payData: %#v, err: %v\n", orderObj, payData, err)
 		return err
 	}
 	return nil
@@ -326,6 +292,144 @@ func (o *OrderService) SearchOrderWithOrgId(ctx context.Context, condition *enti
 	return o.SearchOrders(ctx, condition, operator)
 }
 
+func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *entity.JWTUser) (*entity.OrderInfoWithRecords, error) {
+	orderObj, err := da.GetOrderModel().GetOrderById(ctx, orderId)
+	if err != nil {
+		log.Warning.Printf("Get order failed, orderId: %#v, operator: %#v, err: %v\n", orderId, operator, err)
+		return nil, err
+	}
+	err = o.checkOrderAuthorize(ctx, orderObj, operator)
+	if err != nil {
+		log.Warning.Printf("Check order authorize failed, order: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
+		return nil, err
+	}
+
+	var student *da.Student
+	var org *da.Org
+	var user *da.User
+	_, students, err := da.GetStudentModel().SearchStudents(ctx, da.SearchStudentCondition{
+		StudentIDList: []int{orderObj.Order.StudentID},
+	})
+	if err != nil {
+		log.Warning.Printf("Search students failed, orderObj: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
+		return nil, err
+	}
+	if len(students) < 1 {
+		return nil, ErrInvalidStudentID
+	}
+	student = students[0]
+
+	orgs, err := da.GetOrgModel().ListOrgs(ctx)
+	if err != nil {
+		log.Warning.Printf("Search orgs failed, orderObj: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
+		return nil, err
+	}
+	for i := range orgs {
+		if orgs[i].ID == orderObj.Order.ToOrgID {
+			org = orgs[i]
+		}
+	}
+	if org == nil {
+		log.Warning.Printf("Invalid to Org, orgs: %#v, org: %#v, err: %v\n", orgs, org, ErrInvalidToOrgID)
+		return nil, ErrInvalidToOrgID
+	}
+
+	users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
+		IDList: []int{orderObj.Order.PublisherID},
+	})
+	if err != nil {
+		log.Warning.Printf("Search users failed, orderObj: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
+		return nil, err
+	}
+	if len(users) < 1 {
+		log.Warning.Printf("Invalid to users, users: %#v, err: %v\n", users, ErrInvalidPublisherID)
+		return nil, ErrInvalidPublisherID
+	}
+	user = users[0]
+
+	res := &entity.OrderInfoWithRecords{
+		OrderInfo: entity.OrderInfo{
+			ID:            orderObj.Order.ID,
+			StudentID:     orderObj.Order.StudentID,
+			ToOrgID:       orderObj.Order.ToOrgID,
+			IntentSubject: strings.Split(orderObj.Order.IntentSubjects, ","),
+			PublisherID:   orderObj.Order.PublisherID,
+			Status:        orderObj.Order.Status,
+		},
+		StudentSummary: &entity.StudentSummaryInfo{
+			ID:        student.ID,
+			Name:      student.Name,
+			Gender:    student.Gender,
+			Telephone: student.Telephone,
+			Address:   student.Address,
+			Note:      student.Note,
+		},
+		OrgName:       org.Name,
+		PublisherName: user.Name,
+	}
+
+	//添加Payment和remark
+	payRecords := make([]*entity.OrderPayRecord, len(orderObj.PaymentInfo))
+	for i := range orderObj.PaymentInfo {
+		payRecords[i] = &entity.OrderPayRecord{
+			ID:        orderObj.PaymentInfo[i].ID,
+			OrderID:   orderObj.PaymentInfo[i].OrderID,
+			Mode:      orderObj.PaymentInfo[i].Mode,
+			Amount:    orderObj.PaymentInfo[i].Amount,
+			Status:    orderObj.PaymentInfo[i].Status,
+			UpdatedAt: orderObj.PaymentInfo[i].UpdatedAt,
+			CreatedAt: orderObj.PaymentInfo[i].CreatedAt,
+			Title:     orderObj.PaymentInfo[i].Title,
+		}
+	}
+	remarkRecords := make([]*entity.OrderRemarkRecord, len(orderObj.RemarkInfo))
+	for i := range orderObj.RemarkInfo {
+		remarkRecords[i] = &entity.OrderRemarkRecord{
+			ID:        orderObj.RemarkInfo[i].ID,
+			OrderID:   orderObj.RemarkInfo[i].OrderID,
+			Author:    orderObj.RemarkInfo[i].Author,
+			Mode:      orderObj.RemarkInfo[i].Mode,
+			Content:   orderObj.RemarkInfo[i].Content,
+			UpdatedAt: orderObj.RemarkInfo[i].UpdatedAt,
+			CreatedAt: orderObj.RemarkInfo[i].CreatedAt,
+		}
+	}
+	res.PaymentInfo = payRecords
+	res.RemarkInfo = remarkRecords
+
+	return res, nil
+}
+
+func (o *OrderService) payOrder(ctx context.Context, mode int, req *entity.OrderPayRequest, operator *entity.JWTUser) error {
+	//检查order状态
+	orderObj, err := da.GetOrderModel().GetOrderById(ctx, req.OrderID)
+	if err != nil {
+		log.Warning.Printf("Get order failed, req: %#v, err: %v\n", req, err)
+		return err
+	}
+	//检查是否为本机构的订单
+	err = o.checkOrderOrg(ctx, operator.OrgId, orderObj.Order.ToOrgID)
+	if err != nil {
+		log.Warning.Printf("Check order org failed, order: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
+		return err
+	}
+
+	//增加orderPay
+	payData := &da.OrderPayRecord{
+		OrderID: req.OrderID,
+		Mode:    mode,
+		Title:   req.Title,
+		Amount:  req.Amount,
+		Status:  entity.OrderPayStatusPending,
+	}
+	_, err = da.GetOrderModel().AddOrderPayRecordTx(ctx, db.Get(), payData)
+	if err != nil {
+		log.Warning.Printf("Add order payment failed, order: %#v, payData: %#v, err: %v\n", orderObj, payData, err)
+		return err
+	}
+	return nil
+}
+
 func (o *OrderService) getPayRecordInfo(ctx context.Context, records []*da.OrderPayRecord) ([]*entity.PayRecordInfo, error) {
 	res := make([]*entity.PayRecordInfo, len(records))
 	orderIdsList := make([]int, len(records))
@@ -437,112 +541,23 @@ func (o *OrderService) getOrderInfoDetails(ctx context.Context, orders []*da.Ord
 	return orderInfos, nil
 }
 
-func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *entity.JWTUser) (*entity.OrderInfoWithRecords, error) {
-	orderObj, err := da.GetOrderModel().GetOrderById(ctx, orderId)
+func (o *OrderService) checkEntity(ctx context.Context, orderEntity orderEntity) error {
+	_, err := da.GetStudentModel().GetStudentById(ctx, orderEntity.StudentID)
 	if err != nil {
-		log.Warning.Printf("Get order failed, orderId: %#v, operator: %#v, err: %v\n", orderId, operator, err)
-		return nil, err
+		log.Warning.Println("Can't find student when check entity, orderEntity:", orderEntity)
+		return err
 	}
-	err = o.checkOrderAuthorize(ctx, orderObj, operator)
+
+	org, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), orderEntity.ToOrgID)
 	if err != nil {
-		log.Warning.Printf("Check order authorize failed, order: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
-		return nil, err
+		log.Warning.Println("Can't find org when check entity, orderEntity:", orderEntity)
+		return err
+	}
+	if org.Status != entity.OrgStatusCertified {
+		return ErrInvalidOrgStatus
 	}
 
-	var student *da.Student
-	var org *da.Org
-	var user *da.User
-	_, students, err := da.GetStudentModel().SearchStudents(ctx, da.SearchStudentCondition{
-		StudentIDList: []int{orderObj.Order.StudentID},
-	})
-	if err != nil {
-		log.Warning.Printf("Search students failed, orderObj: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
-		return nil, err
-	}
-	if len(students) < 1 {
-		return nil, ErrInvalidStudentID
-	}
-	student = students[0]
-
-	orgs, err := da.GetOrgModel().ListOrgs(ctx)
-	if err != nil {
-		log.Warning.Printf("Search orgs failed, orderObj: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
-		return nil, err
-	}
-	for i := range orgs {
-		if orgs[i].ID == orderObj.Order.ToOrgID {
-			org = orgs[i]
-		}
-	}
-	if org == nil {
-		log.Warning.Printf("Invalid to Org, orgs: %#v, org: %#v, err: %v\n", orgs, org, ErrInvalidToOrgID)
-		return nil, ErrInvalidToOrgID
-	}
-
-	users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
-		IDList: []int{orderObj.Order.PublisherID},
-	})
-	if err != nil {
-		log.Warning.Printf("Search users failed, orderObj: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
-		return nil, err
-	}
-	if len(users) < 1 {
-		log.Warning.Printf("Invalid to users, users: %#v, err: %v\n", users, ErrInvalidPublisherID)
-		return nil, ErrInvalidPublisherID
-	}
-	user = users[0]
-
-	res := &entity.OrderInfoWithRecords{
-		OrderInfo: entity.OrderInfo{
-			ID:            orderObj.Order.ID,
-			StudentID:     orderObj.Order.StudentID,
-			ToOrgID:       orderObj.Order.ToOrgID,
-			IntentSubject: strings.Split(orderObj.Order.IntentSubjects, ","),
-			PublisherID:   orderObj.Order.PublisherID,
-			Status:        orderObj.Order.Status,
-		},
-		StudentSummary: &entity.StudentSummaryInfo{
-			ID:        student.ID,
-			Name:      student.Name,
-			Gender:    student.Gender,
-			Telephone: student.Telephone,
-			Address:   student.Address,
-			Note:      student.Note,
-		},
-		OrgName:       org.Name,
-		PublisherName: user.Name,
-	}
-
-	//添加Payment和remark
-	payRecords := make([]*entity.OrderPayRecord, len(orderObj.PaymentInfo))
-	for i := range orderObj.PaymentInfo {
-		payRecords[i] = &entity.OrderPayRecord{
-			ID:        orderObj.PaymentInfo[i].ID,
-			OrderID:   orderObj.PaymentInfo[i].OrderID,
-			Mode:      orderObj.PaymentInfo[i].Mode,
-			Amount:    orderObj.PaymentInfo[i].Amount,
-			Status:    orderObj.PaymentInfo[i].Status,
-			UpdatedAt: orderObj.PaymentInfo[i].UpdatedAt,
-			CreatedAt: orderObj.PaymentInfo[i].CreatedAt,
-			Title:     orderObj.PaymentInfo[i].Title,
-		}
-	}
-	remarkRecords := make([]*entity.OrderRemarkRecord, len(orderObj.RemarkInfo))
-	for i := range orderObj.RemarkInfo {
-		remarkRecords[i] = &entity.OrderRemarkRecord{
-			ID:        orderObj.RemarkInfo[i].ID,
-			OrderID:   orderObj.RemarkInfo[i].OrderID,
-			Author:    orderObj.RemarkInfo[i].Author,
-			Mode:      orderObj.RemarkInfo[i].Mode,
-			Content:   orderObj.RemarkInfo[i].Content,
-			UpdatedAt: orderObj.RemarkInfo[i].UpdatedAt,
-			CreatedAt: orderObj.RemarkInfo[i].CreatedAt,
-		}
-	}
-	res.PaymentInfo = payRecords
-	res.RemarkInfo = remarkRecords
-
-	return res, nil
+	return nil
 }
 
 func (o *OrderService) checkOrderAuthorize(ctx context.Context, order *da.OrderInfo, operator *entity.JWTUser) error {

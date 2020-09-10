@@ -16,6 +16,15 @@ const (
 	ChallengeDate = 60 * time.Hour * 24
 )
 
+type IStudentService interface{
+	CreateStudent(ctx context.Context, c *entity.CreateStudentRequest, operator *entity.JWTUser) (int, int, error)
+	UpdateStudent(ctx context.Context, id int, req *entity.UpdateStudentRequest) error
+	GetStudentById(ctx context.Context, id int, operator *entity.JWTUser) (*entity.StudentInfosWithOrders, error)
+	SearchPrivateStudents(ctx context.Context, ss *entity.SearchStudentRequest, operator *entity.JWTUser) (int, []*entity.StudentInfo, error)
+	SearchStudents(ctx context.Context, ss *entity.SearchStudentRequest, operator *entity.JWTUser) (int, []*entity.StudentInfo, error)
+	AddStudentNote(ctx context.Context, c entity.AddStudentNoteRequest) error
+}
+
 type StudentService struct {
 }
 
