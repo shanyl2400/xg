@@ -123,7 +123,7 @@ func initRole() {
 		panic(err)
 	}
 
-	err = GetRoleModel().SetRoleAuth(context.Background(), adminId, []int{1, 3, 4, 5, 7, 8, 9, 10, 11, 12})
+	err = GetRoleModel().SetRoleAuth(context.Background(), db.Get(), adminId, []int{1, 3, 4, 5, 7, 8, 9, 10, 11, 12})
 	if err != nil {
 		panic(err)
 	}
@@ -132,7 +132,7 @@ func initRole() {
 	if err != nil {
 		panic(err)
 	}
-	err = GetRoleModel().SetRoleAuth(context.Background(), enterId, []int{1, 2})
+	err = GetRoleModel().SetRoleAuth(context.Background(), db.Get(), enterId, []int{1, 2})
 	if err != nil {
 		panic(err)
 	}
@@ -141,7 +141,7 @@ func initRole() {
 	if err != nil {
 		panic(err)
 	}
-	err = GetRoleModel().SetRoleAuth(context.Background(), dispatchId, []int{3})
+	err = GetRoleModel().SetRoleAuth(context.Background(), db.Get(), dispatchId, []int{3})
 	if err != nil {
 		panic(err)
 	}
@@ -150,7 +150,7 @@ func initRole() {
 	if err != nil {
 		panic(err)
 	}
-	err = GetRoleModel().SetRoleAuth(context.Background(), userId, []int{11})
+	err = GetRoleModel().SetRoleAuth(context.Background(), db.Get(), userId, []int{11})
 	if err != nil {
 		panic(err)
 	}
@@ -159,7 +159,7 @@ func initRole() {
 	if err != nil {
 		panic(err)
 	}
-	err = GetRoleModel().SetRoleAuth(context.Background(), orgId, []int{9})
+	err = GetRoleModel().SetRoleAuth(context.Background(), db.Get(), orgId, []int{9})
 	if err != nil {
 		panic(err)
 	}
@@ -168,7 +168,7 @@ func initRole() {
 	if err != nil {
 		panic(err)
 	}
-	err = GetRoleModel().SetRoleAuth(context.Background(), checkId, []int{4, 5})
+	err = GetRoleModel().SetRoleAuth(context.Background(), db.Get(), checkId, []int{4, 5})
 	if err != nil {
 		panic(err)
 	}
@@ -177,7 +177,7 @@ func initRole() {
 	if err != nil {
 		panic(err)
 	}
-	err = GetRoleModel().SetRoleAuth(context.Background(), outOrgId, []int{6})
+	err = GetRoleModel().SetRoleAuth(context.Background(), db.Get(), outOrgId, []int{6})
 	if err != nil {
 		panic(err)
 	}

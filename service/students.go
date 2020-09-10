@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/jinzhu/gorm"
 	"strings"
 	"sync"
 	"time"
@@ -64,22 +65,25 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 		Note:          c.Note,
 	}
 	log.Info.Printf("create student, student: %#v, err: %v\n", student, err)
-	tx := db.Get().Begin()
-	//添加学生记录
-	id, err := da.GetStudentModel().CreateStudent(ctx, tx, student)
-	if err != nil {
-		log.Warning.Printf("Create student failed, student: %#v, err: %v\n", student, err)
-		tx.Rollback()
+
+	id, err := db.GetTransResult(ctx, func(ctx context.Context, tx *gorm.DB) (interface{}, error) {
+		//添加学生记录
+		id, err := da.GetStudentModel().CreateStudent(ctx, tx, student)
+		if err != nil {
+			log.Warning.Printf("Create student failed, student: %#v, err: %v\n", student, err)
+			return -1, err
+		}
+		err = GetStatisticsService().AddStudent(ctx, tx, 1)
+		if err != nil {
+			log.Warning.Printf("Add student statistics failed, student: %#v, err: %v\n", student, err)
+			return -1, err
+		}
+		return id, nil
+	})
+	if err != nil{
 		return -1, -1, err
 	}
-	err = GetStatisticsService().AddStudent(ctx, tx, 1)
-	if err != nil {
-		log.Warning.Printf("Add student statistics failed, student: %#v, err: %v\n", student, err)
-		tx.Rollback()
-		return -1, -1, err
-	}
-	tx.Commit()
-	return id, status, nil
+	return id.(int), status, nil
 }
 
 func (s *StudentService) UpdateStudent(ctx context.Context, id int, req *entity.UpdateStudentRequest) error {

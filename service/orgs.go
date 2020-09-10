@@ -25,31 +25,33 @@ func (s *OrgService) CreateOrg(ctx context.Context, req *entity.CreateOrgRequest
 }
 
 func (s *OrgService) CreateOrgWithSubOrgs(ctx context.Context, req *entity.CreateOrgWithSubOrgsRequest, operator *entity.JWTUser) (int, error) {
-	tx := db.Get().Begin()
-	cid, err := s.createOrg(ctx, tx, &req.OrgData, operator)
-	if err != nil {
-		log.Warning.Printf("Create org failed, req: %#v, err: %v\n", req, err)
-		tx.Rollback()
-		return -1, nil
-	}
-	for i := range req.SubOrgs {
-		status := entity.OrgStatusCreated
-		_, err = da.GetOrgModel().CreateOrg(ctx, tx, da.Org{
-			Name:      req.OrgData.Name + "-" + req.SubOrgs[i].Name,
-			Subjects:  strings.Join(req.SubOrgs[i].Subjects, ","),
-			Status:    status,
-			Address:   req.SubOrgs[i].Address,
-			ParentID:  cid,
-			Telephone: req.SubOrgs[i].Telephone,
-		})
+	cid, err := db.GetTransResult(ctx, func(ctx context.Context, tx *gorm.DB) (interface{}, error) {
+		cid, err := s.createOrg(ctx, tx, &req.OrgData, operator)
 		if err != nil {
-			log.Warning.Printf("Create sub org failed, req: %#v, err: %v\n", req, err)
-			tx.Rollback()
+			log.Warning.Printf("Create org failed, req: %#v, err: %v\n", req, err)
 			return -1, nil
 		}
+		for i := range req.SubOrgs {
+			status := entity.OrgStatusCreated
+			_, err = da.GetOrgModel().CreateOrg(ctx, tx, da.Org{
+				Name:      req.OrgData.Name + "-" + req.SubOrgs[i].Name,
+				Subjects:  strings.Join(req.SubOrgs[i].Subjects, ","),
+				Status:    status,
+				Address:   req.SubOrgs[i].Address,
+				ParentID:  cid,
+				Telephone: req.SubOrgs[i].Telephone,
+			})
+			if err != nil {
+				log.Warning.Printf("Create sub org failed, req: %#v, err: %v\n", req, err)
+				return -1, nil
+			}
+		}
+		return cid, nil
+	})
+	if err != nil{
+		return -1, err
 	}
-	tx.Commit()
-	return cid, nil
+	return cid.(int), nil
 }
 
 func (s *OrgService) UpdateOrgById(ctx context.Context, req *entity.UpdateOrgRequest, operator *entity.JWTUser) error {
@@ -90,26 +92,29 @@ func (s *OrgService) RevokeOrgById(ctx context.Context, id int, operator *entity
 		log.Warning.Printf("Get orgs by parent failed, org: %#v, err: %v\n", org, err)
 		return err
 	}
-	tx := db.Get().Begin()
-	err = da.GetOrgModel().UpdateOrg(ctx, tx, id, da.Org{
-		Status: entity.OrgStatusRevoked,
-	})
-	if err != nil {
-		log.Warning.Printf("Update org status failed, org: %#v, err: %v\n", org, err)
-		tx.Rollback()
-		return err
-	}
-	for i := range subOrgs {
-		err = da.GetOrgModel().UpdateOrg(ctx, tx, subOrgs[i].ID, da.Org{
+
+	err = db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
+		err = da.GetOrgModel().UpdateOrg(ctx, tx, id, da.Org{
 			Status: entity.OrgStatusRevoked,
 		})
 		if err != nil {
-			log.Warning.Printf("Update sub org status failed, sub org: %#v, err: %v\n", subOrgs[i], err)
-			tx.Rollback()
+			log.Warning.Printf("Update org status failed, org: %#v, err: %v\n", org, err)
 			return err
 		}
+		for i := range subOrgs {
+			err = da.GetOrgModel().UpdateOrg(ctx, tx, subOrgs[i].ID, da.Org{
+				Status: entity.OrgStatusRevoked,
+			})
+			if err != nil {
+				log.Warning.Printf("Update sub org status failed, sub org: %#v, err: %v\n", subOrgs[i], err)
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil{
+		return err
 	}
-	tx.Commit()
 	return nil
 }
 
@@ -133,26 +138,29 @@ func (s *OrgService) CheckOrgById(ctx context.Context, id, status int, operator 
 		log.Warning.Printf("Get orgs by parent id failed, org: %#v, err: %v\n", org, err)
 		return err
 	}
-	tx := db.Get().Begin()
-	err = da.GetOrgModel().UpdateOrg(ctx, tx, id, da.Org{
-		Status: status,
-	})
-	if err != nil {
-		log.Warning.Printf("Updaste org status failed, org: %#v, err: %v\n", org, err)
-		tx.Rollback()
-		return err
-	}
-	for i := range subOrgs {
-		err = da.GetOrgModel().UpdateOrg(ctx, tx, subOrgs[i].ID, da.Org{
+
+	err = db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
+		err = da.GetOrgModel().UpdateOrg(ctx, tx, id, da.Org{
 			Status: status,
 		})
 		if err != nil {
-			log.Warning.Printf("Updaste sub org status failed, org: %#v, err: %v\n", subOrgs[i], err)
-			tx.Rollback()
+			log.Warning.Printf("Updaste org status failed, org: %#v, err: %v\n", org, err)
 			return err
 		}
+		for i := range subOrgs {
+			err = da.GetOrgModel().UpdateOrg(ctx, tx, subOrgs[i].ID, da.Org{
+				Status: status,
+			})
+			if err != nil {
+				log.Warning.Printf("Updaste sub org status failed, org: %#v, err: %v\n", subOrgs[i], err)
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
 	}
-	tx.Commit()
 	return nil
 }
 

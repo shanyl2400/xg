@@ -2,8 +2,10 @@ package service
 
 import (
 	"context"
+	"github.com/jinzhu/gorm"
 	"sync"
 	"xg/da"
+	"xg/db"
 	"xg/entity"
 	"xg/log"
 )
@@ -12,17 +14,23 @@ type RoleService struct {
 }
 
 func (r *RoleService) CreateRole(ctx context.Context, name string, authList []int) (int, error) {
-	id, err := da.GetRoleModel().CreateRole(ctx, name)
-	if err != nil {
-		log.Warning.Printf("Get role failed, name: %#v, authList: %#v, err: %v\n", name, authList, err)
+	id, err := db.GetTransResult(ctx, func(ctx context.Context, tx *gorm.DB) (interface{}, error) {
+		id, err := da.GetRoleModel().CreateRole(ctx, tx, name)
+		if err != nil {
+			log.Warning.Printf("Get role failed, name: %#v, authList: %#v, err: %v\n", name, authList, err)
+			return -1, err
+		}
+		err = da.GetRoleModel().SetRoleAuth(ctx, tx, id, authList)
+		if err != nil {
+			log.Warning.Printf("Set role failed, name: %#v, authList: %#v, err: %v\n", name, authList, err)
+			return -1, err
+		}
+		return id, nil
+	})
+	if err != nil{
 		return -1, err
 	}
-	err = da.GetRoleModel().SetRoleAuth(ctx, id, authList)
-	if err != nil {
-		log.Warning.Printf("Set role failed, name: %#v, authList: %#v, err: %v\n", name, authList, err)
-		return -1, err
-	}
-	return id, nil
+	return id.(int), nil
 }
 
 func (r *RoleService) ListRole(ctx context.Context) ([]*entity.Role, error) {
@@ -48,11 +56,18 @@ func (r *RoleService) ListRole(ctx context.Context) ([]*entity.Role, error) {
 	return res, nil
 }
 func (r *RoleService) SetRoleAuth(ctx context.Context, id int, ids []int) error {
-	err := da.GetRoleModel().SetRoleAuth(ctx, id, ids)
+	err := db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
+		err := da.GetRoleModel().SetRoleAuth(ctx, tx, id, ids)
+		if err != nil{
+			log.Warning.Printf("Set role auth failed, roleId: %#v, authIds: %#v, err: %v\n", id, ids, err)
+			return err
+		}
+		return nil
+	})
 	if err != nil{
-		log.Warning.Printf("Set role auth failed, roleId: %#v, authIds: %#v, err: %v\n", id, ids, err)
 		return err
 	}
+
 	return nil
 }
 

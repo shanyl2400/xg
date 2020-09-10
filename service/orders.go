@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/jinzhu/gorm"
 	"strings"
 	"sync"
 	"xg/da"
@@ -83,29 +84,33 @@ func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequ
 		log.Warning.Printf("Check order status failed, req: %#v, order: %#v, err: %v\n", req, orderObj, err)
 		return ErrNoAuthToOperateOrder
 	}
-	tx := db.Get().Begin()
-	//修改order状态
-	err = da.GetOrderModel().UpdateOrderStatusTx(ctx, tx, req.OrderID, entity.OrderStatusSigned)
-	if err != nil {
-		log.Warning.Printf("Update order status failed, req: %#v, operator: %#v, err: %v\n", req, operator, err)
-		tx.Rollback()
+
+	err = db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
+		//修改order状态
+		err = da.GetOrderModel().UpdateOrderStatusTx(ctx, tx, req.OrderID, entity.OrderStatusSigned)
+		if err != nil {
+			log.Warning.Printf("Update order status failed, req: %#v, operator: %#v, err: %v\n", req, operator, err)
+			return err
+		}
+		//增加orderPay
+		payData := &da.OrderPayRecord{
+			OrderID: req.OrderID,
+			Mode:    entity.OrderPayModePay,
+			Title:   req.Title,
+			Amount:  req.Amount,
+			Status:  entity.OrderPayStatusPending,
+		}
+		_, err = da.GetOrderModel().AddOrderPayRecordTx(ctx, tx, payData)
+		if err != nil {
+			log.Warning.Printf("Add order pay failed, req: %#v, payData: %#v, err: %v\n", req, payData, err)
+			return err
+		}
+		return nil
+	})
+	if err != nil{
 		return err
 	}
-	//增加orderPay
-	payData := &da.OrderPayRecord{
-		OrderID: req.OrderID,
-		Mode:    entity.OrderPayModePay,
-		Title:   req.Title,
-		Amount:  req.Amount,
-		Status:  entity.OrderPayStatusPending,
-	}
-	_, err = da.GetOrderModel().AddOrderPayRecordTx(ctx, tx, payData)
-	if err != nil {
-		log.Warning.Printf("Add order pay failed, req: %#v, payData: %#v, err: %v\n", req, payData, err)
-		tx.Rollback()
-		return err
-	}
-	tx.Commit()
+
 	return nil
 }
 
@@ -179,34 +184,34 @@ func (o *OrderService) PaybackOrder(ctx context.Context, req *entity.OrderPayReq
 func (o *OrderService) ConfirmOrderPay(ctx context.Context, orderPayId int, status int, operator *entity.JWTUser) error {
 	//所有payRecord都确认，才能将order确认
 	//检查order状态
-	tx := db.Get().Begin()
 	//修改支付记录状态
-	err := da.GetOrderModel().UpdateOrderPayRecordTx(ctx, tx, orderPayId, status)
-	if err != nil {
-		log.Warning.Printf("Update order pay record failed, orderPayId: %#v, err: %v\n", orderPayId, err)
-		tx.Rollback()
+	err := db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
+		err := da.GetOrderModel().UpdateOrderPayRecordTx(ctx, tx, orderPayId, status)
+		if err != nil {
+			log.Warning.Printf("Update order pay record failed, orderPayId: %#v, err: %v\n", orderPayId, err)
+			return err
+		}
+		if status == entity.OrderPayStatusChecked {
+			payment, err := da.GetOrderModel().GetPayRecordById(ctx, orderPayId)
+			if err != nil {
+				log.Warning.Printf("Get pay record failed, orderPayId: %#v, err: %v\n", orderPayId, err)
+				return err
+			}
+			performance := payment.Amount
+			if payment.Mode == entity.OrderPayModePayback {
+				performance = -performance
+			}
+			err = GetStatisticsService().AddPerformance(ctx, tx, performance)
+			if err != nil {
+				log.Warning.Printf("Add performance failed, payment: %#v, performance: %#v, err: %v\n", payment, performance, err)
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil{
 		return err
 	}
-	if status == entity.OrderPayStatusChecked {
-		payment, err := da.GetOrderModel().GetPayRecordById(ctx, orderPayId)
-		if err != nil {
-			log.Warning.Printf("Get pay record failed, orderPayId: %#v, err: %v\n", orderPayId, err)
-			tx.Rollback()
-			return err
-		}
-		performance := payment.Amount
-		if payment.Mode == entity.OrderPayModePayback {
-			performance = -performance
-		}
-		err = GetStatisticsService().AddPerformance(ctx, tx, performance)
-		if err != nil {
-			log.Warning.Printf("Add performance failed, payment: %#v, performance: %#v, err: %v\n", payment, performance, err)
-			tx.Rollback()
-			return err
-		}
-	}
-
-	tx.Commit()
 	return nil
 }
 

@@ -2,6 +2,7 @@ package da
 
 import (
 	"context"
+	"github.com/jinzhu/gorm"
 	"sync"
 	"time"
 	"xg/db"
@@ -9,12 +10,12 @@ import (
 )
 
 type IRolesModel interface {
-	CreateRole(ctx context.Context, name string) (int, error)
+	CreateRole(ctx context.Context, tx *gorm.DB, name string) (int, error)
 	CreateRoleWithID(ctx context.Context, id int, name string) (int, error)
 	ListRoles(ctx context.Context) ([]*Role, error)
 	GetRoleById(ctx context.Context, id int) (*Role, error)
 
-	SetRoleAuth(ctx context.Context, id int, authIdList []int) error
+	SetRoleAuth(ctx context.Context, tx *gorm.DB, id int, authIdList []int) error
 	ListRoleAuth(ctx context.Context, id int) (*RoleAuthInfo, error)
 }
 
@@ -40,14 +41,14 @@ type RoleAuthInfo struct {
 
 type DBRoleModel struct{}
 
-func (d *DBRoleModel) CreateRole(ctx context.Context, name string) (int, error) {
+func (d *DBRoleModel) CreateRole(ctx context.Context, tx *gorm.DB, name string) (int, error) {
 	now := time.Now()
 	role := &Role{
 		Name:      name,
 		UpdatedAt: &now,
 		CreatedAt: &now,
 	}
-	err := db.Get().Create(role).Error
+	err := tx.Create(role).Error
 	if err != nil {
 		return -1, err
 	}
@@ -86,8 +87,7 @@ func (d *DBRoleModel) ListRoles(ctx context.Context) ([]*Role, error) {
 	return result, nil
 }
 
-func (d *DBRoleModel) SetRoleAuth(ctx context.Context, id int, authIdList []int) error {
-	tx := db.Get().Begin()
+func (d *DBRoleModel) SetRoleAuth(ctx context.Context, tx *gorm.DB, id int, authIdList []int) error {
 	for i := range authIdList {
 		ra := &RoleAuth{
 			RoleId: id,
@@ -95,11 +95,9 @@ func (d *DBRoleModel) SetRoleAuth(ctx context.Context, id int, authIdList []int)
 		}
 		err := tx.Create(ra).Error
 		if err != nil {
-			tx.Rollback()
 			return err
 		}
 	}
-	tx.Commit()
 	return nil
 }
 
