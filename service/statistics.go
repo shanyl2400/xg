@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 	"xg/da"
@@ -122,8 +123,25 @@ func (s *StatisticsService) SearchYearRecords(ctx context.Context, key string) (
 func (s *StatisticsService) AddStudent(ctx context.Context, tx *gorm.DB, count int) error {
 	return s.addValue(ctx, tx, entity.StudentStatisticsKey, count)
 }
-func (s *StatisticsService) AddPerformance(ctx context.Context, tx *gorm.DB, performance int) error {
-	return s.addValue(ctx, tx, entity.PerformanceStatisticsKey, performance)
+func (s *StatisticsService) AddPerformance(ctx context.Context, tx *gorm.DB, info entity.OrderPerformanceInfo, performance int) error {
+	err := s.addValue(ctx, tx, statisticKeyId(entity.OrgPerformanceStatisticsKey, info.OrgId), performance)
+	if err != nil{
+		return err
+	}
+	err = s.addValue(ctx, tx, statisticKeyId(entity.AuthorPerformanceStatisticsKey, info.AuthorId), performance)
+	if err != nil{
+		return err
+	}
+	err = s.addValue(ctx, tx, statisticKeyId(entity.PublisherPerformanceStatisticsKey, info.PublisherId), performance)
+	if err != nil{
+		return err
+	}
+
+	err = s.addValue(ctx, tx, entity.PerformanceStatisticsKey, performance)
+	if err != nil{
+		return err
+	}
+	return nil
 }
 
 func (s *StatisticsService) addValue(ctx context.Context, tx *gorm.DB, key string, value int) error {
@@ -163,6 +181,10 @@ func (s *StatisticsService) addValue(ctx context.Context, tx *gorm.DB, key strin
 		return err
 	}
 	return nil
+}
+
+func statisticKeyId(prefix string, id int) string{
+	return fmt.Sprintf("%v-%v", prefix, id)
 }
 
 var (

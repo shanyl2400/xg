@@ -167,7 +167,13 @@ func (o *OrderService) ConfirmOrderPay(ctx context.Context, orderPayId int, stat
 			if payment.Mode == entity.OrderPayModePayback {
 				performance = -performance
 			}
-			err = GetStatisticsService().AddPerformance(ctx, tx, performance)
+			orderInfo, err := o.GetOrderById(ctx, payment.OrderID, operator)
+
+			err = GetStatisticsService().AddPerformance(ctx, tx, entity.OrderPerformanceInfo{
+				OrgId:       orderInfo.ToOrgID,
+				AuthorId:    orderInfo.StudentSummary.AuthorId,
+				PublisherId: orderInfo.PublisherID,
+			}, performance)
 			if err != nil {
 				log.Warning.Printf("Add performance failed, payment: %#v, performance: %#v, err: %v\n", payment, performance, err)
 				return err
@@ -306,7 +312,6 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 
 	var student *da.Student
 	var org *da.Org
-	var user *da.User
 	_, students, err := da.GetStudentModel().SearchStudents(ctx, da.SearchStudentCondition{
 		StudentIDList: []int{orderObj.Order.StudentID},
 	})
@@ -335,7 +340,7 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 	}
 
 	users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
-		IDList: []int{orderObj.Order.PublisherID},
+		IDList: []int{orderObj.Order.PublisherID, student.AuthorID},
 	})
 	if err != nil {
 		log.Warning.Printf("Search users failed, orderObj: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
@@ -345,7 +350,17 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 		log.Warning.Printf("Invalid to users, users: %#v, err: %v\n", users, ErrInvalidPublisherID)
 		return nil, ErrInvalidPublisherID
 	}
-	user = users[0]
+
+	publisherName := ""
+	authorName := ""
+	for i := range users {
+		if users[i].ID == student.AuthorID {
+			authorName = users[i].Name
+		}
+		if users[i].ID == orderObj.Order.PublisherID {
+			publisherName = users[i].Name
+		}
+	}
 
 	res := &entity.OrderInfoWithRecords{
 		OrderInfo: entity.OrderInfo{
@@ -363,9 +378,11 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 			Telephone: student.Telephone,
 			Address:   student.Address,
 			Note:      student.Note,
+			AuthorId: 	student.AuthorID,
 		},
 		OrgName:       org.Name,
-		PublisherName: user.Name,
+		PublisherName: publisherName,
+		AuthorName: authorName,
 	}
 
 	//添加Payment和remark

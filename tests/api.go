@@ -65,7 +65,7 @@ func (a *APIClient) CreateOrder(ctx context.Context, crq *entity.CreateOrderRequ
 
 func (a *APIClient) SignUpOrder(ctx context.Context, orq *entity.OrderPayRequest, token string) error {
 	req := JSONRequest{
-		URL:      fmt.Sprintf("/api/%v/signup", orq.OrderID),
+		URL:      fmt.Sprintf("/api/order/%v/signup", orq.OrderID),
 		Method:   "PUT",
 		JSONBody: orq,
 		Token:    token,
@@ -84,7 +84,7 @@ func (a *APIClient) SignUpOrder(ctx context.Context, orq *entity.OrderPayRequest
 
 func (a *APIClient) RevokeOrder(ctx context.Context, orderId int, token string) error {
 	req := JSONRequest{
-		URL:      fmt.Sprintf("/api/%v/signup", orderId),
+		URL:      fmt.Sprintf("/api/order/%v/revoke", orderId),
 		Method:   "PUT",
 		Token:    token,
 	}

@@ -101,6 +101,7 @@ type OrderInfoWithRecords struct {
 	StudentSummary *StudentSummaryInfo `json:"student_summary"`
 	OrgName        string              `json:"org_name"`
 	PublisherName  string              `json:"publisher_name"`
+	AuthorName string `json:"author_name"`
 	PaymentInfo    []*OrderPayRecord
 	RemarkInfo     []*OrderRemarkRecord
 }

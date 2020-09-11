@@ -76,6 +76,8 @@ type StudentSummaryInfo struct {
 	Telephone string `json:"telephone"`
 	Address   string `json:"address"`
 	Note      string `json:"note"`
+
+	AuthorId  int `json:"author_id"`
 }
 
 type StudentInfoList struct {

@@ -3,6 +3,10 @@ package entity
 const (
 	StudentStatisticsKey     = "students"
 	PerformanceStatisticsKey = "performance"
+
+	OrgPerformanceStatisticsKey = "org"
+	AuthorPerformanceStatisticsKey = "author"
+	PublisherPerformanceStatisticsKey = "publisher"
 )
 
 type SummaryInfo struct {
@@ -22,4 +26,10 @@ type StatisticRecord struct {
 type StatisticGraph struct {
 	StudentsGraph     []*StatisticRecord `json:"students_graph"`
 	PerformancesGraph []*StatisticRecord `json:"performances_graph"`
+}
+
+type OrderPerformanceInfo struct {
+	OrgId int `json:"org_id"`
+	AuthorId int `json:"author_id"`
+	PublisherId int `json:"publisher_id"`
 }
