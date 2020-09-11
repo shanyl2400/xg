@@ -60,8 +60,8 @@ func (d *DBStudentsModel) CreateStudent(ctx context.Context, tx *gorm.DB, studen
 func (d *DBStudentsModel) UpdateStudent(ctx context.Context, id int, student Student) error {
 	now := time.Now()
 	student.UpdatedAt = &now
-	student.ID = id
-	err := db.Get().Updates(&student).Error
+	//student.ID = id
+	err := db.Get().Model(Student{ID: id}).Updates(&student).Error
 	if err != nil {
 		return err
 	}
@@ -124,6 +124,7 @@ type SearchStudentCondition struct {
 	Telephone     string `json:"telephone"`
 	Address       string `json:"address"`
 	IntentString  string `json:"intent_string"`
+	Status int `json:"status"`
 
 	AuthorIDList []int `json:"author_id_list"`
 
@@ -156,6 +157,10 @@ func (s SearchStudentCondition) GetConditions() (string, []interface{}) {
 	if s.IntentString != "" {
 		wheres = append(wheres, "intent_subject LIKE ?")
 		values = append(values, "%"+s.IntentString+"%")
+	}
+	if s.Status > 0 {
+		wheres = append(wheres, "status=?")
+		values = append(values, s.Status)
 	}
 
 	if len(s.AuthorIDList) > 0 {

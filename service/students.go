@@ -35,6 +35,7 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 	condition := da.SearchStudentCondition{
 		Telephone: c.Telephone,
 		OrderBy:   "created_at",
+		Status: entity.StudentCreated,
 		PageSize:  1,
 		Page:      0,
 	}
@@ -49,7 +50,7 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 		now := time.Now()
 		latestAdd := students[0].CreatedAt
 		timeDiff := now.Sub(*latestAdd)
-		log.Info.Printf("check challenge student, students: %#v, req: %#v, latestAdd: %#v, now: %#v, timeDiff: %v\n", students, c, latestAdd, now, timeDiff)
+		log.Info.Printf("check challenge student, students: %#v, req: %#v, latestAdd: %#v, now: %#v, timeDiff: %v\n", students[0], c, latestAdd, now, timeDiff)
 		if timeDiff > ChallengeDate {
 			//挑战成功
 			log.Info.Printf("challenge success\n")

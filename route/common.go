@@ -1,6 +1,7 @@
 package route
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -14,102 +15,244 @@ import (
 type Response struct {
 	ErrMsg string `json:"err_msg"`
 }
+func (r Response) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
 
 type IdResponse struct {
 	ID int `json:"id"`
 	ErrMsg string `json:"err_msg"`
 }
+func (r IdResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
+
 type FileNameResponse struct {
 	Name string `json:"name"`
 	ErrMsg string `json:"err_msg"`
+}
+
+func (r FileNameResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
 }
 
 type SubjectsResponse struct {
 	Subjects []string `json:"subjects"`
 	ErrMsg string `json:"err_msg"`
 }
+
+func (r SubjectsResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
+
 type SubjectsObjResponse struct {
 	Subjects []*entity.Subject `json:"subjects"`
 	ErrMsg string `json:"err_msg"`
+}
+func (r SubjectsObjResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
 }
 
 type AuthsListResponse struct {
 	ErrMsg string `json:"err_msg"`
 	AuthList []*entity.Auth `json:"auths"`
 }
+func (r AuthsListResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
+
 type AuthorizationListResponse struct {
 	ErrMsg string `json:"err_msg"`
 	AuthList []*entity.Auth `json:"authority"`
+}
+func (r AuthorizationListResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
 }
 
 type OrderInfoListResponse struct {
 	Data *entity.OrderInfoList `json:"data"`
 	ErrMsg string `json:"err_msg"`
 }
+func (r OrderInfoListResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
+
 type OrderRecordResponse struct {
 	Data *entity.OrderInfoWithRecords `json:"data"`
 	ErrMsg string `json:"err_msg"`
+}
+func (r OrderRecordResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
 }
 
 type OrderPaymentRecordListResponse struct {
 	Data *entity.PayRecordInfoList `json:"data"`
 	ErrMsg string `json:"err_msg"`
 }
+func (r OrderPaymentRecordListResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
 
 type OrderSourcesListResponse struct {
 	Sources []*entity.OrderSource `json:"sources"`
 	ErrMsg string `json:"err_msg"`
 }
+func (r OrderSourcesListResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
 
 type OrgsListResponse struct {
-	Sources *OrgListInfo `json:"data"`
-	ErrMsg string        `json:"err_msg"`
+	Data   *OrgListInfo `json:"data"`
+	ErrMsg string       `json:"err_msg"`
+}
+func (r OrgsListResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
 }
 
 type OrgInfoResponse struct {
 	Org 	*entity.Org 	`json:"org"`
 	ErrMsg 	string        `json:"err_msg"`
 }
+func (r OrgInfoResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
+
 type RolesResponse struct {
 	Roles []*entity.Role `json:"roles"`
 	ErrMsg 	string        `json:"err_msg"`
 }
+func (r RolesResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
+
 type SummaryResponse struct {
 	Summary *entity.SummaryInfo `json:"summary"`
 	ErrMsg 	string        `json:"err_msg"`
 }
+func (r SummaryResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
+
 type GraphResponse struct {
 	 Graph *entity.StatisticGraph `json:"graph"`
 	ErrMsg 	string        `json:"err_msg"`
+}
+func (r GraphResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
 }
 
 type OrgSubjectsResponse struct {
 	Subjects 	[]string	`json:"subjects"`
 	ErrMsg 	string        `json:"err_msg"`
 }
+func (r OrgSubjectsResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
 
 type IDStatusResponse struct {
 	Result entity.CreateStudentResponse `json:"result"`
 	ErrMsg string `json:"err_msg"`
+}
+func (r IDStatusResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
 }
 
 type StudentWithDetailsListResponse struct {
 	Student *entity.StudentInfosWithOrders `json:"student"`
 	ErrMsg string `json:"err_msg"`
 }
+func (r StudentWithDetailsListResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
+
 type StudentListResponse struct {
 	Result *entity.StudentInfoList `json:"result"`
 	ErrMsg string `json:"err_msg"`
+}
+func (r StudentListResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
 }
 
 type UserLoginResponse struct {
 	Data *entity.UserLoginResponse `json:"data"`
 	ErrMsg string `json:"err_msg"`
 }
+func (r UserLoginResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
 
 type UserListResponse struct {
 	Users []*entity.UserInfo `json:"users"`
 	ErrMsg string `json:"err_msg"`
+}
+func (r UserListResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
 }
 
 func (s *Server) responseErr(c *gin.Context, code int, err error) {
@@ -147,7 +290,7 @@ func (s *Server) getParamInt(c *gin.Context, key string) (int, bool) {
 
 func parseInt(str string) int {
 	id, err := strconv.Atoi(str)
-	if err == nil {
+	if err != nil {
 		return 0
 	}
 	return id

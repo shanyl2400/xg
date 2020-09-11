@@ -11,7 +11,7 @@ import (
 )
 var (
 	HttpTimeout = time.Second * 5
-	BaseURL = "http://localhost:8088/"
+	BaseURL = "http://localhost:8088"
 )
 
 type JSONRequest struct {
@@ -28,6 +28,7 @@ func (jr JSONRequest) DoRequest(ctx context.Context) ([]byte, error){
 	i := 0
 	for k, v := range jr.Query{
 		queryStrPairs[i] = k + "=" + v
+		i ++
 	}
 	queryStr := ""
 	if len(queryStrPairs) > 0 {

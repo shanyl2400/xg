@@ -294,12 +294,16 @@ func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsC
 		return 0, nil, err
 	}
 	res := make([]*entity.Org, 0)
-
 	for i := range orgs {
 		var subjects []string
 		if len(orgs[i].Subjects) > 0 {
 			allSubjects := s.filterSubjects(orgs[i].Subjects)
-			subjects = s.filterTargetSubjects(allSubjects, condition.Subjects)
+			if len(condition.Subjects) > 0 {
+				subjects = s.filterTargetSubjects(allSubjects, condition.Subjects)
+			}else{
+				subjects =append(subjects, allSubjects...)
+			}
+
 		}
 		if len(orgs[i].Subjects) > 0 && len(subjects) == 0 {
 			continue

@@ -32,7 +32,7 @@ func (s *Server) listOrgs(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, OrgsListResponse{
-		Sources: &OrgListInfo{
+		Data: &OrgListInfo{
 			Orgs:  orgs,
 			Total: count,
 		},
@@ -57,7 +57,7 @@ func (s *Server) listPendingOrgs(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, OrgsListResponse{
-		Sources: &OrgListInfo{
+		Data: &OrgListInfo{
 			Orgs:  orgs,
 			Total: count,
 		},
@@ -84,7 +84,7 @@ func (s *Server) searchSubOrgs(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, OrgsListResponse{
-		Sources: &OrgListInfo{
+		Data: &OrgListInfo{
 			Orgs:  orgs,
 			Total: count,
 		},

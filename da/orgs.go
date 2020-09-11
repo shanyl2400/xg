@@ -134,10 +134,13 @@ func (s SearchOrgsCondition) GetConditions() (string, []interface{}) {
 	}
 
 	if len(s.Subjects) != 0 {
+		partsWhere := make([]string, 0)
 		for i := range s.Subjects {
-			wheres = append(wheres, "subjects LIKE ?")
+			partsWhere = append(partsWhere, "subjects LIKE ?")
 			values = append(values, "%"+s.Subjects[i]+"%")
 		}
+		where := "(" + strings.Join(partsWhere, " or ") + ")"
+		wheres = append(wheres, where)
 	}
 	if s.Address != "" {
 		wheres = append(wheres, "address LIKE ?")
