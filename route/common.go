@@ -179,15 +179,38 @@ func (r SummaryResponse) Error() error{
 }
 
 type GraphResponse struct {
-	 Graph *entity.StatisticGraph `json:"graph"`
+	Graph *entity.StatisticGraph `json:"graph"`
 	ErrMsg 	string        `json:"err_msg"`
 }
+
 func (r GraphResponse) Error() error{
 	if r.ErrMsg == "success" {
 		return nil
 	}
 	return errors.New(r.ErrMsg)
 }
+
+type PerformanceGraphResponse struct {
+	Graph *entity.PerformancesGraph `json:"graph"`
+	ErrMsg 	string        `json:"err_msg"`
+}
+func (r PerformanceGraphResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
+type AuthorPerformanceGraphResponse struct {
+	Graph *entity.AuthorPerformancesGraph `json:"graph"`
+	ErrMsg 	string        `json:"err_msg"`
+}
+func (r AuthorPerformanceGraphResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
+
 
 type OrgSubjectsResponse struct {
 	Subjects 	[]string	`json:"subjects"`
@@ -245,6 +268,7 @@ func (r UserLoginResponse) Error() error{
 }
 
 type UserListResponse struct {
+	Total int `json:"total"`
 	Users []*entity.UserInfo `json:"users"`
 	ErrMsg string `json:"err_msg"`
 }

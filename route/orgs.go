@@ -26,7 +26,8 @@ type OrgListInfo struct {
 // @Failure 400 {object} Response
 // @Router /api/orgs [get]
 func (s *Server) listOrgs(c *gin.Context) {
-	count, orgs, err := service.GetOrgService().ListOrgs(c.Request.Context())
+	condition := buildOrgsSearchCondition(c)
+	count, orgs, err := service.GetOrgService().ListOrgs(c.Request.Context(), condition)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
@@ -267,11 +268,18 @@ func (s *Server) revokeOrg(c *gin.Context) {
 func buildOrgsSearchCondition(c *gin.Context) da.SearchOrgsCondition {
 	subjects := make([]string, 0)
 	subjectsParam := c.Query("subjects")
+	orderBy := c.Query("order_by")
+	page := c.Query("page")
+	pageSize := c.Query("page_size")
 	if subjectsParam != "" {
 		subjects = strings.Split(subjectsParam, ",")
 	}
 	return da.SearchOrgsCondition{
 		Subjects: subjects,
 		Address:  c.Query("address"),
+		OrderBy: orderBy,
+
+		PageSize: parseInt(pageSize),
+		Page:     parseInt(page),
 	}
 }

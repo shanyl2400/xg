@@ -124,15 +124,15 @@ func (s *StatisticsService) AddStudent(ctx context.Context, tx *gorm.DB, count i
 	return s.addValue(ctx, tx, entity.StudentStatisticsKey, count)
 }
 func (s *StatisticsService) AddPerformance(ctx context.Context, tx *gorm.DB, info entity.OrderPerformanceInfo, performance int) error {
-	err := s.addValue(ctx, tx, statisticKeyId(entity.OrgPerformanceStatisticsKey, info.OrgId), performance)
+	err := s.addValue(ctx, tx, StatisticKeyId(entity.OrgPerformanceStatisticsKey, info.OrgId), performance)
 	if err != nil{
 		return err
 	}
-	err = s.addValue(ctx, tx, statisticKeyId(entity.AuthorPerformanceStatisticsKey, info.AuthorId), performance)
+	err = s.addValue(ctx, tx, StatisticKeyId(entity.AuthorPerformanceStatisticsKey, info.AuthorId), performance)
 	if err != nil{
 		return err
 	}
-	err = s.addValue(ctx, tx, statisticKeyId(entity.PublisherPerformanceStatisticsKey, info.PublisherId), performance)
+	err = s.addValue(ctx, tx, StatisticKeyId(entity.PublisherPerformanceStatisticsKey, info.PublisherId), performance)
 	if err != nil{
 		return err
 	}
@@ -183,7 +183,7 @@ func (s *StatisticsService) addValue(ctx context.Context, tx *gorm.DB, key strin
 	return nil
 }
 
-func statisticKeyId(prefix string, id int) string{
+func StatisticKeyId(prefix string, id int) string{
 	return fmt.Sprintf("%v-%v", prefix, id)
 }
 

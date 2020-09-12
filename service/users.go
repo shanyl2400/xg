@@ -36,7 +36,7 @@ type IUserService interface{
 	UpdatePassword(ctx context.Context, newPassword string, operator *entity.JWTUser) error
 	ResetPassword(ctx context.Context, userId int, operator *entity.JWTUser) error
 	ListUserAuthority(ctx context.Context, operator *entity.JWTUser) ([]*entity.Auth, error)
-	ListUsers(ctx context.Context) ([]*entity.UserInfo, error)
+	ListUsers(ctx context.Context, condition da.SearchUserCondition) (int, []*entity.UserInfo, error)
 	CreateUser(ctx context.Context, req *entity.CreateUserRequest) (int, error)
 }
 
@@ -44,7 +44,7 @@ type UserService struct {
 }
 
 func (u *UserService) Login(ctx context.Context, name, password string) (*entity.UserLoginResponse, error) {
-	users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
+	_, users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
 		Name: name,
 	})
 	if err != nil {
@@ -125,22 +125,22 @@ func (u *UserService) ListUserAuthority(ctx context.Context, operator *entity.JW
 	return authList.Auth, nil
 }
 
-func (u *UserService) ListUsers(ctx context.Context) ([]*entity.UserInfo, error) {
-	users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{})
+func (u *UserService) ListUsers(ctx context.Context, condition da.SearchUserCondition) (int, []*entity.UserInfo, error) {
+	total, users, err := da.GetUsersModel().SearchUsers(ctx, condition)
 	if err != nil {
 		log.Warning.Printf("Search users failed, err: %v\n", err)
-		return nil, err
+		return 0, nil, err
 	}
 	roles, err := da.GetRoleModel().ListRoles(ctx)
 	if err != nil {
 		log.Warning.Printf("List roles failed, users: %#v, err: %v\n", users, err)
-		return nil, err
+		return 0, nil, err
 	}
 
 	orgs, err := da.GetOrgModel().ListOrgs(ctx)
 	if err != nil {
 		log.Warning.Printf("List orgs failed, users: %#v, roles: %#v, err: %v\n", users, roles, err)
-		return nil, err
+		return 0, nil, err
 	}
 	roleMap := make(map[int]string)
 	orgMap := make(map[int]string)
@@ -163,7 +163,7 @@ func (u *UserService) ListUsers(ctx context.Context) ([]*entity.UserInfo, error)
 			OrgName:  orgMap[users[i].OrgId],
 		}
 	}
-	return userList, nil
+	return total, userList, nil
 }
 
 func (u *UserService) CreateUser(ctx context.Context, req *entity.CreateUserRequest) (int, error) {
@@ -174,7 +174,7 @@ func (u *UserService) CreateUser(ctx context.Context, req *entity.CreateUserRequ
 		return -1, err
 	}
 
-	users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
+	_, users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
 		Name: req.Name,
 	})
 	if err != nil {

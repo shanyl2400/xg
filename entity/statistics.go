@@ -28,6 +28,15 @@ type StatisticGraph struct {
 	PerformancesGraph []*StatisticRecord `json:"performances_graph"`
 }
 
+type PerformancesGraph struct {
+	PerformancesGraph []*StatisticRecord `json:"performances_graph"`
+}
+
+type AuthorPerformancesGraph struct {
+	AuthorPerformancesGraph []*StatisticRecord `json:"author_performances_graph"`
+	PublisherPerformancesGraph []*StatisticRecord `json:"publisher_performances_graph"`
+}
+
 type OrderPerformanceInfo struct {
 	OrgId int `json:"org_id"`
 	AuthorId int `json:"author_id"`

@@ -3,3 +3,4 @@ statics
 docs
 start.sh
 start.ps1
+log/*.log

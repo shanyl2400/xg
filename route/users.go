@@ -3,6 +3,7 @@ package route
 import (
 	"errors"
 	"net/http"
+	"xg/da"
 	"xg/entity"
 	"xg/service"
 
@@ -110,12 +111,15 @@ func (s *Server) listUserAuthority(c *gin.Context) {
 // @Failure 400 {object} Response
 // @Router /api/users [get]
 func (s *Server) listUsers(c *gin.Context) {
-	users, err := service.GetUserService().ListUsers(c.Request.Context())
+	condition := buildUsersSearchCondition(c)
+
+	total, users, err := service.GetUserService().ListUsers(c.Request.Context(), condition)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusOK, UserListResponse{
+		Total: total,
 		Users: users,
 		ErrMsg:  "success",
 	})
@@ -173,4 +177,17 @@ func (s *Server) createUser(c *gin.Context) {
 		ID: id,
 		ErrMsg:  "success",
 	})
+}
+
+
+func buildUsersSearchCondition(c *gin.Context) da.SearchUserCondition {
+	orderBy := c.Query("order_by")
+	page := c.Query("page")
+	pageSize := c.Query("page_size")
+	return da.SearchUserCondition{
+		OrderBy: orderBy,
+
+		PageSize: parseInt(pageSize),
+		Page:     parseInt(page),
+	}
 }

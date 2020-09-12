@@ -20,7 +20,7 @@ type IOrgService interface{
 	CheckOrgById(ctx context.Context, id, status int, operator *entity.JWTUser) error
 	GetOrgById(ctx context.Context, orgId int) (*entity.Org, error)
 	GetOrgSubjectsById(ctx context.Context, orgId int) ([]string, error)
-	ListOrgs(ctx context.Context) (int, []*entity.Org, error)
+	ListOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error)
 	ListOrgsByStatus(ctx context.Context, status []int) (int, []*entity.Org, error)
 	SearchSubOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error)
 }
@@ -223,13 +223,10 @@ func (s *OrgService) GetOrgSubjectsById(ctx context.Context, orgId int) ([]strin
 	return subjects, nil
 }
 
-func (s *OrgService) ListOrgs(ctx context.Context) (int, []*entity.Org, error) {
-	condition := da.SearchOrgsCondition{
-		Status: []int{
-			entity.OrgStatusCertified,
-		},
-		ParentIDs: []int{0},
-	}
+func (s *OrgService) ListOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error) {
+	condition.Status = []int{entity.OrgStatusCertified}
+	condition.ParentIDs = []int{0}
+
 	count, orgs, err := da.GetOrgModel().SearchOrgs(ctx, condition)
 	if err != nil {
 		log.Warning.Printf("Search org failed, condition: %#v, err: %v\n", condition, err)

@@ -27,6 +27,7 @@ type IOrderService interface{
 }
 
 type OrderService struct {
+	lock sync.Mutex
 }
 type orderEntity struct {
 	StudentID int `json:"student_id"`
@@ -151,6 +152,8 @@ func (o *OrderService) ConfirmOrderPay(ctx context.Context, orderPayId int, stat
 	//所有payRecord都确认，才能将order确认
 	//检查order状态
 	//修改支付记录状态
+	o.lock.Lock()
+	defer o.lock.Unlock()
 	err := db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
 		err := da.GetOrderModel().UpdateOrderPayRecordTx(ctx, tx, orderPayId, status)
 		if err != nil {
@@ -249,6 +252,15 @@ func (o *OrderService) SearchOrderPayRecords(ctx context.Context, condition *ent
 
 func (o *OrderService) SearchOrders(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) (*entity.OrderInfoList, error) {
 	//查询订单
+	if len(condition.ToOrgIDList) > 0 {
+		allIds, err := o.getOrgSubOrgs(ctx, condition.ToOrgIDList)
+		if err != nil{
+			log.Warning.Printf("Search org failed, condition: %#v, err: %v\n", condition, err)
+			return nil, err
+		}
+		condition.ToOrgIDList = allIds
+	}
+
 	total, orders, err := da.GetOrderModel().SearchOrder(ctx, da.SearchOrderCondition{
 		StudentIDList:  condition.StudentIDList,
 		ToOrgIDList:    condition.ToOrgIDList,
@@ -339,7 +351,7 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 		return nil, ErrInvalidToOrgID
 	}
 
-	users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
+	_, users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
 		IDList: []int{orderObj.Order.PublisherID, student.AuthorID},
 	})
 	if err != nil {
@@ -516,7 +528,7 @@ func (o *OrderService) getOrderInfoDetails(ctx context.Context, orders []*da.Ord
 		return nil, err
 	}
 
-	users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
+	_, users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
 		IDList: userIds,
 	})
 	if err != nil {
@@ -608,6 +620,34 @@ func (o *OrderService) checkOrderOrg(ctx context.Context, orgId, toOrgId int) er
 		}
 	}
 	return nil
+}
+
+func (o *OrderService) getOrgSubOrgs(ctx context.Context, orgIds[]int) ([]int, error){
+	orgs, err := da.GetOrgModel().ListOrgsByIDs(ctx, orgIds)
+	if err != nil{
+		return nil, err
+	}
+	ret := make([]int, 0)
+	parentIds := make([]int, len(orgs))
+	for i := range orgs {
+		if orgs[i].ParentID == 0 {
+			parentIds[i] = orgs[i].ID
+		}
+	}
+	if len(parentIds) > 0 {
+		_, subOrgs, err := da.GetOrgModel().SearchOrgs(ctx, da.SearchOrgsCondition{
+			Status:    []int{entity.OrgStatusCertified},
+			ParentIDs: parentIds,
+		})
+		if err != nil{
+			return nil, err
+		}
+		for i := range subOrgs{
+			ret = append(ret, subOrgs[i].ID)
+		}
+	}
+	ret = append(ret, orgIds...)
+	return ret, nil
 }
 
 var (

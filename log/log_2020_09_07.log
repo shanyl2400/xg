@@ -1,5 +1,0 @@
-ERROR: 2020/09/07 16:39:28 uploader.go:19: open ./uploads/timg.jpg: no such file or directory
-ERROR: 2020/09/07 16:46:11 uploader.go:49: open /uploads/avatartimg.jpg: no such file or directory
-ERROR: 2020/09/07 16:46:32 uploader.go:49: open /uploads/avatar/timg.jpg: no such file or directory
-ERROR: 2020/09/07 16:46:53 uploader.go:49: open /uploads/avatar/timg.jpg: no such file or directory
-ERROR: 2020/09/07 16:46:58 uploader.go:49: open /uploads/avatar/timg.jpg: no such file or directory

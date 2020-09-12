@@ -154,6 +154,8 @@ func buildCondition(c *gin.Context) *entity.SearchStudentRequest {
 	pageSizeStr := c.Query("page_size")
 	pageStr := c.Query("page")
 
+	status := parseInt(c.Query("status"))
+
 	pageSize := 0
 	page := 0
 	authorId := 0
@@ -182,6 +184,7 @@ func buildCondition(c *gin.Context) *entity.SearchStudentRequest {
 		Address:      address,
 		AuthorIDList: authorIdList,
 		IntentSubject: intentSubjects,
+		Status: 		status,
 		OrderBy:      orderBy,
 		PageSize:     pageSize,
 		Page:         page,

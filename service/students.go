@@ -138,7 +138,7 @@ func (s *StudentService) GetStudentById(ctx context.Context, id int, operator *e
 		orgIds[i] = orders[i].ToOrgID
 		publisherIds[i] = orders[i].PublisherID
 	}
-	publishers, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
+	_, publishers, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
 		IDList: publisherIds,
 	})
 	if err != nil {
@@ -231,6 +231,7 @@ func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchSt
 		Address:      ss.Address,
 		AuthorIDList: ss.AuthorIDList,
 		IntentString: ss.IntentSubject,
+		Status: 	 ss.Status,
 		OrderBy:      ss.OrderBy,
 		PageSize:     ss.PageSize,
 		Page:         ss.Page,
@@ -245,7 +246,7 @@ func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchSt
 		authorIds[i] = students[i].AuthorID
 	}
 
-	users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
+	_, users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
 		IDList: authorIds,
 	})
 	if err != nil {

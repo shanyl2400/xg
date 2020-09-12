@@ -14,7 +14,7 @@ type IUsersModel interface {
 	UpdateUser(ctx context.Context, user User) error
 
 	GetUserById(ctx context.Context, id int) (*User, error)
-	SearchUsers(ctx context.Context, s SearchUserCondition) ([]*User, error)
+	SearchUsers(ctx context.Context, s SearchUserCondition) (int, []*User, error)
 }
 
 type User struct {
@@ -35,6 +35,10 @@ type SearchUserCondition struct {
 	IDList     []int
 	OrgIdList  []int
 	RoleIdList []int
+
+	OrderBy string
+	Page int
+	PageSize int
 }
 
 func (s SearchUserCondition) GetConditions() (string, []interface{}) {
@@ -106,15 +110,29 @@ func (d *DBUsersModel) GetUserById(ctx context.Context, id int) (*User, error) {
 	return user, nil
 }
 
-func (d *DBUsersModel) SearchUsers(ctx context.Context, s SearchUserCondition) ([]*User, error) {
+func (d *DBUsersModel) SearchUsers(ctx context.Context, s SearchUserCondition) (int, []*User, error) {
 	where, values := s.GetConditions()
+	count := 0
+
+	err := db.Get().Model(User{}).Where(where, values...).Count(&count).Error
+	if err != nil {
+		return 0, nil, err
+	}
 
 	users := make([]*User, 0)
-	err := db.Get().Where(where, values...).Find(&users).Error
-	if err != nil {
-		return nil, err
+	tx := db.Get().Where(where, values...)
+	if s.PageSize > 0 {
+		offset, limit := parsePage(s.Page, s.PageSize)
+		tx = tx.Offset(offset).Limit(limit)
 	}
-	return users, nil
+	if s.OrderBy != "" {
+		tx = tx.Order(s.OrderBy)
+	}
+	err = tx.Find(&users).Error
+	if err != nil {
+		return 0, nil, err
+	}
+	return count, users, nil
 }
 
 var (

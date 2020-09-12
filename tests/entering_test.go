@@ -80,24 +80,6 @@ func tryCreateEnterUser(t *testing.T){
 	}, superToken)
 }
 
-func tryCreateDispatchUser(t *testing.T){
-	client := new(APIClient)
-	ctx := context.Background()
-	//1.使用错误密码1登录录入员
-	res, err := client.Login(ctx, "Admin", "123456")
-	if !assert.NoError(t, err) {
-		return
-	}
-	superToken := res.Data.Token
-
-	client.CreateUser(ctx, &entity.CreateUserRequest{
-		Name:   "dispatch0",
-		OrgId:  1,
-		RoleId: 3,
-	}, superToken)
-}
-
-
 func tryCreateCheckUser(t *testing.T){
 	client := new(APIClient)
 	ctx := context.Background()
@@ -112,6 +94,24 @@ func tryCreateCheckUser(t *testing.T){
 		Name:   "check0",
 		OrgId:  1,
 		RoleId: 6,
+	}, superToken)
+}
+
+
+func tryCreateDispatchUser(t *testing.T){
+	client := new(APIClient)
+	ctx := context.Background()
+	//1.使用错误密码1登录录入员
+	res, err := client.Login(ctx, "Admin", "123456")
+	if !assert.NoError(t, err) {
+		return
+	}
+	superToken := res.Data.Token
+
+	client.CreateUser(ctx, &entity.CreateUserRequest{
+		Name:   "dispatch0",
+		OrgId:  1,
+		RoleId: 3,
 	}, superToken)
 }
 

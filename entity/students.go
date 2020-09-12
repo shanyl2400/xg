@@ -42,6 +42,7 @@ type SearchStudentRequest struct {
 
 	IntentSubject   string `json:"intent_subject"`
 	AuthorIDList []int `json:"author_id_list"`
+	Status int `json:"status"`
 
 	OrderBy  string `json:"order_by"`
 	PageSize int    `json:"page_size"`

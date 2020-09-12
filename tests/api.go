@@ -606,6 +606,60 @@ func (a *APIClient) Graph(ctx context.Context, token string) (*route.GraphRespon
 	return responseObj, responseObj.Error()
 }
 
+func (a *APIClient) OrgGraph(ctx context.Context, token string) (*route.PerformanceGraphResponse, error) {
+	req := JSONRequest{
+		URL:     "/api/statistics/graph/org",
+		Method:   "GET",
+		Token:    token,
+	}
+	resp, err := req.DoRequest(ctx)
+	if err != nil {
+		return nil, err
+	}
+	responseObj := new(route.PerformanceGraphResponse)
+	err = json.Unmarshal(resp, responseObj)
+	if err != nil {
+		return nil, err
+	}
+	return responseObj, responseObj.Error()
+}
+
+func (a *APIClient) DispatchGraph(ctx context.Context, token string) (*route.PerformanceGraphResponse, error) {
+	req := JSONRequest{
+		URL:      "/api/statistics/graph/dispatch",
+		Method:   "GET",
+		Token:    token,
+	}
+	resp, err := req.DoRequest(ctx)
+	if err != nil {
+		return nil, err
+	}
+	responseObj := new(route.PerformanceGraphResponse)
+	err = json.Unmarshal(resp, responseObj)
+	if err != nil {
+		return nil, err
+	}
+	return responseObj, responseObj.Error()
+}
+
+func (a *APIClient) EnterGraph(ctx context.Context, token string) (*route.AuthorPerformanceGraphResponse, error) {
+	req := JSONRequest{
+		URL:      "/api/statistics/graph/enter",
+		Method:   "GET",
+		Token:    token,
+	}
+	resp, err := req.DoRequest(ctx)
+	if err != nil {
+		return nil, err
+	}
+	responseObj := new(route.AuthorPerformanceGraphResponse)
+	err = json.Unmarshal(resp, responseObj)
+	if err != nil {
+		return nil, err
+	}
+	return responseObj, responseObj.Error()
+}
+
 func (a *APIClient) CreateStudent(ctx context.Context, c *entity.CreateStudentRequest, token string) (*route.IDStatusResponse, error) {
 	req := JSONRequest{
 		URL:      "/api/student",

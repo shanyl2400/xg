@@ -17,6 +17,8 @@ type IOrgModel interface {
 	UpdateOrg(ctx context.Context, tx *gorm.DB, id int, org Org) error
 	CountOrgs(ctx context.Context, s SearchOrgsCondition) (int, error)
 
+	ListOrgsByIDs(ctx context.Context, ids []int) ([]*Org, error)
+
 	GetOrgsByParentId(ctx context.Context, parentId int) ([]*Org, error)
 	SearchOrgs(ctx context.Context, s SearchOrgsCondition) (int, []*Org, error)
 }
@@ -86,6 +88,16 @@ func (d *DBOrgModel) CountOrgs(ctx context.Context, s SearchOrgsCondition) (int,
 	return count, nil
 }
 
+func (d *DBOrgModel) ListOrgsByIDs(ctx context.Context, ids []int) ([]*Org, error) {
+	orgList := make([]*Org, 0)
+	err := db.Get().Where("id IN (?)", ids).Find(&orgList).Error
+	if err != nil {
+		return nil, err
+	}
+	return orgList, nil
+}
+
+
 func (d *DBOrgModel) GetOrgsByParentId(ctx context.Context, parentId int) ([]*Org, error) {
 	condition := SearchOrgsCondition{
 		ParentIDs: []int{parentId},
@@ -108,7 +120,17 @@ func (d *DBOrgModel) SearchOrgs(ctx context.Context, s SearchOrgsCondition) (int
 	}
 
 	result := make([]*Org, 0)
-	err = db.Get().Where(where, values...).Find(&result).Error
+	tx := db.Get().Where(where, values...)
+
+	if s.PageSize > 0 {
+		offset, limit := parsePage(s.Page, s.PageSize)
+		tx = tx.Offset(offset).Limit(limit)
+	}
+	if s.OrderBy != "" {
+		tx = tx.Order(s.OrderBy)
+	}
+	err = tx.Find(&result).Error
+
 	if err != nil {
 		return 0, nil, err
 	}
@@ -122,6 +144,10 @@ type SearchOrgsCondition struct {
 
 	ParentIDs []int
 	IsSubOrg  bool
+
+	OrderBy string
+	Page int
+	PageSize int
 }
 
 func (s SearchOrgsCondition) GetConditions() (string, []interface{}) {
