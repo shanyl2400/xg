@@ -3,6 +3,7 @@ package route
 import (
 	"errors"
 	"net/http"
+	"os"
 	"strings"
 	"xg/log"
 
@@ -17,10 +18,11 @@ var (
 type Partition string
 
 func (p Partition) PartitionPath() string {
+	uploads := os.Getenv("xg_upload_path")
 	if p == "avatar" {
-		return "./uploads/avatar"
+		return uploads + "/avatar"
 	}
-	return "./uploads/others"
+	return uploads + "/others"
 }
 
 func NewPartition(p string) (Partition, error) {

@@ -17,7 +17,7 @@ var (
 
 func init() {
 	logPath := "./log"
-	if v := os.Getenv("log_path"); v != "" {
+	if v := os.Getenv("xg_log_path"); v != "" {
 		logPath = v
 	}
 	fileName := fmt.Sprintf("%v/log_%v.log", logPath, time.Now().Format("2006_01_02"))
