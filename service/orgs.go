@@ -29,6 +29,7 @@ type OrgService struct {
 }
 
 func (s *OrgService) CreateOrg(ctx context.Context, req *entity.CreateOrgRequest, operator *entity.JWTUser) (int, error) {
+	log.Info.Printf("create org, req: %#v\n", req)
 	id, err := s.createOrg(ctx, db.Get(), req, operator)
 	if err != nil{
 		log.Warning.Printf("Create org failed, req: %#v, err: %v\n", req, err)
@@ -38,6 +39,7 @@ func (s *OrgService) CreateOrg(ctx context.Context, req *entity.CreateOrgRequest
 }
 
 func (s *OrgService) CreateOrgWithSubOrgs(ctx context.Context, req *entity.CreateOrgWithSubOrgsRequest, operator *entity.JWTUser) (int, error) {
+	log.Info.Printf("create org with sub orgs, req: %#v\n", req)
 	cid, err := db.GetTransResult(ctx, func(ctx context.Context, tx *gorm.DB) (interface{}, error) {
 		cid, err := s.createOrg(ctx, tx, &req.OrgData, operator)
 		if err != nil {
@@ -68,7 +70,7 @@ func (s *OrgService) CreateOrgWithSubOrgs(ctx context.Context, req *entity.Creat
 }
 
 func (s *OrgService) UpdateOrgById(ctx context.Context, req *entity.UpdateOrgRequest, operator *entity.JWTUser) error {
-
+	log.Info.Printf("update org, req: %#v\n", req)
 	err := da.GetOrgModel().UpdateOrg(ctx, db.Get(), req.ID, da.Org{
 		Subjects: strings.Join(req.Subjects, ","),
 		Address:  req.Address,
@@ -82,6 +84,7 @@ func (s *OrgService) UpdateOrgById(ctx context.Context, req *entity.UpdateOrgReq
 }
 
 func (s *OrgService) RevokeOrgById(ctx context.Context, id int, operator *entity.JWTUser) error {
+	log.Info.Printf("revoke org, id: %#v\n", id)
 	if id == 1 {
 		log.Warning.Printf("Can't revoke root org, id: %v\n", id)
 		return ErrOperateOnRootOrg
@@ -132,6 +135,7 @@ func (s *OrgService) RevokeOrgById(ctx context.Context, id int, operator *entity
 }
 
 func (s *OrgService) CheckOrgById(ctx context.Context, id, status int, operator *entity.JWTUser) error {
+	log.Info.Printf("check org, id: %#v, status: %#v\n", id, status)
 	org, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), id)
 	if err != nil {
 		log.Warning.Printf("Get org failed, orgid: %#v, err: %v\n", id, err)
@@ -178,6 +182,7 @@ func (s *OrgService) CheckOrgById(ctx context.Context, id, status int, operator 
 }
 
 func (s *OrgService) GetOrgById(ctx context.Context, orgId int) (*entity.Org, error) {
+	log.Info.Printf("get org by id, id: %#v\n", orgId)
 	org, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), orgId)
 	if err != nil {
 		log.Warning.Printf("Get org failed, orgId: %#v, err: %v\n", orgId, err)
@@ -205,6 +210,7 @@ func (s *OrgService) GetOrgById(ctx context.Context, orgId int) (*entity.Org, er
 }
 
 func (s *OrgService) GetOrgSubjectsById(ctx context.Context, orgId int) ([]string, error) {
+	log.Info.Printf("GetOrgSubjectsById, id: %#v\n", orgId)
 	org, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), orgId)
 	if err != nil {
 		log.Warning.Printf("Get org by id failed, orgId: %#v, err: %v\n", orgId, err)
@@ -224,6 +230,7 @@ func (s *OrgService) GetOrgSubjectsById(ctx context.Context, orgId int) ([]strin
 }
 
 func (s *OrgService) ListOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error) {
+	log.Info.Printf("ListOrgs, condition: %#v\n", condition)
 	condition.Status = []int{entity.OrgStatusCertified}
 	condition.ParentIDs = []int{0}
 
@@ -253,6 +260,7 @@ func (s *OrgService) ListOrgs(ctx context.Context, condition da.SearchOrgsCondit
 }
 
 func (s *OrgService) ListOrgsByStatus(ctx context.Context, status []int) (int, []*entity.Org, error) {
+	log.Info.Printf("ListOrgsByStatus, status: %#v\n", status)
 	condition := da.SearchOrgsCondition{
 		Status:    status,
 		ParentIDs: []int{0},
@@ -285,6 +293,9 @@ func (s *OrgService) ListOrgsByStatus(ctx context.Context, status []int) (int, [
 func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error) {
 	condition.Status = []int{entity.OrgStatusCertified}
 	condition.IsSubOrg = true
+
+	log.Info.Printf("SearchSubOrgs, condition: %#v\n", condition)
+
 	count, orgs, err := da.GetOrgModel().SearchOrgs(ctx, condition)
 	if err != nil {
 		log.Warning.Printf("Search org failed, condition: %#v, err: %v\n", condition, err)

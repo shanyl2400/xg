@@ -18,6 +18,7 @@ type SubjectService struct {
 }
 
 func (s *SubjectService) ListSubjects(ctx context.Context, parentID int) ([]*entity.Subject, error) {
+	log.Info.Printf("ListSubjects, parentID: %#v\n", parentID)
 	subjects, err := da.GetSubjectModel().SearchSubject(ctx, da.SearchSubjectCondition{
 		ParentId: parentID,
 	})
@@ -58,6 +59,7 @@ func (s *SubjectService) ListSubjects(ctx context.Context, parentID int) ([]*ent
 
 func (s *SubjectService) CreateSubject(ctx context.Context, req entity.CreateSubjectRequest) (int, error) {
 	level := 1
+	log.Info.Printf("CreateSubject, req: %#v\n", req)
 	if req.ParentId > 0 {
 		parentSubject, err := da.GetSubjectModel().GetSubjectById(ctx, req.ParentId)
 		if err != nil {

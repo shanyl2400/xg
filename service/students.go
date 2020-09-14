@@ -30,7 +30,7 @@ type StudentService struct {
 
 func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStudentRequest, operator *entity.JWTUser) (int, int, error) {
 	status := entity.StudentCreated
-
+	log.Info.Printf("CreateStudent, req: %#v\n", c)
 	//检查冲单，查询相同手机号是否有学生
 	condition := da.SearchStudentCondition{
 		Telephone: c.Telephone,
@@ -97,6 +97,8 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 }
 
 func (s *StudentService) UpdateStudent(ctx context.Context, id int, req *entity.UpdateStudentRequest) error {
+	log.Info.Printf("UpdateStudent, id: %#v, req: %#v\n", id, req)
+
 	data := da.Student{
 		Name:          req.Name,
 		Gender:        req.Gender,
@@ -116,6 +118,8 @@ func (s *StudentService) UpdateStudent(ctx context.Context, id int, req *entity.
 
 func (s *StudentService) GetStudentById(ctx context.Context, id int, operator *entity.JWTUser) (*entity.StudentInfosWithOrders, error) {
 	//查询学生信息
+	log.Info.Printf("GetStudentById, id: %#v\n", id)
+
 	student, err := da.GetStudentModel().GetStudentById(ctx, id)
 	if err != nil {
 		log.Warning.Printf("Get student, id: %#v, err: %v\n", id, err)
@@ -221,10 +225,12 @@ func (s *StudentService) GetStudentById(ctx context.Context, id int, operator *e
 
 func (s *StudentService) SearchPrivateStudents(ctx context.Context, ss *entity.SearchStudentRequest, operator *entity.JWTUser) (int, []*entity.StudentInfo, error) {
 	ss.AuthorIDList = []int{operator.UserId}
+	log.Info.Printf("SearchPrivateStudents, condition: %#v\n", ss)
 	return s.SearchStudents(ctx, ss, operator)
 }
 
 func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchStudentRequest, operator *entity.JWTUser) (int, []*entity.StudentInfo, error) {
+	log.Info.Printf("SearchStudents, condition: %#v\n", ss)
 	condition := da.SearchStudentCondition{
 		Name:         ss.Name,
 		Telephone:    ss.Telephone,
