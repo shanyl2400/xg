@@ -5,6 +5,7 @@ import(
 	"github.com/jinzhu/gorm"
 	"sync"
 	"xg/conf"
+	"xg/log"
 )
 
 var (
@@ -18,6 +19,7 @@ func Get()*gorm.DB{
 		if err != nil {
 			panic(err)
 		}
+		db.SetLogger(log.Trace)
 		db.LogMode(true)
 		globalDB = db
 	})
