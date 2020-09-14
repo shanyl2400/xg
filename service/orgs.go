@@ -300,7 +300,6 @@ func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsC
 			}else{
 				subjects =append(subjects, allSubjects...)
 			}
-
 		}
 		if len(orgs[i].Subjects) > 0 && len(subjects) == 0 {
 			continue

@@ -3,7 +3,6 @@ package log
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -17,22 +16,26 @@ var (
 )
 
 func init() {
-	fileName := fmt.Sprintf("./log/log_%v.log", time.Now().Format("2006_01_02"))
+	logPath := "./log"
+	if v := os.Getenv("log_path"); v != "" {
+		logPath = v
+	}
+	fileName := fmt.Sprintf("%v/log_%v.log", logPath, time.Now().Format("2006_01_02"))
 	file, err := os.OpenFile(fileName,
 		os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalln("Failed to open error log file:", err)
 	}
 
-	Trace = log.New(ioutil.Discard,
+	Trace = log.New(io.MultiWriter(file, os.Stdout),
 		"TRACE: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
 
-	Info = log.New(os.Stdout,
+	Info = log.New(io.MultiWriter(file, os.Stdout),
 		"INFO: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
 
-	Warning = log.New(os.Stdout,
+	Warning = log.New(io.MultiWriter(file, os.Stdout),
 		"WARNING: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
 
