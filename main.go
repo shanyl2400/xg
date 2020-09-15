@@ -4,6 +4,7 @@ import (
 	"os"
 	"xg/conf"
 	"xg/da"
+	"xg/log"
 	_ "xg/log"
 	"xg/route"
 )
@@ -40,6 +41,9 @@ func loadConfig() {
 func main() {
 	engine := route.Get()
 	loadConfig()
+
+	//初始化日志
+	log.LogInit()
 
 	//迁移数据库
 	da.AutoMigrate()

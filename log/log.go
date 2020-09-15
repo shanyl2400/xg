@@ -16,7 +16,7 @@ var (
 	Error   *log.Logger // 非常严重的问题
 )
 
-func init() {
+func LogInit() {
 	logPath := "./log"
 	if v := conf.Get().LogPath; v != "" {
 		logPath = v
