@@ -16,6 +16,7 @@ type AuthService struct {
 }
 
 func (a *AuthService) ListAuths(ctx context.Context) ([]*entity.Auth, error){
+	log.Info.Printf("list all auths\n")
 	auths, err := da.GetAuthModel().ListAuth(ctx)
 	if err != nil{
 		log.Warning.Printf("List auth failed, err: %v\n", err)

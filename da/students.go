@@ -2,11 +2,12 @@ package da
 
 import (
 	"context"
-	"github.com/jinzhu/gorm"
 	"strings"
 	"sync"
 	"time"
 	"xg/db"
+
+	"github.com/jinzhu/gorm"
 )
 
 type IStudentsModel interface {
@@ -25,7 +26,7 @@ type Student struct {
 	Address       string `gorm:"type:varchar(128);NOT NULL;column:address"`
 	Email         string `gorm:"type:varchar(128);NOT NULL;column:email"`
 	IntentSubject string `gorm:"type:varchar(255);NOT NULL;column:intent_subject"`
-	Status        int    `gorm:"type:int;NOT NULL;column:status"`
+	Status        int    `gorm:"type:int;NOT NULL;column:status;index"`
 	Note          string `gorm:"type:text;NOT NULL;column:note"`
 	OrderSourceID int    `gorm:"type:int;NOT NULL;column:order_source_id"`
 
@@ -103,7 +104,6 @@ func (d *DBStudentsModel) SearchStudents(ctx context.Context, s SearchStudentCon
 	return total, students, nil
 }
 
-
 func (d *DBStudentsModel) CountStudents(ctx context.Context) (int, error) {
 	count := 0
 	err := db.Get().Model(Student{}).Count(&count).Error
@@ -112,7 +112,6 @@ func (d *DBStudentsModel) CountStudents(ctx context.Context) (int, error) {
 	}
 	return count, nil
 }
-
 
 func parsePage(page, pageSize int) (int, int) {
 	return (page - 1) * pageSize, pageSize
@@ -124,7 +123,7 @@ type SearchStudentCondition struct {
 	Telephone     string `json:"telephone"`
 	Address       string `json:"address"`
 	IntentString  string `json:"intent_string"`
-	Status int `json:"status"`
+	Status        int    `json:"status"`
 
 	AuthorIDList []int `json:"author_id_list"`
 

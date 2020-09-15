@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"xg/conf"
 	"xg/log"
 
 	"github.com/gin-gonic/gin"
@@ -17,10 +18,11 @@ var (
 type Partition string
 
 func (p Partition) PartitionPath() string {
+	uploads := conf.Get().UploadPath
 	if p == "avatar" {
-		return "./uploads/avatar"
+		return uploads + "/avatar"
 	}
-	return "./uploads/others"
+	return uploads + "/others"
 }
 
 func NewPartition(p string) (Partition, error) {

@@ -36,12 +36,12 @@ type OrderInfo struct {
 
 type Order struct {
 	ID             int    `gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
-	StudentID      int    `gorm:"type:int;NOT NULL;column:student_id"`
-	ToOrgID        int    `gorm:"type:int;NOT NULL;column:org_id"`
+	StudentID      int    `gorm:"type:int;NOT NULL;column:student_id;index"`
+	ToOrgID        int    `gorm:"type:int;NOT NULL;column:org_id;index"`
 	IntentSubjects string `gorm:"type:varchar(255);NOT NULL;column:intent_subjects"`
-	PublisherID    int    `gorm:"type:int;NOT NULL;column:publisher_id"`
+	PublisherID    int    `gorm:"type:int;NOT NULL;column:publisher_id;index"`
 
-	Status int `gorm:"type:int;NOT NULL;column:status"`
+	Status int `gorm:"type:int;NOT NULL;column:status;index"`
 
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`
 	CreatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:created_at"`

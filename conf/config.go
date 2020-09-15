@@ -8,6 +8,9 @@ var (
 )
 type Config struct {
 	DBConnectionString string `json:"db_connection_string"`
+	LogPath string `json:"log_path"`
+	UploadPath string `json:"upload_path"`
+	RedisConnectionString string `json:"redis_connection_string"`
 }
 
 func Set(c *Config) {

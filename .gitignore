@@ -4,3 +4,11 @@ docs
 start.sh
 start.ps1
 log/*.log
+
+deploy/golang
+deploy/nginx/www
+deploy/nginx/log
+deploy/mysql/db
+deploy/mysql/log
+deploy/redis/dasta
+deploy/redis/log

@@ -21,6 +21,7 @@ type RoleService struct {
 }
 
 func (r *RoleService) CreateRole(ctx context.Context, name string, authList []int) (int, error) {
+	log.Info.Printf("CreateRole, name: %#v, authList: %#v\n", name, authList)
 	id, err := db.GetTransResult(ctx, func(ctx context.Context, tx *gorm.DB) (interface{}, error) {
 		id, err := da.GetRoleModel().CreateRole(ctx, tx, name)
 		if err != nil {
@@ -41,6 +42,7 @@ func (r *RoleService) CreateRole(ctx context.Context, name string, authList []in
 }
 
 func (r *RoleService) ListRole(ctx context.Context) ([]*entity.Role, error) {
+	log.Info.Printf("ListRole\n")
 	roles, err := da.GetRoleModel().ListRoles(ctx)
 	if err != nil {
 		log.Warning.Printf("List role failed, err: %v\n", err)
@@ -63,6 +65,7 @@ func (r *RoleService) ListRole(ctx context.Context) ([]*entity.Role, error) {
 	return res, nil
 }
 func (r *RoleService) SetRoleAuth(ctx context.Context, id int, ids []int) error {
+	log.Info.Printf("SetRoleAuth, roleId: %#v, authList: %#v\n", id, ids)
 	err := db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
 		err := da.GetRoleModel().SetRoleAuth(ctx, tx, id, ids)
 		if err != nil{
@@ -79,6 +82,7 @@ func (r *RoleService) SetRoleAuth(ctx context.Context, id int, ids []int) error 
 }
 
 func (r *RoleService) GetRoleAuth(ctx context.Context, id int) ([]*entity.Auth, error) {
+	log.Info.Printf("GetRoleAuth, roleId: %#v\n", id)
 	res, err := da.GetRoleModel().ListRoleAuth(ctx, id)
 	if err != nil {
 		log.Warning.Printf("Set role auth failed, roleId: %#v, err: %v\n", id, err)

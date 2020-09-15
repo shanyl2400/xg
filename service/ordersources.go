@@ -17,6 +17,7 @@ type OrderSourceService struct {
 }
 
 func (o *OrderSourceService) ListOrderService(ctx context.Context)([]*entity.OrderSource, error){
+	log.Info.Printf("list order services\n")
 	os, err := da.GetOrderSourceModel().ListOrderSources(ctx)
 	if err != nil{
 		log.Warning.Printf("Get order source failed, err: %v\n", err)
@@ -33,6 +34,7 @@ func (o *OrderSourceService) ListOrderService(ctx context.Context)([]*entity.Ord
 }
 
 func (o *OrderSourceService) CreateOrderService(ctx context.Context, name string)(int, error){
+	log.Info.Printf("CreateOrderService, req: %#v\n", name)
 	return da.GetOrderSourceModel().CreateOrderSources(ctx, name)
 }
 

@@ -36,8 +36,8 @@ type SearchUserCondition struct {
 	OrgIdList  []int
 	RoleIdList []int
 
-	OrderBy string
-	Page int
+	OrderBy  string
+	Page     int
 	PageSize int
 }
 

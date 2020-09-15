@@ -44,6 +44,7 @@ type UserService struct {
 }
 
 func (u *UserService) Login(ctx context.Context, name, password string) (*entity.UserLoginResponse, error) {
+	log.Info.Printf("Login, name: %#v\n", name)
 	_, users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
 		Name: name,
 	})
@@ -71,7 +72,7 @@ func (u *UserService) Login(ctx context.Context, name, password string) (*entity
 		log.Warning.Printf("fillUserInfo failed, user: %#v, err: %v\n", user, err)
 		return nil, err
 	}
-
+	log.Info.Printf("Login success, name: %#v\n", name)
 	return &entity.UserLoginResponse{
 		UserDetailsInfo: entity.UserDetailsInfo{
 			UserId:   userInfo.UserId,
@@ -86,7 +87,7 @@ func (u *UserService) Login(ctx context.Context, name, password string) (*entity
 }
 
 func (u *UserService) UpdatePassword(ctx context.Context, newPassword string, operator *entity.JWTUser) error {
-
+	log.Info.Printf("UpdatePassword, operator: %#v\n", operator)
 	user, err := da.GetUsersModel().GetUserById(ctx, operator.UserId)
 	if err != nil {
 		log.Warning.Printf("Get user failed, operator: %#v, err: %v\n", operator, err)
@@ -102,6 +103,7 @@ func (u *UserService) UpdatePassword(ctx context.Context, newPassword string, op
 }
 
 func (u *UserService) ResetPassword(ctx context.Context, userId int, operator *entity.JWTUser) error {
+	log.Info.Printf("ResetPassword, userId: %#v\n", userId)
 	user, err := da.GetUsersModel().GetUserById(ctx, userId)
 	if err != nil {
 		log.Warning.Printf("Get user failed, userId: %#v, err: %v\n", userId, err)
@@ -117,6 +119,7 @@ func (u *UserService) ResetPassword(ctx context.Context, userId int, operator *e
 }
 
 func (u *UserService) ListUserAuthority(ctx context.Context, operator *entity.JWTUser) ([]*entity.Auth, error) {
+	log.Info.Printf("ListUserAuthority, operator: %#v\n", operator)
 	authList, err := da.GetRoleModel().ListRoleAuth(ctx, operator.RoleId)
 	if err != nil {
 		log.Warning.Printf("List role auth failed, operator: %#v, err: %v\n", operator, err)
@@ -126,6 +129,7 @@ func (u *UserService) ListUserAuthority(ctx context.Context, operator *entity.JW
 }
 
 func (u *UserService) ListUsers(ctx context.Context, condition da.SearchUserCondition) (int, []*entity.UserInfo, error) {
+	log.Info.Printf("ListUsers, condition: %#v\n", condition)
 	total, users, err := da.GetUsersModel().SearchUsers(ctx, condition)
 	if err != nil {
 		log.Warning.Printf("Search users failed, err: %v\n", err)
@@ -168,6 +172,7 @@ func (u *UserService) ListUsers(ctx context.Context, condition da.SearchUserCond
 
 func (u *UserService) CreateUser(ctx context.Context, req *entity.CreateUserRequest) (int, error) {
 	//check orgId & roleId
+	log.Info.Printf("CreateUser, req: %#v\n", req)
 	err := u.checkUserEntity(ctx, req)
 	if err != nil {
 		log.Warning.Printf("checkUserEntity failed, req: %#v, err: %v\n", req, err)
@@ -229,7 +234,7 @@ func (u *UserService) fillUserInfo(ctx context.Context, user *da.User) (*entity.
 }
 
 func (u *UserService) checkUserEntity(ctx context.Context, req *entity.CreateUserRequest) error {
-	_, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), req.OrgId)
+	orgInfo, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), req.OrgId)
 	if err != nil {
 		log.Warning.Printf("Get org failed, req: %#v, err: %v\n", req, err)
 		return err
@@ -240,8 +245,20 @@ func (u *UserService) checkUserEntity(ctx context.Context, req *entity.CreateUse
 		return err
 	}
 
-	if (req.OrgId != 1 && req.RoleId != 7) ||
-		(req.OrgId == 1 && req.RoleId == 7) {
+	//if (req.OrgId != entity.RootOrgId && req.RoleId != entity.RoleOutOrg) ||
+	//	(req.OrgId == entity.RootOrgId && req.RoleId == entity.RoleOutOrg) {
+	//	log.Warning.Printf("Invalid user role, req: %#v, err: %v\n", req, ErrInvalidUserRoleOrg)
+	//	return ErrInvalidUserRoleOrg
+	//}
+
+	supportRoleIds := entity.StringToIntArray(orgInfo.SupportRoleID)
+	flag := false
+	for i := range supportRoleIds {
+		if supportRoleIds[i] == req.RoleId {
+			flag = true
+		}
+	}
+	if !flag {
 		log.Warning.Printf("Invalid user role, req: %#v, err: %v\n", req, ErrInvalidUserRoleOrg)
 		return ErrInvalidUserRoleOrg
 	}

@@ -2,6 +2,7 @@ package route
 
 import (
 	"net/http"
+	"os"
 	"time"
 	"xg/entity"
 
@@ -140,7 +141,7 @@ func Get() *gin.Engine {
 	}
 
 	//访问上传文件
-	route.StaticFS("/data", http.Dir("./uploads"))
+	route.StaticFS("/data", http.Dir(os.Getenv("xg_upload_path")))
 
 	return route
 }

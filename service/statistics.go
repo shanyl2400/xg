@@ -21,6 +21,7 @@ type StatisticsService struct {
 }
 
 func (s *StatisticsService) Summary(ctx context.Context) (*entity.SummaryInfo, error) {
+	log.Info.Printf("Get summary\n")
 	orgsCount, err := da.GetOrgModel().CountOrgs(ctx, da.SearchOrgsCondition{
 		ParentIDs: []int{0},
 	})
@@ -83,6 +84,7 @@ func (s *StatisticsService) Summary(ctx context.Context) (*entity.SummaryInfo, e
 }
 
 func (s *StatisticsService) SearchYearRecords(ctx context.Context, key string) ([]*entity.StatisticRecord, error) {
+	log.Info.Printf("SearchYearRecords, key: %#v\n", key)
 	year := time.Now().Year()
 	condition := da.SearchStatisticsRecordCondition{
 		Key:  key,
@@ -121,9 +123,12 @@ func (s *StatisticsService) SearchYearRecords(ctx context.Context, key string) (
 }
 
 func (s *StatisticsService) AddStudent(ctx context.Context, tx *gorm.DB, count int) error {
+	log.Info.Printf("AddStudent, count: %#v\n", count)
 	return s.addValue(ctx, tx, entity.StudentStatisticsKey, count)
 }
 func (s *StatisticsService) AddPerformance(ctx context.Context, tx *gorm.DB, info entity.OrderPerformanceInfo, performance int) error {
+	log.Info.Printf("AddPerformance, value: %#v\n", info)
+
 	err := s.addValue(ctx, tx, StatisticKeyId(entity.OrgPerformanceStatisticsKey, info.OrgId), performance)
 	if err != nil{
 		return err

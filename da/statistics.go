@@ -2,26 +2,27 @@ package da
 
 import (
 	"context"
-	"github.com/jinzhu/gorm"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
 type IStatisticsModel interface {
-	CreateStatisticsRecord(ctx context.Context, tx *gorm.DB, c *StatisticsRecord) (int ,error)
+	CreateStatisticsRecord(ctx context.Context, tx *gorm.DB, c *StatisticsRecord) (int, error)
 	UpdateStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value int) error
 
-	SearchStatisticsRecord(ctx context.Context, tx *gorm.DB, c SearchStatisticsRecordCondition)([]*StatisticsRecord, error)
+	SearchStatisticsRecord(ctx context.Context, tx *gorm.DB, c SearchStatisticsRecordCondition) ([]*StatisticsRecord, error)
 }
 
 type StatisticsRecord struct {
-	ID       int    `gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
+	ID int `gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
 
-	Key     string `gorm:"type:varchar(128);NOT NULL;column:key"`
+	Key   string `gorm:"type:varchar(128);NOT NULL;column:key;index"`
 	Value int    `gorm:"type:int;NOT NULL;column:value"`
 
-	Year int `gorm:"type:int;NOT NULL;column:year"`
+	Year  int `gorm:"type:int;NOT NULL;column:year;index"`
 	Month int `gorm:"type:int;NOT NULL;column:month"`
 
 	Author int `gorm:"type:int;NOT NULL;column:author"`
@@ -32,10 +33,10 @@ type StatisticsRecord struct {
 }
 
 type SearchStatisticsRecordCondition struct {
-	Key string `json:"key"`
-	Year int `json:"year"`
-	Month int `json:"month"`
-	Author int `json:"author"`
+	Key    string `json:"key"`
+	Year   int    `json:"year"`
+	Month  int    `json:"month"`
+	Author int    `json:"author"`
 }
 
 func (s SearchStatisticsRecordCondition) GetConditions() (string, []interface{}) {
@@ -65,10 +66,9 @@ func (s SearchStatisticsRecordCondition) GetConditions() (string, []interface{})
 }
 
 type DBStatisticsModel struct {
-
 }
 
-func (s *DBStatisticsModel) CreateStatisticsRecord(ctx context.Context, tx *gorm.DB, c *StatisticsRecord) (int ,error){
+func (s *DBStatisticsModel) CreateStatisticsRecord(ctx context.Context, tx *gorm.DB, c *StatisticsRecord) (int, error) {
 	now := time.Now()
 	c.CreatedAt = &now
 	c.UpdatedAt = &now
@@ -78,7 +78,7 @@ func (s *DBStatisticsModel) CreateStatisticsRecord(ctx context.Context, tx *gorm
 	}
 	return c.ID, nil
 }
-func (s *DBStatisticsModel) UpdateStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value int) error{
+func (s *DBStatisticsModel) UpdateStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value int) error {
 	record := new(StatisticsRecord)
 	now := time.Now()
 	record.UpdatedAt = &now
@@ -92,7 +92,7 @@ func (s *DBStatisticsModel) UpdateStatisticsRecord(ctx context.Context, tx *gorm
 
 }
 
-func (s *DBStatisticsModel) SearchStatisticsRecord(ctx context.Context, tx *gorm.DB, c SearchStatisticsRecordCondition)([]*StatisticsRecord, error){
+func (s *DBStatisticsModel) SearchStatisticsRecord(ctx context.Context, tx *gorm.DB, c SearchStatisticsRecordCondition) ([]*StatisticsRecord, error) {
 	records := make([]*StatisticsRecord, 0)
 	where, values := c.GetConditions()
 	err := tx.Where(where, values...).Find(&records).Error
