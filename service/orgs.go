@@ -30,6 +30,8 @@ type OrgService struct {
 
 func (s *OrgService) CreateOrg(ctx context.Context, req *entity.CreateOrgRequest, operator *entity.JWTUser) (int, error) {
 	log.Info.Printf("create org, req: %#v\n", req)
+
+	req.SupportRoleID = []int{entity.RoleOutOrg}
 	id, err := s.createOrg(ctx, db.Get(), req, operator)
 	if err != nil{
 		log.Warning.Printf("Create org failed, req: %#v, err: %v\n", req, err)
@@ -41,6 +43,7 @@ func (s *OrgService) CreateOrg(ctx context.Context, req *entity.CreateOrgRequest
 func (s *OrgService) CreateOrgWithSubOrgs(ctx context.Context, req *entity.CreateOrgWithSubOrgsRequest, operator *entity.JWTUser) (int, error) {
 	log.Info.Printf("create org with sub orgs, req: %#v\n", req)
 	cid, err := db.GetTransResult(ctx, func(ctx context.Context, tx *gorm.DB) (interface{}, error) {
+		req.OrgData.SupportRoleID = []int{entity.RoleOutOrg}
 		cid, err := s.createOrg(ctx, tx, &req.OrgData, operator)
 		if err != nil {
 			log.Warning.Printf("Create org failed, req: %#v, err: %v\n", req, err)
@@ -48,6 +51,7 @@ func (s *OrgService) CreateOrgWithSubOrgs(ctx context.Context, req *entity.Creat
 		}
 		for i := range req.SubOrgs {
 			status := entity.OrgStatusCreated
+			req.SubOrgs[i].SupportRoleID = []int{entity.RoleOutOrg}
 			_, err = da.GetOrgModel().CreateOrg(ctx, tx, da.Org{
 				Name:      req.OrgData.Name + "-" + req.SubOrgs[i].Name,
 				Subjects:  strings.Join(req.SubOrgs[i].Subjects, ","),
@@ -55,6 +59,7 @@ func (s *OrgService) CreateOrgWithSubOrgs(ctx context.Context, req *entity.Creat
 				Address:   req.SubOrgs[i].Address,
 				ParentID:  cid,
 				Telephone: req.SubOrgs[i].Telephone,
+				SupportRoleID: entity.IntArrayToString(req.SubOrgs[i].SupportRoleID),
 			})
 			if err != nil {
 				log.Warning.Printf("Create sub org failed, req: %#v, err: %v\n", req, err)
@@ -205,6 +210,7 @@ func (s *OrgService) GetOrgById(ctx context.Context, orgId int) (*entity.Org, er
 		Address:   org.Address,
 		ParentID:  org.ParentID,
 		Telephone: org.Telephone,
+		SupportRoleID: entity.StringToIntArray(org.SupportRoleID),
 		SubOrgs:   ToOrgEntities(subOrgs),
 	}, nil
 }
@@ -254,6 +260,7 @@ func (s *OrgService) ListOrgs(ctx context.Context, condition da.SearchOrgsCondit
 			Address:   orgs[i].Address,
 			ParentID:  orgs[i].ParentID,
 			Telephone: orgs[i].Telephone,
+			SupportRoleID: entity.StringToIntArray(orgs[i].SupportRoleID),
 		}
 	}
 	return count, res, nil
@@ -285,6 +292,7 @@ func (s *OrgService) ListOrgsByStatus(ctx context.Context, status []int) (int, [
 			Address:   orgs[i].Address,
 			ParentID:  orgs[i].ParentID,
 			Telephone: orgs[i].Telephone,
+			SupportRoleID: entity.StringToIntArray(orgs[i].SupportRoleID),
 		}
 	}
 	return count, res, nil
@@ -323,6 +331,7 @@ func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsC
 			Address:   orgs[i].Address,
 			ParentID:  orgs[i].ParentID,
 			Telephone: orgs[i].Telephone,
+			SupportRoleID: entity.StringToIntArray(orgs[i].SupportRoleID),
 		})
 	}
 	return count, res, nil
@@ -403,6 +412,7 @@ func (s *OrgService) createOrg(ctx context.Context, tx *gorm.DB, req *entity.Cre
 		Address:   req.Address,
 		ParentID:  req.ParentID,
 		Telephone: req.Telephone,
+		SupportRoleID: entity.IntArrayToString(req.SupportRoleID),
 	}
 	id, err := da.GetOrgModel().CreateOrg(ctx, tx, data)
 	if err != nil{
@@ -425,6 +435,7 @@ func ToOrgEntity(org *da.Org) *entity.Org {
 		Address:   org.Address,
 		ParentID:  org.ParentID,
 		Telephone: org.Telephone,
+		SupportRoleID: entity.StringToIntArray(org.SupportRoleID),
 	}
 }
 

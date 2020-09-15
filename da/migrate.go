@@ -2,6 +2,7 @@ package da
 
 import (
 	"context"
+	"fmt"
 	"xg/crypto"
 	"xg/db"
 	"xg/entity"
@@ -37,6 +38,9 @@ func InitData(flag bool) {
 		Name:     "学果网",
 		Subjects: "",
 		Status:   entity.OrgStatusCertified,
+		SupportRoleID: fmt.Sprintf("%v,%v,%v,%v,%v,%v", entity.RoleSuperAdmin,
+			entity.RoleEnterWorker, entity.RoleDispatchWorker, entity.RoleUserManager,
+			entity.RoleOrgManager, entity.RoleChecker),
 	})
 	if err != nil {
 		panic(err)
@@ -118,7 +122,7 @@ func initAuth() {
 
 func initRole() {
 	//创建超级管理员角色
-	adminId, err := GetRoleModel().CreateRoleWithID(context.Background(), 1, "超级管理员")
+	adminId, err := GetRoleModel().CreateRoleWithID(context.Background(), entity.RoleSuperAdmin, "超级管理员")
 	if err != nil {
 		panic(err)
 	}
@@ -128,7 +132,7 @@ func initRole() {
 		panic(err)
 	}
 
-	enterId, err := GetRoleModel().CreateRoleWithID(context.Background(), 2, "录单员")
+	enterId, err := GetRoleModel().CreateRoleWithID(context.Background(), entity.RoleEnterWorker, "录单员")
 	if err != nil {
 		panic(err)
 	}
@@ -137,7 +141,7 @@ func initRole() {
 		panic(err)
 	}
 
-	dispatchId, err := GetRoleModel().CreateRoleWithID(context.Background(), 3, "派单员")
+	dispatchId, err := GetRoleModel().CreateRoleWithID(context.Background(), entity.RoleDispatchWorker, "派单员")
 	if err != nil {
 		panic(err)
 	}
@@ -146,7 +150,7 @@ func initRole() {
 		panic(err)
 	}
 
-	userId, err := GetRoleModel().CreateRoleWithID(context.Background(), 4, "人员管理员")
+	userId, err := GetRoleModel().CreateRoleWithID(context.Background(), entity.RoleUserManager, "人员管理员")
 	if err != nil {
 		panic(err)
 	}
@@ -155,7 +159,7 @@ func initRole() {
 		panic(err)
 	}
 
-	orgId, err := GetRoleModel().CreateRoleWithID(context.Background(), 5, "机构管理员")
+	orgId, err := GetRoleModel().CreateRoleWithID(context.Background(), entity.RoleOrgManager, "机构管理员")
 	if err != nil {
 		panic(err)
 	}
@@ -164,7 +168,7 @@ func initRole() {
 		panic(err)
 	}
 
-	checkId, err := GetRoleModel().CreateRoleWithID(context.Background(), 6, "审核员")
+	checkId, err := GetRoleModel().CreateRoleWithID(context.Background(), entity.RoleChecker, "审核员")
 	if err != nil {
 		panic(err)
 	}
@@ -173,7 +177,7 @@ func initRole() {
 		panic(err)
 	}
 
-	outOrgId, err := GetRoleModel().CreateRoleWithID(context.Background(), 7, "机构账号")
+	outOrgId, err := GetRoleModel().CreateRoleWithID(context.Background(), entity.RoleOutOrg, "机构账号")
 	if err != nil {
 		panic(err)
 	}

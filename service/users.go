@@ -234,7 +234,7 @@ func (u *UserService) fillUserInfo(ctx context.Context, user *da.User) (*entity.
 }
 
 func (u *UserService) checkUserEntity(ctx context.Context, req *entity.CreateUserRequest) error {
-	_, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), req.OrgId)
+	orgInfo, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), req.OrgId)
 	if err != nil {
 		log.Warning.Printf("Get org failed, req: %#v, err: %v\n", req, err)
 		return err
@@ -245,8 +245,20 @@ func (u *UserService) checkUserEntity(ctx context.Context, req *entity.CreateUse
 		return err
 	}
 
-	if (req.OrgId != 1 && req.RoleId != 7) ||
-		(req.OrgId == 1 && req.RoleId == 7) {
+	//if (req.OrgId != entity.RootOrgId && req.RoleId != entity.RoleOutOrg) ||
+	//	(req.OrgId == entity.RootOrgId && req.RoleId == entity.RoleOutOrg) {
+	//	log.Warning.Printf("Invalid user role, req: %#v, err: %v\n", req, ErrInvalidUserRoleOrg)
+	//	return ErrInvalidUserRoleOrg
+	//}
+
+	supportRoleIds := entity.StringToIntArray(orgInfo.SupportRoleID)
+	flag := false
+	for i := range supportRoleIds {
+		if supportRoleIds[i] == req.RoleId {
+			flag = true
+		}
+	}
+	if !flag {
 		log.Warning.Printf("Invalid user role, req: %#v, err: %v\n", req, ErrInvalidUserRoleOrg)
 		return ErrInvalidUserRoleOrg
 	}

@@ -32,6 +32,7 @@ type Org struct {
 	Telephone string `gorm:"type:varchar(64);NOT NULL; column:telephone"`
 
 	Status int `gorm:"type:int;NOT NULL;column:status"`
+	SupportRoleID string  `gorm:"type:varchar(255);NOT NULL;column:support_role_ids"`
 
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`
 	CreatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:created_at"`
