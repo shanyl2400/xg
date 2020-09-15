@@ -10,5 +10,5 @@ deploy/nginx/www
 deploy/nginx/log
 deploy/mysql/db
 deploy/mysql/log
-deploy/redis/dasta
+deploy/redis/data
 deploy/redis/log
