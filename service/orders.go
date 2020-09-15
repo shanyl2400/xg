@@ -593,10 +593,26 @@ func (o *OrderService) checkOrderAuthorize(ctx context.Context, order *da.OrderI
 	if operator.OrgId == entity.RootOrgId {
 		return nil
 	}
-	if operator.OrgId != order.Order.ToOrgID {
-		log.Warning.Printf("checkOrderAuthorize failed, order: %#v, operator: %#v, err: %v\n", order, operator, ErrNoAuthorizeToOperate)
-		return ErrNoAuthorizeToOperate
+	subOrgs, err := da.GetOrgModel().GetOrgsByParentId(ctx, operator.OrgId)
+	if err != nil{
+		return err
 	}
+
+	if operator.OrgId != order.Order.ToOrgID {
+		flag := false
+		for i := range subOrgs {
+			if subOrgs[i].ID == order.Order.ToOrgID {
+				flag = true
+				break
+			}
+		}
+
+		if !flag{
+			log.Warning.Printf("checkOrderAuthorize failed, order: %#v, operator: %#v, err: %v\n", order, operator, ErrNoAuthorizeToOperate)
+			return ErrNoAuthorizeToOperate
+		}
+	}
+
 	return nil
 }
 
