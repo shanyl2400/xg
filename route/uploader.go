@@ -3,8 +3,8 @@ package route
 import (
 	"errors"
 	"net/http"
-	"os"
 	"strings"
+	"xg/conf"
 	"xg/log"
 
 	"github.com/gin-gonic/gin"
@@ -18,7 +18,7 @@ var (
 type Partition string
 
 func (p Partition) PartitionPath() string {
-	uploads := os.Getenv("xg_upload_path")
+	uploads := conf.Get().UploadPath
 	if p == "avatar" {
 		return uploads + "/avatar"
 	}

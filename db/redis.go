@@ -3,8 +3,8 @@ package db
 import (
 	"context"
 	"github.com/go-redis/redis/v8"
-	"os"
 	"sync"
+	"xg/conf"
 )
 
 var (
@@ -15,7 +15,7 @@ var (
 func GetRedis() *redis.Client{
 	_redisOnce.Do(func() {
 		globalRedis = redis.NewClient(&redis.Options{
-			Addr:     os.Getenv("xg_redis_conn"),
+			Addr:     conf.Get().RedisConnectionString,
 			Password: "", // no password set
 			DB:       0,  // use default DB
 		})

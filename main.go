@@ -13,7 +13,23 @@ func loadConfig() {
 	if dbConn == "" {
 		panic("xg_db_conn env is required")
 	}
-	c := &conf.Config{DBConnectionString: dbConn}
+	redisConn := os.Getenv("xg_redis_conn")
+	if redisConn == "" {
+		panic("xg_redis_conn env is required")
+	}
+	uploadPath := os.Getenv("xg_upload_path")
+	if uploadPath == "" {
+		panic("xg_upload_path env is required")
+	}
+
+	logPath := os.Getenv("xg_log_path")
+
+	c := &conf.Config{
+		DBConnectionString: dbConn,
+		RedisConnectionString: redisConn,
+		LogPath: logPath,
+		UploadPath: uploadPath,
+	}
 	conf.Set(c)
 }
 

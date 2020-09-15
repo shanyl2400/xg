@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"time"
+	"xg/conf"
 )
 
 var (
@@ -17,7 +18,7 @@ var (
 
 func init() {
 	logPath := "./log"
-	if v := os.Getenv("xg_log_path"); v != "" {
+	if v := conf.Get().LogPath; v != "" {
 		logPath = v
 	}
 	fileName := fmt.Sprintf("%v/log_%v.log", logPath, time.Now().Format("2006_01_02"))
