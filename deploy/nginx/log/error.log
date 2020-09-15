@@ -1,0 +1,557 @@
+2020/09/14 05:56:03 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 05:56:05 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 05:56:06 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 05:56:08 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 05:56:10 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 05:56:13 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 05:56:18 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 05:56:26 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 05:56:40 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 05:57:07 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 05:57:59 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 05:59:01 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 06:00:02 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 06:01:04 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 06:02:05 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 06:03:48 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 06:03:50 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 06:03:51 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 06:03:53 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 06:03:56 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 06:03:59 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 06:04:03 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 06:04:11 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 06:04:25 [emerg] 1#1: host not found in upstream "apache:80" in /etc/nginx/nginx.conf:16
+2020/09/14 06:06:24 [error] 19#19: *1 "/etc/nginx/html/index.html" is not found (2: No such file or directory), client: 172.23.0.1, server: localhost, request: "GET / HTTP/1.1", host: "localhost"
+2020/09/14 06:06:24 [error] 19#19: *1 open() "/etc/nginx/html/favicon.ico" failed (2: No such file or directory), client: 172.23.0.1, server: localhost, request: "GET /favicon.ico HTTP/1.1", host: "localhost", referrer: "http://localhost/"
+2020/09/14 06:07:22 [emerg] 1#1: directive "root" is not terminated by ";" in /etc/nginx/nginx.conf:39
+2020/09/14 06:07:23 [emerg] 1#1: directive "root" is not terminated by ";" in /etc/nginx/nginx.conf:39
+2020/09/14 06:07:24 [emerg] 1#1: directive "root" is not terminated by ";" in /etc/nginx/nginx.conf:39
+2020/09/14 06:07:24 [emerg] 1#1: directive "root" is not terminated by ";" in /etc/nginx/nginx.conf:39
+2020/09/14 06:07:25 [emerg] 1#1: directive "root" is not terminated by ";" in /etc/nginx/nginx.conf:39
+2020/09/14 06:07:27 [emerg] 1#1: directive "root" is not terminated by ";" in /etc/nginx/nginx.conf:39
+2020/09/14 06:07:31 [emerg] 1#1: directive "root" is not terminated by ";" in /etc/nginx/nginx.conf:39
+2020/09/14 06:07:38 [emerg] 1#1: directive "root" is not terminated by ";" in /etc/nginx/nginx.conf:39
+2020/09/14 06:07:51 [emerg] 1#1: directive "root" is not terminated by ";" in /etc/nginx/nginx.conf:39
+2020/09/14 06:08:17 [emerg] 1#1: directive "root" is not terminated by ";" in /etc/nginx/nginx.conf:39
+2020/09/14 06:09:08 [emerg] 1#1: directive "root" is not terminated by ";" in /etc/nginx/nginx.conf:39
+2020/09/14 06:10:09 [emerg] 1#1: directive "root" is not terminated by ";" in /etc/nginx/nginx.conf:39
+2020/09/14 06:11:09 [emerg] 1#1: directive "root" is not terminated by ";" in /etc/nginx/nginx.conf:39
+2020/09/14 06:12:10 [emerg] 1#1: directive "root" is not terminated by ";" in /etc/nginx/nginx.conf:39
+2020/09/14 06:13:10 [emerg] 1#1: directive "root" is not terminated by ";" in /etc/nginx/nginx.conf:39
+2020/09/14 06:14:10 [emerg] 1#1: directive "root" is not terminated by ";" in /etc/nginx/nginx.conf:39
+2020/09/14 06:17:30 [emerg] 1#1: open() "/etc/nginx/log/error.log" failed (2: No such file or directory)
+2020/09/14 06:17:31 [emerg] 1#1: open() "/etc/nginx/log/error.log" failed (2: No such file or directory)
+2020/09/14 06:17:31 [emerg] 1#1: open() "/etc/nginx/log/error.log" failed (2: No such file or directory)
+2020/09/14 06:17:32 [emerg] 1#1: open() "/etc/nginx/log/error.log" failed (2: No such file or directory)
+2020/09/14 06:17:33 [emerg] 1#1: open() "/etc/nginx/log/error.log" failed (2: No such file or directory)
+2020/09/14 06:17:35 [emerg] 1#1: open() "/etc/nginx/log/error.log" failed (2: No such file or directory)
+2020/09/14 06:17:39 [emerg] 1#1: open() "/etc/nginx/log/error.log" failed (2: No such file or directory)
+2020/09/14 06:17:45 [emerg] 1#1: open() "/etc/nginx/log/error.log" failed (2: No such file or directory)
+2020/09/14 06:17:59 [emerg] 1#1: open() "/etc/nginx/log/error.log" failed (2: No such file or directory)
+2020/09/14 06:18:25 [emerg] 1#1: open() "/etc/nginx/log/error.log" failed (2: No such file or directory)
+2020/09/14 06:19:16 [emerg] 1#1: open() "/etc/nginx/log/error.log" failed (2: No such file or directory)
+2020/09/14 06:19:46 [emerg] 1#1: open() "/etc/nginx/log/access.log" failed (2: No such file or directory)
+2020/09/14 06:19:46 [emerg] 1#1: open() "/etc/nginx/log/access.log" failed (2: No such file or directory)
+2020/09/14 06:19:47 [emerg] 1#1: open() "/etc/nginx/log/access.log" failed (2: No such file or directory)
+2020/09/14 06:19:48 [emerg] 1#1: open() "/etc/nginx/log/access.log" failed (2: No such file or directory)
+2020/09/14 06:19:49 [emerg] 1#1: open() "/etc/nginx/log/access.log" failed (2: No such file or directory)
+2020/09/14 06:19:51 [emerg] 1#1: open() "/etc/nginx/log/access.log" failed (2: No such file or directory)
+2020/09/14 06:19:54 [emerg] 1#1: open() "/etc/nginx/log/access.log" failed (2: No such file or directory)
+2020/09/14 06:20:01 [emerg] 1#1: open() "/etc/nginx/log/access.log" failed (2: No such file or directory)
+2020/09/14 06:20:14 [emerg] 1#1: open() "/etc/nginx/log/access.log" failed (2: No such file or directory)
+2020/09/14 06:20:40 [emerg] 1#1: open() "/etc/nginx/log/access.log" failed (2: No such file or directory)
+2020/09/14 06:21:32 [emerg] 1#1: open() "/etc/nginx/log/access.log" failed (2: No such file or directory)
+2020/09/14 06:22:20 [notice] 1#1: using the "epoll" event method
+2020/09/14 06:22:20 [notice] 1#1: nginx/1.19.2
+2020/09/14 06:22:20 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 06:22:20 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 06:22:20 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 06:22:20 [notice] 1#1: start worker processes
+2020/09/14 06:22:20 [notice] 1#1: start worker process 19
+2020/09/14 06:22:27 [error] 19#19: *2 directory index of "/usr/share/nginx/wwwroot/" is forbidden, client: 172.27.0.1, server: 127.0.0.1, request: "GET / HTTP/1.1", host: "localhost"
+2020/09/14 06:22:32 [error] 19#19: *2 directory index of "/usr/share/nginx/wwwroot/" is forbidden, client: 172.27.0.1, server: 127.0.0.1, request: "GET / HTTP/1.1", host: "localhost"
+2020/09/14 06:22:38 [error] 19#19: *2 directory index of "/usr/share/nginx/wwwroot/" is forbidden, client: 172.27.0.1, server: 127.0.0.1, request: "GET / HTTP/1.1", host: "localhost"
+2020/09/14 06:23:27 [info] 19#19: *1 client timed out (110: Connection timed out) while waiting for request, client: 172.27.0.1, server: 0.0.0.0:80
+2020/09/14 06:24:08 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 06:24:08 [notice] 19#19: exiting
+2020/09/14 06:24:08 [notice] 19#19: exit
+2020/09/14 06:24:08 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 06:24:08 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 06:24:08 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 06:24:08 [notice] 1#1: exit
+2020/09/14 06:24:12 [notice] 1#1: using the "epoll" event method
+2020/09/14 06:24:12 [notice] 1#1: nginx/1.19.2
+2020/09/14 06:24:12 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 06:24:12 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 06:24:12 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 06:24:12 [notice] 1#1: start worker processes
+2020/09/14 06:24:12 [notice] 1#1: start worker process 19
+2020/09/14 06:24:16 [error] 19#19: *1 directory index of "/usr/share/nginx/wwwroot/" is forbidden, client: 172.28.0.1, server: localhost, request: "GET / HTTP/1.1", host: "localhost"
+2020/09/14 06:24:17 [error] 19#19: *1 directory index of "/usr/share/nginx/wwwroot/" is forbidden, client: 172.28.0.1, server: localhost, request: "GET / HTTP/1.1", host: "localhost"
+2020/09/14 06:24:18 [error] 19#19: *1 directory index of "/usr/share/nginx/wwwroot/" is forbidden, client: 172.28.0.1, server: localhost, request: "GET / HTTP/1.1", host: "localhost"
+2020/09/14 06:25:11 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 06:25:11 [notice] 19#19: exiting
+2020/09/14 06:25:11 [notice] 19#19: exit
+2020/09/14 06:25:12 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 06:25:12 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 06:25:12 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 06:25:12 [notice] 1#1: exit
+2020/09/14 06:25:14 [notice] 1#1: using the "epoll" event method
+2020/09/14 06:25:14 [notice] 1#1: nginx/1.19.2
+2020/09/14 06:25:14 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 06:25:14 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 06:25:14 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 06:25:14 [notice] 1#1: start worker processes
+2020/09/14 06:25:14 [notice] 1#1: start worker process 19
+2020/09/14 06:25:16 [error] 19#19: *1 directory index of "/usr/share/nginx/wwwroot/" is forbidden, client: 172.29.0.1, server: localhost, request: "GET / HTTP/1.1", host: "localhost"
+2020/09/14 06:25:17 [error] 19#19: *1 directory index of "/usr/share/nginx/wwwroot/" is forbidden, client: 172.29.0.1, server: localhost, request: "GET / HTTP/1.1", host: "localhost"
+2020/09/14 06:25:17 [error] 19#19: *1 directory index of "/usr/share/nginx/wwwroot/" is forbidden, client: 172.29.0.1, server: localhost, request: "GET / HTTP/1.1", host: "localhost"
+2020/09/14 06:25:18 [error] 19#19: *1 directory index of "/usr/share/nginx/wwwroot/" is forbidden, client: 172.29.0.1, server: localhost, request: "GET / HTTP/1.1", host: "localhost"
+2020/09/14 06:25:27 [error] 19#19: *3 directory index of "/usr/share/nginx/wwwroot/" is forbidden, client: 172.29.0.1, server: localhost, request: "GET / HTTP/1.1", host: "localhost"
+2020/09/14 06:25:27 [info] 19#19: *3 client 172.29.0.1 closed keepalive connection
+2020/09/14 06:26:17 [info] 19#19: *2 client timed out (110: Connection timed out) while waiting for request, client: 172.29.0.1, server: 0.0.0.0:80
+2020/09/14 06:30:09 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 06:30:09 [notice] 19#19: exiting
+2020/09/14 06:30:09 [notice] 19#19: exit
+2020/09/14 06:30:09 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 06:30:09 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 06:30:09 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 06:30:09 [notice] 1#1: exit
+2020/09/14 06:30:18 [notice] 1#1: using the "epoll" event method
+2020/09/14 06:30:18 [notice] 1#1: nginx/1.19.2
+2020/09/14 06:30:18 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 06:30:18 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 06:30:18 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 06:30:18 [notice] 1#1: start worker processes
+2020/09/14 06:30:18 [notice] 1#1: start worker process 19
+2020/09/14 06:30:30 [notice] 19#19: *1 "^.*$" matches "/main", client: 172.30.0.1, server: localhost, request: "GET /main HTTP/1.1", host: "localhost"
+2020/09/14 06:30:30 [notice] 19#19: *1 rewritten data: "/index.html", args: "", client: 172.30.0.1, server: localhost, request: "GET /main HTTP/1.1", host: "localhost"
+2020/09/14 06:32:11 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 06:32:11 [notice] 19#19: exiting
+2020/09/14 06:32:11 [notice] 19#19: exit
+2020/09/14 06:32:11 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 06:32:11 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 06:32:11 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 06:32:11 [notice] 1#1: exit
+2020/09/14 06:50:57 [notice] 1#1: using the "epoll" event method
+2020/09/14 06:50:57 [notice] 1#1: nginx/1.19.2
+2020/09/14 06:50:57 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 06:50:57 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 06:50:57 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 06:50:57 [notice] 1#1: start worker processes
+2020/09/14 06:50:57 [notice] 1#1: start worker process 19
+2020/09/14 06:52:39 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 06:52:39 [notice] 19#19: exiting
+2020/09/14 06:52:39 [notice] 19#19: exit
+2020/09/14 06:52:39 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 06:52:40 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 06:52:40 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 06:52:40 [notice] 1#1: exit
+2020/09/14 06:52:46 [notice] 1#1: using the "epoll" event method
+2020/09/14 06:52:46 [notice] 1#1: nginx/1.19.2
+2020/09/14 06:52:46 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 06:52:46 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 06:52:46 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 06:52:46 [notice] 1#1: start worker processes
+2020/09/14 06:52:46 [notice] 1#1: start worker process 19
+2020/09/14 06:57:52 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 06:57:52 [notice] 19#19: exiting
+2020/09/14 06:57:52 [notice] 19#19: exit
+2020/09/14 06:57:52 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 06:57:52 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 06:57:52 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 06:57:52 [notice] 1#1: exit
+2020/09/14 06:59:21 [notice] 1#1: using the "epoll" event method
+2020/09/14 06:59:21 [notice] 1#1: nginx/1.19.2
+2020/09/14 06:59:21 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 06:59:21 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 06:59:21 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 06:59:21 [notice] 1#1: start worker processes
+2020/09/14 06:59:21 [notice] 1#1: start worker process 19
+2020/09/14 07:01:17 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 07:01:17 [notice] 19#19: exiting
+2020/09/14 07:01:17 [notice] 19#19: exit
+2020/09/14 07:01:17 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 07:01:17 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 07:01:17 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 07:01:17 [notice] 1#1: exit
+2020/09/14 07:01:23 [notice] 1#1: using the "epoll" event method
+2020/09/14 07:01:23 [notice] 1#1: nginx/1.19.2
+2020/09/14 07:01:23 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 07:01:23 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 07:01:23 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 07:01:23 [notice] 1#1: start worker processes
+2020/09/14 07:01:23 [notice] 1#1: start worker process 19
+2020/09/14 07:03:06 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 07:03:06 [notice] 19#19: exiting
+2020/09/14 07:03:06 [notice] 19#19: exit
+2020/09/14 07:03:06 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 07:03:06 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 07:03:06 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 07:03:06 [notice] 1#1: exit
+2020/09/14 07:06:56 [notice] 1#1: using the "epoll" event method
+2020/09/14 07:06:56 [notice] 1#1: nginx/1.19.2
+2020/09/14 07:06:56 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 07:06:56 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 07:06:56 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 07:06:56 [notice] 1#1: start worker processes
+2020/09/14 07:06:56 [notice] 1#1: start worker process 19
+2020/09/14 07:08:16 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 07:08:16 [notice] 19#19: exiting
+2020/09/14 07:08:16 [notice] 19#19: exit
+2020/09/14 07:08:16 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 07:08:16 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 07:08:16 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 07:08:16 [notice] 1#1: exit
+2020/09/14 07:08:21 [notice] 1#1: using the "epoll" event method
+2020/09/14 07:08:21 [notice] 1#1: nginx/1.19.2
+2020/09/14 07:08:21 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 07:08:21 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 07:08:21 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 07:08:21 [notice] 1#1: start worker processes
+2020/09/14 07:08:21 [notice] 1#1: start worker process 20
+2020/09/14 07:09:41 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 07:09:41 [notice] 20#20: exiting
+2020/09/14 07:09:41 [notice] 20#20: exit
+2020/09/14 07:09:41 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 07:09:41 [notice] 1#1: signal 17 (SIGCHLD) received from 20
+2020/09/14 07:09:41 [notice] 1#1: worker process 20 exited with code 0
+2020/09/14 07:09:41 [notice] 1#1: exit
+2020/09/14 07:09:47 [notice] 1#1: using the "epoll" event method
+2020/09/14 07:09:47 [notice] 1#1: nginx/1.19.2
+2020/09/14 07:09:47 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 07:09:47 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 07:09:47 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 07:09:47 [notice] 1#1: start worker processes
+2020/09/14 07:09:47 [notice] 1#1: start worker process 19
+2020/09/14 07:10:16 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 07:10:16 [notice] 19#19: exiting
+2020/09/14 07:10:16 [notice] 19#19: exit
+2020/09/14 07:10:16 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 07:10:16 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 07:10:16 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 07:10:16 [notice] 1#1: exit
+2020/09/14 07:11:53 [notice] 1#1: using the "epoll" event method
+2020/09/14 07:11:53 [notice] 1#1: nginx/1.19.2
+2020/09/14 07:11:53 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 07:11:53 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 07:11:53 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 07:11:53 [notice] 1#1: start worker processes
+2020/09/14 07:11:53 [notice] 1#1: start worker process 19
+2020/09/14 07:14:41 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 07:14:41 [notice] 19#19: exiting
+2020/09/14 07:14:41 [notice] 19#19: exit
+2020/09/14 07:14:41 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 07:14:41 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 07:14:41 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 07:14:41 [notice] 1#1: exit
+2020/09/14 07:14:47 [notice] 1#1: using the "epoll" event method
+2020/09/14 07:14:47 [notice] 1#1: nginx/1.19.2
+2020/09/14 07:14:47 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 07:14:47 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 07:14:47 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 07:14:47 [notice] 1#1: start worker processes
+2020/09/14 07:14:47 [notice] 1#1: start worker process 19
+2020/09/14 07:17:05 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 07:17:05 [notice] 19#19: exiting
+2020/09/14 07:17:05 [notice] 19#19: exit
+2020/09/14 07:17:05 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 07:17:05 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 07:17:05 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 07:17:05 [notice] 1#1: exit
+2020/09/14 07:24:13 [notice] 1#1: using the "epoll" event method
+2020/09/14 07:24:13 [notice] 1#1: nginx/1.19.2
+2020/09/14 07:24:13 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 07:24:13 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 07:24:13 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 07:24:13 [notice] 1#1: start worker processes
+2020/09/14 07:24:13 [notice] 1#1: start worker process 19
+2020/09/14 07:25:05 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 07:25:05 [notice] 19#19: exiting
+2020/09/14 07:25:05 [notice] 19#19: exit
+2020/09/14 07:25:05 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 07:25:05 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 07:25:05 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 07:25:05 [notice] 1#1: exit
+2020/09/14 07:25:11 [notice] 1#1: using the "epoll" event method
+2020/09/14 07:25:11 [notice] 1#1: nginx/1.19.2
+2020/09/14 07:25:11 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 07:25:11 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 07:25:11 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 07:25:11 [notice] 1#1: start worker processes
+2020/09/14 07:25:11 [notice] 1#1: start worker process 19
+2020/09/14 07:26:20 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 07:26:20 [notice] 19#19: exiting
+2020/09/14 07:26:20 [notice] 19#19: exit
+2020/09/14 07:26:20 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 07:26:20 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 07:26:20 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 07:26:20 [notice] 1#1: exit
+2020/09/14 07:26:38 [notice] 1#1: using the "epoll" event method
+2020/09/14 07:26:38 [notice] 1#1: nginx/1.19.2
+2020/09/14 07:26:38 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 07:26:38 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 07:26:38 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 07:26:38 [notice] 1#1: start worker processes
+2020/09/14 07:26:38 [notice] 1#1: start worker process 24
+2020/09/14 07:27:22 [notice] 24#24: *3 "^.*$" matches "/main", client: 172.21.0.1, server: localhost, request: "GET /main HTTP/1.1", host: "localhost"
+2020/09/14 07:27:22 [notice] 24#24: *3 rewritten data: "/index.html", args: "", client: 172.21.0.1, server: localhost, request: "GET /main HTTP/1.1", host: "localhost"
+2020/09/14 07:28:30 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 07:28:30 [notice] 24#24: exiting
+2020/09/14 07:28:30 [notice] 24#24: exit
+2020/09/14 07:28:30 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 07:28:30 [notice] 1#1: signal 17 (SIGCHLD) received from 24
+2020/09/14 07:28:30 [notice] 1#1: worker process 24 exited with code 0
+2020/09/14 07:28:30 [notice] 1#1: exit
+2020/09/14 07:32:32 [notice] 1#1: using the "epoll" event method
+2020/09/14 07:32:32 [notice] 1#1: nginx/1.19.2
+2020/09/14 07:32:32 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 07:32:32 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 07:32:32 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 07:32:32 [notice] 1#1: start worker processes
+2020/09/14 07:32:32 [notice] 1#1: start worker process 20
+2020/09/14 07:36:37 [notice] 20#20: *3 "^.*$" matches "/main/user_info", client: 172.23.0.1, server: localhost, request: "GET /main/user_info HTTP/1.1", host: "localhost", referrer: "http://localhost/main/user_info"
+2020/09/14 07:36:37 [notice] 20#20: *3 rewritten data: "/index.html", args: "", client: 172.23.0.1, server: localhost, request: "GET /main/user_info HTTP/1.1", host: "localhost", referrer: "http://localhost/main/user_info"
+2020/09/14 07:53:58 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 07:53:58 [notice] 20#20: exiting
+2020/09/14 07:53:58 [notice] 20#20: exit
+2020/09/14 07:53:58 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 07:53:58 [notice] 1#1: signal 17 (SIGCHLD) received from 20
+2020/09/14 07:53:58 [notice] 1#1: worker process 20 exited with code 0
+2020/09/14 07:53:58 [notice] 1#1: exit
+2020/09/14 07:54:04 [notice] 1#1: using the "epoll" event method
+2020/09/14 07:54:04 [notice] 1#1: nginx/1.19.2
+2020/09/14 07:54:04 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 07:54:04 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 07:54:04 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 07:54:04 [notice] 1#1: start worker processes
+2020/09/14 07:54:04 [notice] 1#1: start worker process 19
+2020/09/14 07:59:59 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 07:59:59 [notice] 19#19: exiting
+2020/09/14 07:59:59 [notice] 19#19: exit
+2020/09/14 07:59:59 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 07:59:59 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 07:59:59 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 07:59:59 [notice] 1#1: exit
+2020/09/14 08:00:05 [notice] 1#1: using the "epoll" event method
+2020/09/14 08:00:05 [notice] 1#1: nginx/1.19.2
+2020/09/14 08:00:05 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 08:00:05 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 08:00:05 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 08:00:05 [notice] 1#1: start worker processes
+2020/09/14 08:00:05 [notice] 1#1: start worker process 21
+2020/09/14 08:01:15 [info] 21#21: *1 client timed out (110: Connection timed out) while waiting for request, client: 172.25.0.1, server: 0.0.0.0:80
+2020/09/14 08:01:15 [info] 21#21: *2 client timed out (110: Connection timed out) while waiting for request, client: 172.25.0.1, server: 0.0.0.0:80
+2020/09/14 09:24:34 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 09:24:34 [notice] 21#21: exiting
+2020/09/14 09:24:34 [notice] 21#21: exit
+2020/09/14 09:24:35 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 09:24:35 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 09:24:35 [notice] 1#1: signal 17 (SIGCHLD) received from 21
+2020/09/14 09:24:35 [notice] 1#1: worker process 21 exited with code 0
+2020/09/14 09:24:35 [notice] 1#1: exit
+2020/09/14 09:31:03 [notice] 1#1: using the "epoll" event method
+2020/09/14 09:31:03 [notice] 1#1: nginx/1.19.2
+2020/09/14 09:31:03 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 09:31:03 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 09:31:03 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 09:31:03 [notice] 1#1: start worker processes
+2020/09/14 09:31:03 [notice] 1#1: start worker process 20
+2020/09/14 09:31:27 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 09:31:27 [notice] 20#20: exiting
+2020/09/14 09:31:27 [notice] 20#20: exit
+2020/09/14 09:31:27 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 09:31:27 [notice] 1#1: signal 17 (SIGCHLD) received from 20
+2020/09/14 09:31:27 [notice] 1#1: worker process 20 exited with code 0
+2020/09/14 09:31:27 [notice] 1#1: exit
+2020/09/14 09:33:54 [notice] 1#1: using the "epoll" event method
+2020/09/14 09:33:54 [notice] 1#1: nginx/1.19.2
+2020/09/14 09:33:54 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 09:33:54 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 09:33:54 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 09:33:54 [notice] 1#1: start worker processes
+2020/09/14 09:33:54 [notice] 1#1: start worker process 19
+2020/09/14 09:34:12 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 09:34:12 [notice] 19#19: exiting
+2020/09/14 09:34:12 [notice] 19#19: exit
+2020/09/14 09:34:12 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 09:34:12 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 09:34:12 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 09:34:12 [notice] 1#1: exit
+2020/09/14 09:34:58 [notice] 1#1: using the "epoll" event method
+2020/09/14 09:34:58 [notice] 1#1: nginx/1.19.2
+2020/09/14 09:34:58 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 09:34:58 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 09:34:58 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 09:34:58 [notice] 1#1: start worker processes
+2020/09/14 09:34:58 [notice] 1#1: start worker process 19
+2020/09/14 09:36:32 [notice] 19#19: *4 "^.*$" matches "/main/user_info", client: 172.28.0.1, server: localhost, request: "GET /main/user_info HTTP/1.1", host: "localhost", referrer: "http://localhost/main/user_info"
+2020/09/14 09:36:32 [notice] 19#19: *4 rewritten data: "/index.html", args: "", client: 172.28.0.1, server: localhost, request: "GET /main/user_info HTTP/1.1", host: "localhost", referrer: "http://localhost/main/user_info"
+2020/09/14 09:39:40 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 09:39:40 [notice] 19#19: exiting
+2020/09/14 09:39:40 [notice] 19#19: exit
+2020/09/14 09:39:40 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 09:39:40 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 09:39:40 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 09:39:40 [notice] 1#1: exit
+2020/09/14 09:40:10 [notice] 1#1: using the "epoll" event method
+2020/09/14 09:40:10 [notice] 1#1: nginx/1.19.2
+2020/09/14 09:40:10 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 09:40:10 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 09:40:10 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 09:40:10 [notice] 1#1: start worker processes
+2020/09/14 09:40:10 [notice] 1#1: start worker process 20
+2020/09/14 09:40:42 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 09:40:42 [notice] 20#20: exiting
+2020/09/14 09:40:42 [notice] 20#20: exit
+2020/09/14 09:40:42 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 09:40:42 [notice] 1#1: signal 17 (SIGCHLD) received from 20
+2020/09/14 09:40:42 [notice] 1#1: worker process 20 exited with code 0
+2020/09/14 09:40:42 [notice] 1#1: exit
+2020/09/14 09:40:48 [notice] 1#1: using the "epoll" event method
+2020/09/14 09:40:48 [notice] 1#1: nginx/1.19.2
+2020/09/14 09:40:48 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 09:40:48 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 09:40:48 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 09:40:48 [notice] 1#1: start worker processes
+2020/09/14 09:40:48 [notice] 1#1: start worker process 20
+2020/09/14 09:41:43 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 09:41:43 [notice] 20#20: exiting
+2020/09/14 09:41:43 [notice] 20#20: exit
+2020/09/14 09:41:43 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 09:41:43 [notice] 1#1: signal 17 (SIGCHLD) received from 20
+2020/09/14 09:41:43 [notice] 1#1: worker process 20 exited with code 0
+2020/09/14 09:41:43 [notice] 1#1: exit
+2020/09/14 09:41:48 [notice] 1#1: using the "epoll" event method
+2020/09/14 09:41:48 [notice] 1#1: nginx/1.19.2
+2020/09/14 09:41:48 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 09:41:48 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 09:41:48 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 09:41:48 [notice] 1#1: start worker processes
+2020/09/14 09:41:48 [notice] 1#1: start worker process 19
+2020/09/14 09:42:12 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 09:42:12 [notice] 19#19: exiting
+2020/09/14 09:42:12 [notice] 19#19: exit
+2020/09/14 09:42:12 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 09:42:12 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 09:42:12 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 09:42:12 [notice] 1#1: exit
+2020/09/14 09:45:50 [notice] 1#1: using the "epoll" event method
+2020/09/14 09:45:50 [notice] 1#1: nginx/1.19.2
+2020/09/14 09:45:50 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 09:45:50 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 09:45:50 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 09:45:50 [notice] 1#1: start worker processes
+2020/09/14 09:45:50 [notice] 1#1: start worker process 24
+2020/09/14 09:46:12 [notice] 24#24: *1 "^.*$" matches "/main", client: 192.168.0.1, server: localhost, request: "GET /main HTTP/1.1", host: "localhost"
+2020/09/14 09:46:12 [notice] 24#24: *1 rewritten data: "/index.html", args: "", client: 192.168.0.1, server: localhost, request: "GET /main HTTP/1.1", host: "localhost"
+2020/09/14 10:06:07 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 10:06:07 [notice] 24#24: exiting
+2020/09/14 10:06:07 [notice] 24#24: exit
+2020/09/14 10:06:07 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 10:06:07 [notice] 1#1: signal 17 (SIGCHLD) received from 24
+2020/09/14 10:06:07 [notice] 1#1: worker process 24 exited with code 0
+2020/09/14 10:06:07 [notice] 1#1: exit
+2020/09/14 10:15:09 [notice] 1#1: using the "epoll" event method
+2020/09/14 10:15:09 [notice] 1#1: nginx/1.19.2
+2020/09/14 10:15:09 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 10:15:09 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 10:15:09 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 10:15:09 [notice] 1#1: start worker processes
+2020/09/14 10:15:09 [notice] 1#1: start worker process 19
+2020/09/14 10:15:21 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/14 10:15:21 [notice] 19#19: exiting
+2020/09/14 10:15:21 [notice] 19#19: exit
+2020/09/14 10:15:21 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/14 10:15:21 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/14 10:15:21 [notice] 1#1: worker process 19 exited with code 0
+2020/09/14 10:15:21 [notice] 1#1: exit
+2020/09/14 10:15:38 [notice] 1#1: using the "epoll" event method
+2020/09/14 10:15:38 [notice] 1#1: nginx/1.19.2
+2020/09/14 10:15:38 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/14 10:15:38 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/14 10:15:38 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/14 10:15:38 [notice] 1#1: start worker processes
+2020/09/14 10:15:38 [notice] 1#1: start worker process 19
+2020/09/15 02:00:10 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/15 02:00:10 [notice] 19#19: exiting
+2020/09/15 02:00:10 [notice] 19#19: exit
+2020/09/15 02:00:10 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/15 02:00:10 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/15 02:00:10 [notice] 1#1: worker process 19 exited with code 0
+2020/09/15 02:00:10 [notice] 1#1: exit
+2020/09/15 02:07:44 [notice] 1#1: using the "epoll" event method
+2020/09/15 02:07:44 [notice] 1#1: nginx/1.19.2
+2020/09/15 02:07:44 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/15 02:07:44 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/15 02:07:44 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/15 02:07:44 [notice] 1#1: start worker processes
+2020/09/15 02:07:44 [notice] 1#1: start worker process 19
+2020/09/15 02:08:33 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/15 02:08:33 [notice] 19#19: exiting
+2020/09/15 02:08:33 [notice] 19#19: exit
+2020/09/15 02:08:33 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/15 02:08:33 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/15 02:08:33 [notice] 1#1: worker process 19 exited with code 0
+2020/09/15 02:08:33 [notice] 1#1: exit
+2020/09/15 02:43:57 [notice] 1#1: using the "epoll" event method
+2020/09/15 02:43:57 [notice] 1#1: nginx/1.19.2
+2020/09/15 02:43:57 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/15 02:43:57 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/15 02:43:57 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/15 02:43:57 [notice] 1#1: start worker processes
+2020/09/15 02:43:57 [notice] 1#1: start worker process 20
+2020/09/15 02:54:31 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/15 02:54:31 [notice] 20#20: exiting
+2020/09/15 02:54:31 [notice] 20#20: exit
+2020/09/15 02:54:31 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/15 02:54:31 [notice] 1#1: signal 17 (SIGCHLD) received from 20
+2020/09/15 02:54:31 [notice] 1#1: worker process 20 exited with code 0
+2020/09/15 02:54:31 [notice] 1#1: exit
+2020/09/15 02:55:03 [notice] 1#1: using the "epoll" event method
+2020/09/15 02:55:03 [notice] 1#1: nginx/1.19.2
+2020/09/15 02:55:03 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/15 02:55:03 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/15 02:55:03 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/15 02:55:03 [notice] 1#1: start worker processes
+2020/09/15 02:55:03 [notice] 1#1: start worker process 19
+2020/09/15 02:56:58 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/15 02:56:58 [notice] 19#19: exiting
+2020/09/15 02:56:58 [notice] 19#19: exit
+2020/09/15 02:56:58 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/15 02:56:58 [notice] 1#1: signal 17 (SIGCHLD) received from 19
+2020/09/15 02:56:58 [notice] 1#1: worker process 19 exited with code 0
+2020/09/15 02:56:58 [notice] 1#1: exit
+2020/09/15 02:58:26 [notice] 1#1: using the "epoll" event method
+2020/09/15 02:58:26 [notice] 1#1: nginx/1.19.2
+2020/09/15 02:58:26 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/15 02:58:26 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/15 02:58:26 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/15 02:58:26 [notice] 1#1: start worker processes
+2020/09/15 02:58:26 [notice] 1#1: start worker process 20
+2020/09/15 03:00:28 [info] 20#20: *1 client timed out (110: Connection timed out) while waiting for request, client: 192.168.96.1, server: 0.0.0.0:80
+2020/09/15 03:00:28 [info] 20#20: *2 client timed out (110: Connection timed out) while waiting for request, client: 192.168.96.1, server: 0.0.0.0:80
+2020/09/15 03:01:00 [notice] 20#20: *3 "^.*$" matches "/main", client: 192.168.96.1, server: localhost, request: "GET /main HTTP/1.1", host: "localhost"
+2020/09/15 03:01:00 [notice] 20#20: *3 rewritten data: "/index.html", args: "", client: 192.168.96.1, server: localhost, request: "GET /main HTTP/1.1", host: "localhost"
+2020/09/15 03:02:00 [info] 20#20: *4 client timed out (110: Connection timed out) while waiting for request, client: 192.168.96.1, server: 0.0.0.0:80
+2020/09/15 03:32:17 [notice] 1#1: signal 15 (SIGTERM) received, exiting
+2020/09/15 03:32:17 [notice] 20#20: exiting
+2020/09/15 03:32:17 [notice] 20#20: exit
+2020/09/15 03:32:17 [notice] 1#1: signal 14 (SIGALRM) received
+2020/09/15 03:32:17 [notice] 1#1: signal 17 (SIGCHLD) received from 20
+2020/09/15 03:32:17 [notice] 1#1: worker process 20 exited with code 0
+2020/09/15 03:32:17 [notice] 1#1: exit
+2020/09/15 03:32:25 [notice] 1#1: using the "epoll" event method
+2020/09/15 03:32:25 [notice] 1#1: nginx/1.19.2
+2020/09/15 03:32:25 [notice] 1#1: built by gcc 8.3.0 (Debian 8.3.0-6) 
+2020/09/15 03:32:25 [notice] 1#1: OS: Linux 4.19.104-microsoft-standard
+2020/09/15 03:32:25 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+2020/09/15 03:32:25 [notice] 1#1: start worker processes
+2020/09/15 03:32:25 [notice] 1#1: start worker process 19
+2020/09/15 03:34:59 [info] 19#19: *1 client timed out (110: Connection timed out) while waiting for request, client: 192.168.112.1, server: 0.0.0.0:80
+2020/09/15 03:34:59 [info] 19#19: *2 client timed out (110: Connection timed out) while waiting for request, client: 192.168.112.1, server: 0.0.0.0:80
+2020/09/15 03:38:11 [notice] 19#19: *3 "^.*$" matches "/main/create_user", client: 192.168.112.1, server: localhost, request: "GET /main/create_user HTTP/1.1", host: "localhost"
+2020/09/15 03:38:11 [notice] 19#19: *3 rewritten data: "/index.html", args: "", client: 192.168.112.1, server: localhost, request: "GET /main/create_user HTTP/1.1", host: "localhost"
+2020/09/15 03:46:04 [info] 19#19: *6 client timed out (110: Connection timed out) while waiting for request, client: 192.168.112.1, server: 0.0.0.0:80
+2020/09/15 03:46:04 [info] 19#19: *7 client timed out (110: Connection timed out) while waiting for request, client: 192.168.112.1, server: 0.0.0.0:80
