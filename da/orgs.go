@@ -28,11 +28,11 @@ type Org struct {
 	Name      string `gorm:"type:varchar(128);NOT NULL;column:name"`
 	Subjects  string `gorm:"type:varchar(255);NOT NULL;column:subjects"`
 	Address   string `gorm:"type:varchar(255);NOT NULL; column:address"`
-	ParentID  int    `gorm:"type:int;NOT NULL;column:parent_id"`
+	ParentID  int    `gorm:"type:int;NOT NULL;column:parent_id;index"`
 	Telephone string `gorm:"type:varchar(64);NOT NULL; column:telephone"`
 
-	Status int `gorm:"type:int;NOT NULL;column:status"`
-	SupportRoleID string  `gorm:"type:varchar(255);NOT NULL;column:support_role_ids"`
+	Status        int    `gorm:"type:int;NOT NULL;column:status;index"`
+	SupportRoleID string `gorm:"type:varchar(255);NOT NULL;column:support_role_ids"`
 
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`
 	CreatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:created_at"`
@@ -98,7 +98,6 @@ func (d *DBOrgModel) ListOrgsByIDs(ctx context.Context, ids []int) ([]*Org, erro
 	return orgList, nil
 }
 
-
 func (d *DBOrgModel) GetOrgsByParentId(ctx context.Context, parentId int) ([]*Org, error) {
 	condition := SearchOrgsCondition{
 		ParentIDs: []int{parentId},
@@ -106,7 +105,7 @@ func (d *DBOrgModel) GetOrgsByParentId(ctx context.Context, parentId int) ([]*Or
 	where, values := condition.GetConditions()
 	result := make([]*Org, 0)
 	err := db.Get().Where(where, values...).Find(&result).Error
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	return result, nil
@@ -146,8 +145,8 @@ type SearchOrgsCondition struct {
 	ParentIDs []int
 	IsSubOrg  bool
 
-	OrderBy string
-	Page int
+	OrderBy  string
+	Page     int
 	PageSize int
 }
 
