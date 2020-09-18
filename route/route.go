@@ -1,14 +1,13 @@
 package route
 
 import (
+	"fmt"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
 	"time"
 	"xg/entity"
-	"xg/log"
-
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
@@ -19,7 +18,7 @@ func Get() *gin.Engine {
 	s := new(Server)
 
 	allowOrigin := os.Getenv("allow_origin")
-	log.Info.Println("Allow Origin:", allowOrigin)
+	fmt.Println("Allow Origin:", allowOrigin)
 	route.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{allowOrigin},
 		AllowMethods:     []string{"PUT", "GET", "POST", "DELETE"},
