@@ -23,6 +23,8 @@ func loadConfig() {
 		panic("xg_upload_path env is required")
 	}
 
+	allowOrigin := os.Getenv("allow_origin")
+
 	logPath := os.Getenv("xg_log_path")
 
 	c := &conf.Config{
@@ -30,6 +32,7 @@ func loadConfig() {
 		RedisConnectionString: redisConn,
 		LogPath: logPath,
 		UploadPath: uploadPath,
+		AllowOrigin: allowOrigin,
 	}
 	conf.Set(c)
 }

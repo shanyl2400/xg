@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"xg/conf"
 	"xg/entity"
 
 	"github.com/gin-contrib/cors"
@@ -18,13 +19,13 @@ func Get() *gin.Engine {
 	s := new(Server)
 
 	route.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost", "http://localhost:3000"},
+		AllowOrigins:     []string{conf.Get().AllowOrigin},
 		AllowMethods:     []string{"PUT", "GET", "POST", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Cookie"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		AllowOriginFunc: func(origin string) bool {
-			return origin == "http://localhost"
+			return origin == conf.Get().AllowOrigin
 		},
 		MaxAge: 12 * time.Hour,
 	}))

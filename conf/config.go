@@ -11,6 +11,7 @@ type Config struct {
 	LogPath string `json:"log_path"`
 	UploadPath string `json:"upload_path"`
 	RedisConnectionString string `json:"redis_connection_string"`
+	AllowOrigin string `json:"allow_origin"`
 }
 
 func Set(c *Config) {
