@@ -6,6 +6,7 @@ import (
 	"time"
 	"xg/conf"
 	"xg/entity"
+	"xg/log"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -18,6 +19,7 @@ func Get() *gin.Engine {
 	route := gin.Default()
 	s := new(Server)
 
+	log.Info.Println("Allow Origin:", conf.Get().AllowOrigin)
 	route.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{conf.Get().AllowOrigin},
 		AllowMethods:     []string{"PUT", "GET", "POST", "DELETE"},

@@ -42,8 +42,8 @@ func loadConfig() {
 // @description  xg backend rest api
 // @termsOfService https://localhost:8088/v1
 func main() {
-	engine := route.Get()
 	loadConfig()
+	engine := route.Get()
 
 	//初始化日志
 	log.LogInit()
