@@ -6,7 +6,6 @@ services:
       container_name: xg_mysql
       restart: always
       environment:
-          MYSQL_DATABASE: 'db'
           MYSQL_USER: 'admin'
           MYSQL_PASSWORD: 'Bada123'
           MYSQL_DATABASE: 'xg'
@@ -44,6 +43,7 @@ services:
         xg_redis_conn: 'redis:6379'
         xg_log_path: '/var/log'
         xg_upload_path: '/go/uploads'
+        allow_origin: 'http://localhost'
       ports:
         - 8088:8088
       volumes:
