@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"os"
 	"time"
-	"xg/conf"
 	"xg/entity"
 	"xg/log"
 
@@ -19,15 +18,16 @@ func Get() *gin.Engine {
 	route := gin.Default()
 	s := new(Server)
 
-	log.Info.Println("Allow Origin:", conf.Get().AllowOrigin)
+	allowOrigin := os.Getenv("allow_origin")
+	log.Info.Println("Allow Origin:", allowOrigin)
 	route.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{conf.Get().AllowOrigin},
+		AllowOrigins:     []string{allowOrigin},
 		AllowMethods:     []string{"PUT", "GET", "POST", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Cookie"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		AllowOriginFunc: func(origin string) bool {
-			return origin == conf.Get().AllowOrigin
+			return origin == allowOrigin
 		},
 		MaxAge: 12 * time.Hour,
 	}))
