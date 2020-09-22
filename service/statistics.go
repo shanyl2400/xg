@@ -108,12 +108,14 @@ func (s *StatisticsService) SearchYearRecords(ctx context.Context, key string) (
 				Key:   record.Key,
 				Value: record.Value,
 				Year:  record.Year,
+				Count: record.Count,
 				Month: record.Month,
 			}
 		} else {
 			ret[i-1] = &entity.StatisticRecord{
 				Key:   key,
 				Value: 0,
+				Count: record.Count,
 				Year:  year,
 				Month: i,
 			}

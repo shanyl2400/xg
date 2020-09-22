@@ -21,6 +21,7 @@ type SummaryInfo struct {
 type StatisticRecord struct {
 	Key   string `json:"key"`
 	Value int    `json:"value"`
+	Count int `json:"count"`
 
 	Year  int `json:"year"`
 	Month int `json:"month"`
