@@ -15,6 +15,12 @@ type OrgListInfo struct {
 	Orgs  []*entity.Org `json:"orgs"`
 	Total int           `json:"total"`
 }
+
+
+type SubOrgListInfo struct {
+	Orgs  []*entity.SubOrgWithDistance `json:"orgs"`
+	Total int           `json:"total"`
+}
 // @Summary listOrgs
 // @Description list all organizations
 // @Accept json
@@ -84,8 +90,8 @@ func (s *Server) searchSubOrgs(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	c.JSON(http.StatusOK, OrgsListResponse{
-		Data: &OrgListInfo{
+	c.JSON(http.StatusOK, SubOrgsListResponse{
+		Data: &SubOrgListInfo{
 			Orgs:  orgs,
 			Total: count,
 		},

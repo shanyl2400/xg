@@ -77,7 +77,7 @@ func RandString(length int) string {
 }
 
 func RandInt() int{
-	return rand.Int()
+	return rand.Int() % 1000
 }
 
 func RandIndex(length int) int {

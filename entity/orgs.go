@@ -30,6 +30,20 @@ type Org struct {
 	SubOrgs []*Org `json:"sub_orgs"`
 }
 
+type SubOrgWithDistance struct {
+	ID        int      `json:"id"`
+	Name      string   `json:"name"`
+	Subjects  []string `json:"subjects"`
+	Address   string   `json:"address"`
+	AddressExt string `json:"address_ext"`
+	ParentID  int      `json:"parent_id"`
+	Telephone string   `json:"telephone"`
+	SupportRoleID []int `json:"support_role_id"`
+
+	Status int `json:"status"`
+	Distance float64 `json:"distance"`
+}
+
 type CreateOrgRequest struct {
 	Name      string   `json:"name"`
 	Subjects  []string `json:"subjects"`
@@ -37,6 +51,8 @@ type CreateOrgRequest struct {
 	AddressExt string `json:"address_ext"`
 	Telephone string   `json:"telephone"`
 	SupportRoleID	[]int `json:"support_role_id"`
+	Longitude	 float64 `json:"longitude"`
+	Latitude float64 `json:"latitude"`
 
 	Status   int `json:"status"`
 	ParentID int `json:"parent_id"`
@@ -59,6 +75,9 @@ type CreateOrUpdateOrgRequest struct {
 	Address   string   `json:"address"`
 	AddressExt string `json:"address_ext"`
 	Telephone string   `json:"telephone"`
+
+	Longitude	 float64 `json:"longitude"`
+	Latitude float64 `json:"latitude"`
 }
 
 type UpdateSubOrgsEntity struct {
@@ -75,6 +94,8 @@ type UpdateOrgRequest struct {
 	Address   string   `json:"address"`
 	AddressExt string `json:"address_ext"`
 	Telephone string   `json:"telephone"`
+	Longitude	 float64 `json:"longitude"`
+	Latitude float64 `json:"latitude"`
 
 	Status int `json:"status"`
 }
@@ -104,4 +125,9 @@ func StringToIntArray(s string) []int {
 		ret = append(ret, id)
 	}
 	return ret
+}
+
+type Coordinate struct {
+	Longitude float64 `json:"longitude"`
+	Latitude float64 `json:"latitude"`
 }

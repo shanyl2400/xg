@@ -552,7 +552,7 @@ func (a *APIClient) ListPendingOrgs(ctx context.Context, token string) (*route.O
 	return responseObj, responseObj.Error()
 }
 
-func (a *APIClient) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsCondition, token string) (*route.OrgsListResponse, error) {
+func (a *APIClient) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsCondition, token string) (*route.SubOrgsListResponse, error) {
 	query := make(map[string]string)
 	query["subjects"] = buildStrings(condition.Subjects)
 	query["address"] = condition.Address
@@ -566,7 +566,7 @@ func (a *APIClient) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsCo
 	if err != nil {
 		return nil, err
 	}
-	responseObj := new(route.OrgsListResponse)
+	responseObj := new(route.SubOrgsListResponse)
 	err = json.Unmarshal(resp, responseObj)
 	if err != nil {
 		return nil, err

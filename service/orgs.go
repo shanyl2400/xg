@@ -8,6 +8,7 @@ import (
 	"xg/db"
 	"xg/entity"
 	"xg/log"
+	"xg/utils"
 
 	"github.com/jinzhu/gorm"
 )
@@ -22,7 +23,7 @@ type IOrgService interface{
 	GetOrgSubjectsById(ctx context.Context, orgId int) ([]string, error)
 	ListOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error)
 	ListOrgsByStatus(ctx context.Context, status []int) (int, []*entity.Org, error)
-	SearchSubOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error)
+	SearchSubOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.SubOrgWithDistance, error)
 
 	UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *entity.UpdateOrgWithSubOrgsRequest, operator *entity.JWTUser) error
 }
@@ -54,6 +55,17 @@ func (s *OrgService) CreateOrgWithSubOrgs(ctx context.Context, req *entity.Creat
 		for i := range req.SubOrgs {
 			status := entity.OrgStatusCreated
 			req.SubOrgs[i].SupportRoleID = []int{entity.RoleOutOrg}
+
+			//获取经纬度信息
+			if req.SubOrgs[i].Longitude == 0 && req.SubOrgs[i].Latitude == 0 {
+				cor, err := utils.GetAddressLocation(req.SubOrgs[i].Address + req.SubOrgs[i].AddressExt)
+				if err != nil{
+					log.Warning.Printf("Get address failed, req: %#v, err: %v\n", req, err)
+				}else{
+					req.SubOrgs[i].Latitude = cor.Latitude
+					req.SubOrgs[i].Longitude = cor.Longitude
+				}
+			}
 			_, err = da.GetOrgModel().CreateOrg(ctx, tx, da.Org{
 				Name:      req.OrgData.Name + "-" + req.SubOrgs[i].Name,
 				Subjects:  strings.Join(req.SubOrgs[i].Subjects, ","),
@@ -63,6 +75,8 @@ func (s *OrgService) CreateOrgWithSubOrgs(ctx context.Context, req *entity.Creat
 				ParentID:  cid,
 				Telephone: req.SubOrgs[i].Telephone,
 				SupportRoleID: entity.IntArrayToString(req.SubOrgs[i].SupportRoleID),
+				Latitude: req.SubOrgs[i].Latitude,
+				Longitude: req.SubOrgs[i].Longitude,
 			})
 			if err != nil {
 				log.Warning.Printf("Create sub org failed, req: %#v, err: %v\n", req, err)
@@ -294,18 +308,21 @@ func (s *OrgService) ListOrgsByStatus(ctx context.Context, status []int) (int, [
 	return count, res, nil
 }
 
-func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error) {
+func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.SubOrgWithDistance, error) {
 	condition.Status = []int{entity.OrgStatusCertified}
 	condition.IsSubOrg = true
 
 	log.Info.Printf("SearchSubOrgs, condition: %#v\n", condition)
 
-	count, orgs, err := da.GetOrgModel().SearchOrgs(ctx, condition)
+	count, orgs, err := da.GetOrgModel().SearchOrgsWithDistance(ctx, condition, &entity.Coordinate{
+		Longitude: 100,
+		Latitude:  150,
+	})
 	if err != nil {
 		log.Warning.Printf("Search org failed, condition: %#v, err: %v\n", condition, err)
 		return 0, nil, err
 	}
-	res := make([]*entity.Org, 0)
+	res := make([]*entity.SubOrgWithDistance, 0)
 	for i := range orgs {
 		var subjects []string
 		if len(orgs[i].Subjects) > 0 {
@@ -319,7 +336,7 @@ func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsC
 		if len(orgs[i].Subjects) > 0 && len(subjects) == 0 {
 			continue
 		}
-		res = append(res, &entity.Org{
+		res = append(res, &entity.SubOrgWithDistance{
 			ID:        orgs[i].ID,
 			Name:      orgs[i].Name,
 			Subjects:  subjects,
@@ -329,6 +346,7 @@ func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsC
 			ParentID:  orgs[i].ParentID,
 			Telephone: orgs[i].Telephone,
 			SupportRoleID: entity.StringToIntArray(orgs[i].SupportRoleID),
+			Distance: orgs[i].Distance,
 		})
 	}
 	return count, res, nil
@@ -347,6 +365,8 @@ func (s *OrgService) UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *e
 			Address:    req.OrgData.Address,
 			AddressExt: req.OrgData.AddressExt,
 			Telephone:  req.OrgData.Telephone,
+			Latitude: req.OrgData.Latitude,
+			Longitude: req.OrgData.Longitude,
 		}, operator)
 		if err != nil {
 			log.Warning.Printf("Update org failed, orgId: %#v, req: %#v, err: %v\n", orgId, req, err)
@@ -354,6 +374,17 @@ func (s *OrgService) UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *e
 		}
 		//增加
 		for i := range updateEntity.InsertOrgList {
+
+			//获取经纬度信息
+			if updateEntity.InsertOrgList[i].Longitude == 0 && updateEntity.InsertOrgList[i].Latitude == 0 {
+				cor, err := utils.GetAddressLocation(updateEntity.InsertOrgList[i].Address + updateEntity.InsertOrgList[i].AddressExt)
+				if err != nil{
+					log.Warning.Printf("Get address failed, req: %#v, err: %v\n", req, err)
+				}else{
+					updateEntity.InsertOrgList[i].Latitude = cor.Latitude
+					updateEntity.InsertOrgList[i].Longitude = cor.Longitude
+				}
+			}
 			_, err = da.GetOrgModel().CreateOrg(ctx, tx, da.Org{
 				Name:      updateEntity.OrgInfo.Name + "-" + updateEntity.InsertOrgList[i].Name,
 				Subjects:  strings.Join(updateEntity.InsertOrgList[i].Subjects, ","),
@@ -363,6 +394,8 @@ func (s *OrgService) UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *e
 				ParentID:  orgId,
 				Telephone: updateEntity.InsertOrgList[i].Telephone,
 				SupportRoleID: entity.IntArrayToString([]int{entity.RoleOutOrg}),
+				Longitude: updateEntity.InsertOrgList[i].Longitude,
+				Latitude: updateEntity.InsertOrgList[i].Latitude,
 			})
 			if err != nil {
 				log.Warning.Printf("Create sub org failed, orgId: %#v, req: %#v, err: %v\n", orgId, req, err)
@@ -372,6 +405,17 @@ func (s *OrgService) UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *e
 
 		//修改
 		for i := range updateEntity.UpdateOrgsList {
+
+			//获取经纬度信息
+			if updateEntity.UpdateOrgsList[i].Longitude == 0 && updateEntity.UpdateOrgsList[i].Latitude == 0 {
+				cor, err := utils.GetAddressLocation(updateEntity.UpdateOrgsList[i].Address + updateEntity.UpdateOrgsList[i].AddressExt)
+				if err != nil{
+					log.Warning.Printf("Get address failed, req: %#v, err: %v\n", req, err)
+				}else{
+					updateEntity.UpdateOrgsList[i].Latitude = cor.Latitude
+					updateEntity.UpdateOrgsList[i].Longitude = cor.Longitude
+				}
+			}
 			err = da.GetOrgModel().UpdateOrg(ctx, tx, updateEntity.UpdateOrgsList[i].ID, da.Org{
 				Name:          updateEntity.UpdateOrgsList[i].Name,
 				Subjects:      strings.Join(updateEntity.UpdateOrgsList[i].Subjects, ","),
@@ -379,6 +423,8 @@ func (s *OrgService) UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *e
 				Address:       updateEntity.UpdateOrgsList[i].Address,
 				AddressExt:    updateEntity.UpdateOrgsList[i].AddressExt,
 				Telephone:     updateEntity.UpdateOrgsList[i].Telephone,
+				Longitude: updateEntity.UpdateOrgsList[i].Longitude,
+				Latitude: updateEntity.UpdateOrgsList[i].Latitude,
 			})
 			if err != nil {
 				log.Warning.Printf("Update sub org failed, orgId: %#v, req: %#v, err: %v\n", orgId, req, err)
@@ -445,9 +491,9 @@ func (o *OrgService) prepareUpdateSubOrgs(ctx context.Context, orgId int, req *e
 			insertOrgsReq = append(insertOrgsReq, req.SubOrgs[i])
 		}else{
 			flag := false
-			for i :=range subOrgs {
+			for j :=range subOrgs {
 				//若该id不在组织中，则忽略
-				if req.SubOrgs[i].ID == subOrgs[i].ID {
+				if req.SubOrgs[i].ID == subOrgs[j].ID {
 					flag = true
 				}
 			}
@@ -536,6 +582,16 @@ func (s *OrgService) createOrg(ctx context.Context, tx *gorm.DB, req *entity.Cre
 		}
 		status = parentOrg.Status
 	}
+	//获取经纬度信息
+	if req.Longitude == 0 && req.Latitude == 0 {
+		cor, err := utils.GetAddressLocation(req.Address + req.AddressExt)
+		if err != nil{
+			log.Warning.Printf("Get address failed, req: %#v, err: %v\n", req, err)
+		}else{
+			req.Latitude = cor.Latitude
+			req.Longitude = cor.Longitude
+		}
+	}
 
 	data := da.Org{
 		Name:      req.Name,
@@ -546,6 +602,8 @@ func (s *OrgService) createOrg(ctx context.Context, tx *gorm.DB, req *entity.Cre
 		ParentID:  req.ParentID,
 		Telephone: req.Telephone,
 		SupportRoleID: entity.IntArrayToString(req.SupportRoleID),
+		Latitude: req.Latitude,
+		Longitude: req.Longitude,
 	}
 	id, err := da.GetOrgModel().CreateOrg(ctx, tx, data)
 	if err != nil{

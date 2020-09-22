@@ -24,12 +24,14 @@ func loadConfig() {
 	}
 
 	logPath := os.Getenv("xg_log_path")
+	amapKey := os.Getenv("amap_key")
 
 	c := &conf.Config{
 		DBConnectionString: dbConn,
 		RedisConnectionString: redisConn,
 		LogPath: logPath,
 		UploadPath: uploadPath,
+		AMapKey: amapKey,
 	}
 	conf.Set(c)
 }

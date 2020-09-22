@@ -20,12 +20,23 @@ func TestUpdateOrg(t *testing.T) {
 	id := createOrgRes.ID
 	t.Log(id)
 
+	orgRes, err := client.GetOrgById(ctx, id, superToken)
+	if !assert.NoError(t, err) {
+		return
+	}
+	t.Logf("ORG: %#v", orgRes.Org)
+	for i := range orgRes.Org.SubOrgs {
+		t.Logf("SUB ORG [%v]: %#v", i, orgRes.Org.SubOrgs[i])
+	}
+
 	err = client.UpdateOrgById(ctx, id, entity.UpdateOrgWithSubOrgsRequest{
 		OrgData: entity.CreateOrUpdateOrgRequest{
 			Name:       "新测试机构000",
 			Address:    "上海市闸北区",
 			AddressExt: "古北路101弄",
 			Telephone:  "18800000000",
+			Longitude: float64(RandInt()),
+			Latitude: float64(RandInt()),
 		},
 		SubOrgs: []*entity.CreateOrUpdateOrgRequest{
 			{
@@ -35,6 +46,8 @@ func TestUpdateOrg(t *testing.T) {
 				Address:    "上海市松江区",
 				AddressExt: "西子湖同",
 				Telephone:  "15855552222",
+				Longitude: float64(RandInt()),
+				Latitude: float64(RandInt()),
 			},
 			{
 				Name:       "修改机构222",
@@ -42,6 +55,8 @@ func TestUpdateOrg(t *testing.T) {
 				Address:    "上海市闵行区",
 				AddressExt: "西子湖同222",
 				Telephone:  "18898562222",
+				Longitude: float64(RandInt()),
+				Latitude: float64(RandInt()),
 			},
 		},
 	}, superToken)
@@ -49,7 +64,7 @@ func TestUpdateOrg(t *testing.T) {
 		return
 	}
 
-	orgRes, err := client.GetOrgById(ctx, id, superToken)
+	orgRes, err = client.GetOrgById(ctx, id, superToken)
 	if !assert.NoError(t, err) {
 		return
 	}

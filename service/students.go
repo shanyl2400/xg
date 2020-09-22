@@ -10,6 +10,7 @@ import (
 	"xg/db"
 	"xg/entity"
 	"xg/log"
+	"xg/utils"
 )
 
 const (
@@ -61,7 +62,16 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 			status = entity.StudentConflictFailed
 		}
 	}
-
+	//获取经纬度信息
+	if c.Longitude == 0 && c.Latitude == 0 {
+		cor, err := utils.GetAddressLocation(c.Address + c.AddressExt)
+		if err != nil{
+			log.Warning.Printf("Get address failed, req: %#v, err: %v\n", c, err)
+		}else{
+			c.Latitude = cor.Latitude
+			c.Longitude = cor.Longitude
+		}
+	}
 	student := da.Student{
 		Name:          c.Name,
 		Gender:        c.Gender,
@@ -73,6 +83,8 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 		Status:        status,
 		AuthorID:      operator.UserId,
 		OrderSourceID: c.OrderSourceID,
+		Latitude: c.Latitude,
+		Longitude: c.Longitude,
 		Note:          c.Note,
 	}
 	log.Info.Printf("create student, student: %#v, err: %v\n", student, err)
@@ -99,7 +111,16 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 
 func (s *StudentService) UpdateStudent(ctx context.Context, id int, req *entity.UpdateStudentRequest) error {
 	log.Info.Printf("UpdateStudent, id: %#v, req: %#v\n", id, req)
-
+	//获取经纬度信息
+	if req.Longitude == 0 && req.Latitude == 0 {
+		cor, err := utils.GetAddressLocation(req.Address + req.AddressExt)
+		if err != nil{
+			log.Warning.Printf("Get address failed, req: %#v, err: %v\n", req, err)
+		}else{
+			req.Latitude = cor.Latitude
+			req.Longitude = cor.Longitude
+		}
+	}
 	data := da.Student{
 		Name:          req.Name,
 		Gender:        req.Gender,
@@ -109,6 +130,8 @@ func (s *StudentService) UpdateStudent(ctx context.Context, id int, req *entity.
 		Email:         req.Email,
 		IntentSubject: strings.Join(req.IntentSubject, ","),
 		OrderSourceID: req.OrderSourceID,
+		Longitude: req.Longitude,
+		Latitude: req.Latitude,
 	}
 	err := da.GetStudentModel().UpdateStudent(ctx, id, data)
 	if err != nil{

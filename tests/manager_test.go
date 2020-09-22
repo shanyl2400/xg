@@ -79,7 +79,7 @@ func Test_007(t *testing.T) {
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = containsOrgs([]int{org0Resp.ID, org1Resp.ID}, orgs.Data.Orgs)
+	err = containsOrgs2([]int{org0Resp.ID, org1Resp.ID}, orgs.Data.Orgs)
 	if !assert.Error(t, err) {
 		return
 	}
@@ -102,11 +102,11 @@ func Test_007(t *testing.T) {
 		return
 	}
 	t.Log("orgs:", []int{org0Resp.ID, org1Resp.ID})
-	err = containsOrgs([]int{org0Resp.ID}, orgs.Data.Orgs)
+	err = containsOrgs2([]int{org0Resp.ID}, orgs.Data.Orgs)
 	if !assert.NoError(t, err) {
 		return
 	}
-	err = containsOrgs([]int{org1Resp.ID}, orgs.Data.Orgs)
+	err = containsOrgs2([]int{org1Resp.ID}, orgs.Data.Orgs)
 	if !assert.Error(t, err) {
 		return
 	}

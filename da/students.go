@@ -31,6 +31,9 @@ type Student struct {
 	Note          string `gorm:"type:text;NOT NULL;column:note"`
 	OrderSourceID int    `gorm:"type:int;NOT NULL;column:order_source_id"`
 
+	Longitude float64 `gorm:"type:double(9,6);NOT NULL; column:longitude; default:0"`
+	Latitude float64 `gorm:"type:double(9,6);NOT NULL; column:latitude; default:0"`
+
 	AuthorID int `gorm:"type:int;NOT NULL;column:author_id"`
 
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`

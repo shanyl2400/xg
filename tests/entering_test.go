@@ -640,7 +640,28 @@ func getSuperToken(t *testing.T) string{
 	return res.Data.Token
 }
 
-func containsOrgs(ids []int, orgs []*entity.Org) error {
+func containsOrgs(ids []int, orgs []*entity.SubOrgWithDistance) error {
+	flags := make([]bool, len(ids))
+
+	for i := range orgs {
+		for j := range ids {
+			if orgs[i].ID == ids[j] {
+				fmt.Println("Find org:", orgs[i].ID)
+				flags[j] = true
+			}
+		}
+	}
+
+	for i := range flags {
+		if !flags[i] {
+			return errors.New("Can't find org, id:" + strconv.Itoa(ids[i]))
+		}
+	}
+	return nil
+}
+
+
+func containsOrgs2(ids []int, orgs []*entity.Org) error {
 	flags := make([]bool, len(ids))
 
 	for i := range orgs {

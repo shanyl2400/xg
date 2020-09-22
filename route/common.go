@@ -138,6 +138,17 @@ type OrgsListResponse struct {
 	Data   *OrgListInfo `json:"data"`
 	ErrMsg string       `json:"err_msg"`
 }
+
+type SubOrgsListResponse struct {
+	Data   *SubOrgListInfo `json:"data"`
+	ErrMsg string       `json:"err_msg"`
+}
+func (r SubOrgsListResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
 func (r OrgsListResponse) Error() error{
 	if r.ErrMsg == "success" {
 		return nil

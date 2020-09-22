@@ -44,6 +44,7 @@ services:
         xg_log_path: '/var/log'
         xg_upload_path: '/go/uploads'
         allow_origin: 'http://localhost'
+        amap_key: '5ffb23f18540eea567aa563445bff6ed'
       ports:
         - 8088:8088
       volumes:

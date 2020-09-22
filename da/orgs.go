@@ -2,10 +2,12 @@ package da
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
 	"xg/db"
+	"xg/entity"
 
 	"github.com/jinzhu/gorm"
 )
@@ -23,8 +25,8 @@ type IOrgModel interface {
 	GetOrgsByParentId(ctx context.Context, parentId int) ([]*Org, error)
 	SearchOrgs(ctx context.Context, s SearchOrgsCondition) (int, []*Org, error)
 
+	SearchOrgsWithDistance(ctx context.Context, s SearchOrgsCondition, l *entity.Coordinate) (int, []*OrgWithDistance, error)
 }
-
 type Org struct {
 	ID        int    `gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
 	Name      string `gorm:"type:varchar(128);NOT NULL;column:name"`
@@ -33,6 +35,8 @@ type Org struct {
 	AddressExt string `gorm:"type:varchar(255);NOT NULL; column:address_ext"`
 	ParentID  int    `gorm:"type:int;NOT NULL;column:parent_id;index"`
 	Telephone string `gorm:"type:varchar(64);NOT NULL; column:telephone"`
+	Longitude float64 `gorm:"type:double(9,6);NOT NULL; column:longitude; default:0"`
+	Latitude float64 `gorm:"type:double(9,6);NOT NULL; column:latitude; default:0"`
 
 	Status        int    `gorm:"type:int;NOT NULL;column:status;index"`
 	SupportRoleID string `gorm:"type:varchar(255);NOT NULL;column:support_role_ids"`
@@ -40,6 +44,12 @@ type Org struct {
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`
 	CreatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:created_at"`
 	DeletedAt *time.Time `gorm:"type:datetime;column:deleted_at"`
+}
+
+
+type OrgWithDistance struct {
+	Org
+	Distance float64 `json:"distance"`
 }
 
 type DBOrgModel struct{}
@@ -153,6 +163,35 @@ func (d *DBOrgModel) SearchOrgs(ctx context.Context, s SearchOrgsCondition) (int
 	return count, result, nil
 }
 
+func (d *DBOrgModel) SearchOrgsWithDistance(ctx context.Context, s SearchOrgsCondition, l *entity.Coordinate) (int, []*OrgWithDistance, error) {
+	where, values := s.GetConditions()
+	count := 0
+	err := db.Get().Model(Org{}).Where(where, values...).Count(&count).Error
+	if err != nil {
+		return 0, nil, err
+	}
+
+	result := make([]*OrgWithDistance, 0)
+	tx := db.Get().Where(where, values...)
+
+	if s.PageSize > 0 {
+		offset, limit := parsePage(s.Page, s.PageSize)
+		tx = tx.Offset(offset).Limit(limit)
+	}
+	if s.OrderBy != "" {
+		tx = tx.Order(s.OrderBy)
+	}
+	err = tx.Model(Org{}).Select([]string{
+		"*",
+		fmt.Sprintf("(st_distance(point(longitude,latitude),point(%v,%v))*111195/1000 ) as distance", l.Longitude, l.Latitude),
+	}).Scan(&result).Error
+
+	if err != nil {
+		return 0, nil, err
+	}
+	return count, result, nil
+}
+
 type SearchOrgsCondition struct {
 	Subjects []string
 	Address  string
@@ -199,7 +238,6 @@ func (s SearchOrgsCondition) GetConditions() (string, []interface{}) {
 
 	//wheres = append(wheres, "deleted_at IS NULL")
 	where := strings.Join(wheres, " and ")
-
 	return where, values
 }
 

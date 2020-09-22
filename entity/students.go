@@ -19,6 +19,9 @@ type CreateStudentRequest struct {
 	IntentSubject []string `json:"intent_subject"`
 	Note          string   `json:"note"`
 	OrderSourceID int      `json:"order_source_id"`
+
+	Longitude	 float64 `json:"longitude"`
+	Latitude float64 `json:"latitude"`
 }
 
 type CreateStudentResponse struct {
@@ -35,6 +38,9 @@ type UpdateStudentRequest struct {
 	AddressExt string `json:"address_ext"`
 	IntentSubject []string `json:"intent_subject"`
 	OrderSourceID int      `json:"order_source_id"`
+
+	Longitude	 float64 `json:"longitude"`
+	Latitude float64 `json:"latitude"`
 }
 
 type SearchStudentRequest struct {
