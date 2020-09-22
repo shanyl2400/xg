@@ -118,6 +118,7 @@ func (s *Server) dispatchGraph(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "With the bearer"
+// @Param id path string true "order source id"
 // @Tags statistics
 // @Success 200 {object} PerformanceGraphResponse
 // @Failure 500 {object} Response
