@@ -25,10 +25,11 @@ type CreateOrderRequest struct {
 }
 
 type SearchOrderCondition struct {
-	StudentIDList  []int  `json:"student_id_list"`
-	ToOrgIDList    []int  `json:"to_org_id_list"`
-	IntentSubjects string `json:"intent_subjects"`
-	PublisherID    int    `json:"publisher_id"`
+	StudentIDList   []int  `json:"student_id_list"`
+	ToOrgIDList     []int  `json:"to_org_id_list"`
+	IntentSubjects  string `json:"intent_subjects"`
+	PublisherID     int    `json:"publisher_id"`
+	OrderSourceList []int  `json:"order_source"`
 
 	Status  []int  `json:"status"`
 	OrderBy string `json:"order_by"`
@@ -84,6 +85,7 @@ type OrderInfo struct {
 	ToOrgID       int      `json:"to_org_id"`
 	IntentSubject []string `json:"intent_subject"`
 	PublisherID   int      `json:"publisher_id"`
+	OrderSource int `json:"order_source"`
 
 	Status int `json:"status"`
 }
@@ -94,6 +96,8 @@ type OrderInfoDetails struct {
 	StudentTelephone string `json:"student_telephone"`
 	OrgName          string `json:"org_name"`
 	PublisherName    string `json:"publisher_name"`
+
+	OrderSourceName string `json:"order_source_name"`
 }
 
 type OrderInfoWithRecords struct {
@@ -104,6 +108,8 @@ type OrderInfoWithRecords struct {
 	AuthorName string `json:"author_name"`
 	PaymentInfo    []*OrderPayRecord
 	RemarkInfo     []*OrderRemarkRecord
+
+	OrderSourceName string `json:"order_source_name"`
 }
 
 type OrderPayRecord struct {

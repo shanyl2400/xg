@@ -67,6 +67,7 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 		Gender:        c.Gender,
 		Telephone:     c.Telephone,
 		Address:       c.Address,
+		AddressExt:		c.AddressExt,
 		Email:         c.Email,
 		IntentSubject: strings.Join(c.IntentSubject, ","),
 		Status:        status,
@@ -83,7 +84,7 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 			log.Warning.Printf("Create student failed, student: %#v, err: %v\n", student, err)
 			return -1, err
 		}
-		err = GetStatisticsService().AddStudent(ctx, tx, 1)
+		err = GetStatisticsService().AddStudent(ctx, tx, operator.UserId, 1)
 		if err != nil {
 			log.Warning.Printf("Add student statistics failed, student: %#v, err: %v\n", student, err)
 			return -1, err
@@ -104,6 +105,7 @@ func (s *StudentService) UpdateStudent(ctx context.Context, id int, req *entity.
 		Gender:        req.Gender,
 		Telephone:     req.Telephone,
 		Address:       req.Address,
+		AddressExt: req.AddressExt,
 		Email:         req.Email,
 		IntentSubject: strings.Join(req.IntentSubject, ","),
 		OrderSourceID: req.OrderSourceID,
@@ -190,6 +192,7 @@ func (s *StudentService) GetStudentById(ctx context.Context, id int, operator *e
 			Gender:          student.Gender,
 			Telephone:       student.Telephone,
 			Address:         student.Address,
+			AddressExt: 	 student.AddressExt,
 			AuthorID:        student.AuthorID,
 			Email:           student.Email,
 			AuthorName:      user.Name,
@@ -273,6 +276,7 @@ func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchSt
 			Gender:        students[i].Gender,
 			Telephone:     students[i].Telephone,
 			Address:       students[i].Address,
+			AddressExt:	   students[i].AddressExt,
 			AuthorID:      students[i].AuthorID,
 			Email:         students[i].Email,
 			AuthorName:    authorNameMaps[students[i].AuthorID],

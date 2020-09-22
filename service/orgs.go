@@ -23,6 +23,8 @@ type IOrgService interface{
 	ListOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error)
 	ListOrgsByStatus(ctx context.Context, status []int) (int, []*entity.Org, error)
 	SearchSubOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error)
+
+	UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *entity.UpdateOrgWithSubOrgsRequest, operator *entity.JWTUser) error
 }
 
 type OrgService struct {
@@ -57,6 +59,7 @@ func (s *OrgService) CreateOrgWithSubOrgs(ctx context.Context, req *entity.Creat
 				Subjects:  strings.Join(req.SubOrgs[i].Subjects, ","),
 				Status:    status,
 				Address:   req.SubOrgs[i].Address,
+				AddressExt: req.SubOrgs[i].AddressExt,
 				ParentID:  cid,
 				Telephone: req.SubOrgs[i].Telephone,
 				SupportRoleID: entity.IntArrayToString(req.SubOrgs[i].SupportRoleID),
@@ -75,17 +78,7 @@ func (s *OrgService) CreateOrgWithSubOrgs(ctx context.Context, req *entity.Creat
 }
 
 func (s *OrgService) UpdateOrgById(ctx context.Context, req *entity.UpdateOrgRequest, operator *entity.JWTUser) error {
-	log.Info.Printf("update org, req: %#v\n", req)
-	err := da.GetOrgModel().UpdateOrg(ctx, db.Get(), req.ID, da.Org{
-		Subjects: strings.Join(req.Subjects, ","),
-		Address:  req.Address,
-		//Status:   req.Status,
-	})
-	if err != nil{
-		log.Warning.Printf("Update org failed, req: %#v, err: %v\n", req, err)
-		return err
-	}
-	return nil
+	return s.updateOrgById(ctx, db.Get(), req, operator)
 }
 
 func (s *OrgService) RevokeOrgById(ctx context.Context, id int, operator *entity.JWTUser) error {
@@ -208,6 +201,7 @@ func (s *OrgService) GetOrgById(ctx context.Context, orgId int) (*entity.Org, er
 		Subjects:  subjects,
 		Status:    org.Status,
 		Address:   org.Address,
+		AddressExt: org.AddressExt,
 		ParentID:  org.ParentID,
 		Telephone: org.Telephone,
 		SupportRoleID: entity.StringToIntArray(org.SupportRoleID),
@@ -258,6 +252,7 @@ func (s *OrgService) ListOrgs(ctx context.Context, condition da.SearchOrgsCondit
 			Subjects:  subjects,
 			Status:    orgs[i].Status,
 			Address:   orgs[i].Address,
+			AddressExt: orgs[i].AddressExt,
 			ParentID:  orgs[i].ParentID,
 			Telephone: orgs[i].Telephone,
 			SupportRoleID: entity.StringToIntArray(orgs[i].SupportRoleID),
@@ -290,6 +285,7 @@ func (s *OrgService) ListOrgsByStatus(ctx context.Context, status []int) (int, [
 			Subjects:  subjects,
 			Status:    orgs[i].Status,
 			Address:   orgs[i].Address,
+			AddressExt: orgs[i].AddressExt,
 			ParentID:  orgs[i].ParentID,
 			Telephone: orgs[i].Telephone,
 			SupportRoleID: entity.StringToIntArray(orgs[i].SupportRoleID),
@@ -329,12 +325,79 @@ func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsC
 			Subjects:  subjects,
 			Status:    orgs[i].Status,
 			Address:   orgs[i].Address,
+			AddressExt: orgs[i].AddressExt,
 			ParentID:  orgs[i].ParentID,
 			Telephone: orgs[i].Telephone,
 			SupportRoleID: entity.StringToIntArray(orgs[i].SupportRoleID),
 		})
 	}
 	return count, res, nil
+}
+
+func (s *OrgService) UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *entity.UpdateOrgWithSubOrgsRequest, operator *entity.JWTUser) error {
+	updateEntity, err := s.prepareUpdateSubOrgs(ctx, orgId, req, operator)
+	if err != nil{
+		return err
+	}
+
+	err = db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
+		//更新主机构
+		err := s.updateOrgById(ctx, tx, &entity.UpdateOrgRequest{
+			ID:         orgId,
+			Address:    req.OrgData.Address,
+			AddressExt: req.OrgData.AddressExt,
+			Telephone:  req.OrgData.Telephone,
+		}, operator)
+		if err != nil {
+			log.Warning.Printf("Update org failed, orgId: %#v, req: %#v, err: %v\n", orgId, req, err)
+			return err
+		}
+		//增加
+		for i := range updateEntity.InsertOrgList {
+			_, err = da.GetOrgModel().CreateOrg(ctx, tx, da.Org{
+				Name:      updateEntity.OrgInfo.Name + "-" + updateEntity.InsertOrgList[i].Name,
+				Subjects:  strings.Join(updateEntity.InsertOrgList[i].Subjects, ","),
+				Status:    updateEntity.OrgInfo.Status,
+				Address:   updateEntity.InsertOrgList[i].Address,
+				AddressExt: updateEntity.InsertOrgList[i].AddressExt,
+				ParentID:  orgId,
+				Telephone: updateEntity.InsertOrgList[i].Telephone,
+				SupportRoleID: entity.IntArrayToString([]int{entity.RoleOutOrg}),
+			})
+			if err != nil {
+				log.Warning.Printf("Create sub org failed, orgId: %#v, req: %#v, err: %v\n", orgId, req, err)
+				return err
+			}
+		}
+
+		//修改
+		for i := range updateEntity.UpdateOrgsList {
+			err = da.GetOrgModel().UpdateOrg(ctx, tx, updateEntity.UpdateOrgsList[i].ID, da.Org{
+				Name:          updateEntity.UpdateOrgsList[i].Name,
+				Subjects:      strings.Join(updateEntity.UpdateOrgsList[i].Subjects, ","),
+				Status:    	   updateEntity.OrgInfo.Status,
+				Address:       updateEntity.UpdateOrgsList[i].Address,
+				AddressExt:    updateEntity.UpdateOrgsList[i].AddressExt,
+				Telephone:     updateEntity.UpdateOrgsList[i].Telephone,
+			})
+			if err != nil {
+				log.Warning.Printf("Update sub org failed, orgId: %#v, req: %#v, err: %v\n", orgId, req, err)
+				return err
+			}
+		}
+
+		//删除
+		err = da.GetOrgModel().DeleteOrgById(ctx, tx, updateEntity.DeletedIds)
+		if err != nil {
+			log.Warning.Printf("Delete sub org failed, orgId: %#v, req: %#v, err: %v\n", orgId, req, err)
+			return err
+		}
+		return nil
+	})
+	if err != nil{
+		return err
+	}
+	return nil
 }
 
 func (o *OrgService) filterSubjects(subject string) []string {
@@ -356,6 +419,66 @@ func (o *OrgService) filterTargetSubjects(subjects []string, targetSubjects []st
 	}
 
 	return ret
+}
+
+func (o *OrgService) prepareUpdateSubOrgs(ctx context.Context, orgId int, req *entity.UpdateOrgWithSubOrgsRequest, operator *entity.JWTUser) (*entity.UpdateSubOrgsEntity, error){
+	log.Info.Printf("update org with sub orgs, id: %#v, req: %#v\n", orgId, req)
+	orgObj, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), orgId)
+	if err != nil{
+		log.Warning.Printf("Get org failed, orgId: %#v, err: %v\n", orgId, err)
+		return nil, err
+	}
+	if orgObj.ParentID != 0 {
+		return nil, ErrNotSuperOrg
+	}
+	subOrgs, err := da.GetOrgModel().GetOrgsByParentId(ctx, orgId)
+	if err != nil{
+		log.Warning.Printf("Get sub orgs failed, orgId: %#v, err: %v\n", orgId, err)
+		return nil, err
+	}
+
+	//标记新增，修改
+	insertOrgsReq := make([]*entity.CreateOrUpdateOrgRequest, 0)
+	updateOrgsReq := make([]*entity.CreateOrUpdateOrgRequest, 0)
+	for i := range req.SubOrgs {
+		if req.SubOrgs[i].ID == 0 {
+			insertOrgsReq = append(insertOrgsReq, req.SubOrgs[i])
+		}else{
+			updateOrgsReq = append(updateOrgsReq, req.SubOrgs[i])
+		}
+	}
+
+	//标记删除
+	deletedIds := make([]int, 0)
+	for i := range subOrgs {
+		flag := false
+		for j := range updateOrgsReq {
+			if updateOrgsReq[j].ID == subOrgs[i].ID {
+				flag = true
+				break
+			}
+		}
+		if !flag {
+			deletedIds = append(deletedIds, subOrgs[i].ID)
+		}
+	}
+	orgInfo := &entity.Org{
+		ID:            orgObj.ID,
+		Name:          orgObj.Name,
+		Address:       orgObj.Address,
+		AddressExt:    orgObj.AddressExt,
+		ParentID:      orgObj.ParentID,
+		Telephone:     orgObj.Telephone,
+		Status:        orgObj.Status,
+	}
+
+	return &entity.UpdateSubOrgsEntity{
+		OrgInfo: orgInfo,
+		UpdateOrgReq:   req.OrgData,
+		InsertOrgList:  insertOrgsReq,
+		UpdateOrgsList: updateOrgsReq,
+		DeletedIds:     deletedIds,
+	}, nil
 }
 
 func (o *OrgService) compareSubject(subjectA, subjectB string) bool {
@@ -410,6 +533,7 @@ func (s *OrgService) createOrg(ctx context.Context, tx *gorm.DB, req *entity.Cre
 		Subjects:  strings.Join(req.Subjects, ","),
 		Status:    status,
 		Address:   req.Address,
+		AddressExt: req.AddressExt,
 		ParentID:  req.ParentID,
 		Telephone: req.Telephone,
 		SupportRoleID: entity.IntArrayToString(req.SupportRoleID),
@@ -420,6 +544,21 @@ func (s *OrgService) createOrg(ctx context.Context, tx *gorm.DB, req *entity.Cre
 		return id, err
 	}
 	return id, nil
+}
+
+func (s *OrgService) updateOrgById(ctx context.Context, tx *gorm.DB, req *entity.UpdateOrgRequest, operator *entity.JWTUser) error {
+	log.Info.Printf("update org, req: %#v\n", req)
+	err := da.GetOrgModel().UpdateOrg(ctx, tx, req.ID, da.Org{
+		Subjects: strings.Join(req.Subjects, ","),
+		Address:  req.Address,
+		AddressExt: req.AddressExt,
+		//Status:   req.Status,
+	})
+	if err != nil{
+		log.Warning.Printf("Update org failed, req: %#v, err: %v\n", req, err)
+		return err
+	}
+	return nil
 }
 
 func ToOrgEntity(org *da.Org) *entity.Org {
@@ -433,6 +572,7 @@ func ToOrgEntity(org *da.Org) *entity.Org {
 		Subjects:  subjects,
 		Status:    org.Status,
 		Address:   org.Address,
+		AddressExt: org.AddressExt,
 		ParentID:  org.ParentID,
 		Telephone: org.Telephone,
 		SupportRoleID: entity.StringToIntArray(org.SupportRoleID),

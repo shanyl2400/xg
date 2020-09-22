@@ -230,6 +230,7 @@ func (a *APIClient) SearchOrders(ctx context.Context, condition *entity.SearchOr
 	query["to_org_ids"] = buildInts(condition.ToOrgIDList)
 	query["intent_subjects"] = condition.IntentSubjects
 	query["publisher_id"] = buildInt(condition.PublisherID)
+	query["order_sources"] = buildInts(condition.OrderSourceList)
 	query["status"] = buildInts(condition.Status)
 	query["order_by"] = condition.OrderBy
 	query["page"] = buildInt(condition.Page)
@@ -259,6 +260,7 @@ func (a *APIClient) SearchOrderWithAuthor(ctx context.Context, condition *entity
 	query["to_org_ids"] = buildInts(condition.ToOrgIDList)
 	query["intent_subjects"] = condition.IntentSubjects
 	query["publisher_id"] = buildInt(condition.PublisherID)
+	query["order_sources"] = buildInts(condition.OrderSourceList)
 	query["status"] = buildInts(condition.Status)
 	query["order_by"] = condition.OrderBy
 	query["page"] = buildInt(condition.Page)
@@ -288,6 +290,7 @@ func (a *APIClient) SearchOrderWithOrgId(ctx context.Context, condition *entity.
 	query["to_org_ids"] = buildInts(condition.ToOrgIDList)
 	query["intent_subjects"] = condition.IntentSubjects
 	query["publisher_id"] = buildInt(condition.PublisherID)
+	query["order_sources"] = buildInts(condition.OrderSourceList)
 	query["status"] = buildInts(condition.Status)
 	query["order_by"] = condition.OrderBy
 	query["page"] = buildInt(condition.Page)

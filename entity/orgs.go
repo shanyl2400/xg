@@ -20,6 +20,7 @@ type Org struct {
 	Name      string   `json:"name"`
 	Subjects  []string `json:"subjects"`
 	Address   string   `json:"address"`
+	AddressExt string `json:"address_ext"`
 	ParentID  int      `json:"parent_id"`
 	Telephone string   `json:"telephone"`
 	SupportRoleID []int `json:"support_role_id"`
@@ -33,6 +34,7 @@ type CreateOrgRequest struct {
 	Name      string   `json:"name"`
 	Subjects  []string `json:"subjects"`
 	Address   string   `json:"address"`
+	AddressExt string `json:"address_ext"`
 	Telephone string   `json:"telephone"`
 	SupportRoleID	[]int `json:"support_role_id"`
 
@@ -45,10 +47,33 @@ type CreateOrgWithSubOrgsRequest struct {
 	SubOrgs []*CreateOrgRequest `json:"sub_orgs"`
 }
 
+type UpdateOrgWithSubOrgsRequest struct {
+	OrgData CreateOrUpdateOrgRequest    `json:"org"`
+	SubOrgs []*CreateOrUpdateOrgRequest `json:"sub_orgs"`
+}
+
+type CreateOrUpdateOrgRequest struct {
+	ID        int      `json:"id"`
+	Name      string   `json:"name"`
+	Subjects  []string `json:"subjects"`
+	Address   string   `json:"address"`
+	AddressExt string `json:"address_ext"`
+	Telephone string   `json:"telephone"`
+}
+
+type UpdateSubOrgsEntity struct {
+	UpdateOrgReq CreateOrUpdateOrgRequest `json:"update_org_req"`
+	InsertOrgList []*CreateOrUpdateOrgRequest `json:"insert_org_list"`
+	UpdateOrgsList []*CreateOrUpdateOrgRequest `json:"update_orgs_list"`
+	DeletedIds []int `json:"deleted_ids"`
+	OrgInfo *Org `json:"org_info"`
+}
+
 type UpdateOrgRequest struct {
 	ID        int      `json:"id"`
 	Subjects  []string `json:"subjects"`
 	Address   string   `json:"address"`
+	AddressExt string `json:"address_ext"`
 	Telephone string   `json:"telephone"`
 
 	Status int `json:"status"`

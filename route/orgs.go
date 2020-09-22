@@ -265,6 +265,69 @@ func (s *Server) revokeOrg(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
+// @Summary updateOrgById
+// @Description update orgs
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param request body entity.UpdateOrgWithSubOrgsRequest true "create org request"
+// @Param id path string true "org id"
+// @Tags organization
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/org/{id}/admin [put]
+func (s *Server) updateOrgById(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	req := new(entity.UpdateOrgWithSubOrgsRequest)
+	err = c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	user := s.getJWTUser(c)
+	err = service.GetOrgService().UpdateOrgWithSubOrgs(c.Request.Context(), id, req, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
+
+// @Summary updateSelfOrgById
+// @Description update orgs
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param request body entity.UpdateOrgWithSubOrgsRequest true "create org request"
+// @Param id path string true "org id"
+// @Tags organization
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/org/self [put]
+func (s *Server) updateSelfOrgById(c *gin.Context) {
+	req := new(entity.UpdateOrgWithSubOrgsRequest)
+	err := c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	user := s.getJWTUser(c)
+	err = service.GetOrgService().UpdateOrgWithSubOrgs(c.Request.Context(), user.OrgId, req, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
 func buildOrgsSearchCondition(c *gin.Context) da.SearchOrgsCondition {
 	subjects := make([]string, 0)
 	subjectsParam := c.Query("subjects")

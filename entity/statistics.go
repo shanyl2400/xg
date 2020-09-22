@@ -4,9 +4,12 @@ const (
 	StudentStatisticsKey     = "students"
 	PerformanceStatisticsKey = "performance"
 
+	StudentAuthorStatisticsKey     = "stu_author"
 	OrgPerformanceStatisticsKey = "org"
 	AuthorPerformanceStatisticsKey = "author"
 	PublisherPerformanceStatisticsKey = "publisher"
+
+	OrderSourcePerformanceStatisticsKey = "order_source"
 )
 
 type SummaryInfo struct {
@@ -41,4 +44,5 @@ type OrderPerformanceInfo struct {
 	OrgId int `json:"org_id"`
 	AuthorId int `json:"author_id"`
 	PublisherId int `json:"publisher_id"`
+	OrderSourceId int `json:"order_source_id"`
 }

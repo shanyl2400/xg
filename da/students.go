@@ -24,6 +24,7 @@ type Student struct {
 	Gender        bool   `gorm:"type:int;NOT NULL;column:gender"`
 	Telephone     string `gorm:"type:varchar(20);NOT NULL;column:telephone"`
 	Address       string `gorm:"type:varchar(128);NOT NULL;column:address"`
+	AddressExt	  string `gorm:"type:varchar(256);NOT NULL;column:address_ext"`
 	Email         string `gorm:"type:varchar(128);NOT NULL;column:email"`
 	IntentSubject string `gorm:"type:varchar(255);NOT NULL;column:intent_subject"`
 	Status        int    `gorm:"type:int;NOT NULL;column:status;index"`

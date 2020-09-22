@@ -444,15 +444,17 @@ func buildOrderCondition(c *gin.Context) *entity.SearchOrderCondition {
 	intentSubjects := c.Query("intent_subjects")
 	publisherID := c.Query("publisher_id")
 	status := c.Query("status")
+	orderSources := c.Query("order_sources")
 	orderBy := c.Query("order_by")
 	page := c.Query("page")
 	pageSize := c.Query("page_size")
 
 	return &entity.SearchOrderCondition{
-		StudentIDList:  parseInts(studentIds),
-		ToOrgIDList:    parseInts(toOrgIds),
-		IntentSubjects: intentSubjects,
-		PublisherID:    parseInt(publisherID),
+		StudentIDList:   parseInts(studentIds),
+		ToOrgIDList:     parseInts(toOrgIds),
+		IntentSubjects:  intentSubjects,
+		PublisherID:     parseInt(publisherID),
+		OrderSourceList: parseInts(orderSources),
 
 		Status:  parseInts(status),
 		OrderBy: orderBy,

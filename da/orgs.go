@@ -18,9 +18,11 @@ type IOrgModel interface {
 	CountOrgs(ctx context.Context, s SearchOrgsCondition) (int, error)
 
 	ListOrgsByIDs(ctx context.Context, ids []int) ([]*Org, error)
+	DeleteOrgById(ctx context.Context, tx *gorm.DB, ids []int) error
 
 	GetOrgsByParentId(ctx context.Context, parentId int) ([]*Org, error)
 	SearchOrgs(ctx context.Context, s SearchOrgsCondition) (int, []*Org, error)
+
 }
 
 type Org struct {
@@ -28,6 +30,7 @@ type Org struct {
 	Name      string `gorm:"type:varchar(128);NOT NULL;column:name"`
 	Subjects  string `gorm:"type:varchar(255);NOT NULL;column:subjects"`
 	Address   string `gorm:"type:varchar(255);NOT NULL; column:address"`
+	AddressExt string `gorm:"type:varchar(255);NOT NULL; column:address_ext"`
 	ParentID  int    `gorm:"type:int;NOT NULL;column:parent_id;index"`
 	Telephone string `gorm:"type:varchar(64);NOT NULL; column:telephone"`
 
@@ -54,7 +57,7 @@ func (d *DBOrgModel) CreateOrg(ctx context.Context, tx *gorm.DB, org Org) (int, 
 
 func (d *DBOrgModel) UpdateOrg(ctx context.Context, tx *gorm.DB, id int, org Org) error {
 	now := time.Now()
-	err := db.Get().Model(Org{}).Where(&Org{ID: id}).Updates(Org{Status: org.Status, Subjects: org.Subjects, Address: org.Address, UpdatedAt: &now}).Error
+	err := db.Get().Model(Org{}).Where(&Org{ID: id}).Updates(Org{Status: org.Status, Subjects: org.Subjects, Address: org.Address, AddressExt: org.AddressExt, UpdatedAt: &now}).Error
 	if err != nil {
 		return err
 	}
@@ -98,6 +101,13 @@ func (d *DBOrgModel) ListOrgsByIDs(ctx context.Context, ids []int) ([]*Org, erro
 	return orgList, nil
 }
 
+func (d *DBOrgModel) DeleteOrgById(ctx context.Context, tx *gorm.DB, ids []int) error{
+	err :=tx.Delete(&Org{}, ids).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (d *DBOrgModel) GetOrgsByParentId(ctx context.Context, parentId int) ([]*Org, error) {
 	condition := SearchOrgsCondition{
 		ParentIDs: []int{parentId},

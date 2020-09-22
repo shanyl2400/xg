@@ -11,7 +11,7 @@ import (
 
 type IStatisticsModel interface {
 	CreateStatisticsRecord(ctx context.Context, tx *gorm.DB, c *StatisticsRecord) (int, error)
-	UpdateStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value int) error
+	UpdateStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value, count int) error
 
 	SearchStatisticsRecord(ctx context.Context, tx *gorm.DB, c SearchStatisticsRecordCondition) ([]*StatisticsRecord, error)
 }
@@ -21,6 +21,7 @@ type StatisticsRecord struct {
 
 	Key   string `gorm:"type:varchar(128);NOT NULL;column:key;index"`
 	Value int    `gorm:"type:int;NOT NULL;column:value"`
+	Count int    `gorm:"type:int;NOT NULL;column:count"`
 
 	Year  int `gorm:"type:int;NOT NULL;column:year;index"`
 	Month int `gorm:"type:int;NOT NULL;column:month"`
@@ -78,11 +79,12 @@ func (s *DBStatisticsModel) CreateStatisticsRecord(ctx context.Context, tx *gorm
 	}
 	return c.ID, nil
 }
-func (s *DBStatisticsModel) UpdateStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value int) error {
+func (s *DBStatisticsModel) UpdateStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value, count int) error {
 	record := new(StatisticsRecord)
 	now := time.Now()
 	record.UpdatedAt = &now
 	record.Value = value
+	record.Count = count
 	whereRecord := &StatisticsRecord{ID: rid}
 	err := tx.Model(StatisticsRecord{}).Where(whereRecord).Updates(&record).Error
 	if err != nil {

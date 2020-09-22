@@ -44,6 +44,11 @@ func (o *OrderService) CreateOrder(ctx context.Context, req *entity.CreateOrderR
 		log.Warning.Printf("Create order failed, req: %#v, err: %v\n", req, err)
 		return -1, err
 	}
+	student, err := da.GetStudentModel().GetStudentById(ctx, req.StudentID)
+	if err != nil {
+		log.Warning.Printf("Get Student failed, req: %#v, err: %v\n", req, err)
+		return -1, err
+	}
 
 	//TODO:检查重复订单？
 	data := da.Order{
@@ -51,6 +56,7 @@ func (o *OrderService) CreateOrder(ctx context.Context, req *entity.CreateOrderR
 		ToOrgID:        req.ToOrgID,
 		IntentSubjects: strings.Join(req.IntentSubjects, ","),
 		PublisherID:    operator.UserId,
+		OrderSource: 	student.OrderSourceID,
 		Status:         entity.OrderStatusCreated,
 	}
 	log.Info.Printf("create order: %#v\n", data)
@@ -180,6 +186,7 @@ func (o *OrderService) ConfirmOrderPay(ctx context.Context, orderPayId int, stat
 				OrgId:       orderInfo.ToOrgID,
 				AuthorId:    orderInfo.StudentSummary.AuthorId,
 				PublisherId: orderInfo.PublisherID,
+				OrderSourceId: orderInfo.OrderSource,
 			}, performance)
 			if err != nil {
 				log.Warning.Printf("Add performance failed, payment: %#v, performance: %#v, err: %v\n", payment, performance, err)
@@ -273,6 +280,7 @@ func (o *OrderService) SearchOrders(ctx context.Context, condition *entity.Searc
 		ToOrgIDList:    condition.ToOrgIDList,
 		IntentSubjects: condition.IntentSubjects,
 		PublisherID:    condition.PublisherID,
+		OrderSourceList: condition.OrderSourceList,
 		Status:         condition.Status,
 		OrderBy:        condition.OrderBy,
 		Page:           condition.Page,
@@ -384,6 +392,12 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 		}
 	}
 
+	orderSourceObj, err := da.GetOrderSourceModel().GetOrderSourceById(ctx, orderObj.Order.OrderSource)
+	if err != nil {
+		log.Warning.Printf("Get orderSource failed, orderObj: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
+		return nil, err
+	}
+
 	res := &entity.OrderInfoWithRecords{
 		OrderInfo: entity.OrderInfo{
 			ID:            orderObj.Order.ID,
@@ -392,6 +406,7 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 			IntentSubject: strings.Split(orderObj.Order.IntentSubjects, ","),
 			PublisherID:   orderObj.Order.PublisherID,
 			Status:        orderObj.Order.Status,
+			OrderSource: 	orderObj.Order.OrderSource,
 		},
 		StudentSummary: &entity.StudentSummaryInfo{
 			ID:        student.ID,
@@ -399,12 +414,14 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 			Gender:    student.Gender,
 			Telephone: student.Telephone,
 			Address:   student.Address,
+			AddressExt: student.AddressExt,
 			Note:      student.Note,
 			AuthorId: 	student.AuthorID,
 		},
 		OrgName:       org.Name,
 		PublisherName: publisherName,
 		AuthorName: authorName,
+		OrderSourceName: orderSourceObj.Name,
 	}
 
 	//添加Payment和remark
@@ -547,9 +564,16 @@ func (o *OrderService) getOrderInfoDetails(ctx context.Context, orders []*da.Ord
 		return nil, err
 	}
 
+	orderSources, err := da.GetOrderSourceModel().ListOrderSources(ctx)
+	if err != nil {
+		log.Warning.Printf("Search order source failed, userIds: %#v, orders: %#v, err: %v\n", userIds, orders, err)
+		return nil, err
+	}
+
 	studentMaps := make(map[int]*da.Student)
 	orgMaps := make(map[int]*da.Org)
 	userMaps := make(map[int]*da.User)
+	orderSourceMaps := make(map[int]*da.OrderSource)
 
 	for i := range students {
 		studentMaps[students[i].ID] = students[i]
@@ -559,6 +583,9 @@ func (o *OrderService) getOrderInfoDetails(ctx context.Context, orders []*da.Ord
 	}
 	for i := range users {
 		userMaps[users[i].ID] = users[i]
+	}
+	for i := range orderSources {
+		orderSourceMaps[orderSources[i].ID] = orderSources[i]
 	}
 
 	orderInfos := make([]*entity.OrderInfoDetails, len(orders))
@@ -571,11 +598,13 @@ func (o *OrderService) getOrderInfoDetails(ctx context.Context, orders []*da.Ord
 				IntentSubject: strings.Split(orders[i].IntentSubjects, ","),
 				PublisherID:   orders[i].PublisherID,
 				Status:        orders[i].Status,
+				OrderSource: 	orders[i].OrderSource,
 			},
 			StudentName:      studentMaps[orders[i].StudentID].Name,
 			StudentTelephone: studentMaps[orders[i].StudentID].Telephone,
 			OrgName:          orgMaps[orders[i].ToOrgID].Name,
 			PublisherName:    userMaps[orders[i].PublisherID].Name,
+			OrderSourceName:  orderSourceMaps[orders[i].OrderSource].Name,
 		}
 	}
 	return orderInfos, nil

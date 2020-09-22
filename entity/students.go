@@ -14,6 +14,7 @@ type CreateStudentRequest struct {
 	Gender        bool     `json:"gender"`
 	Telephone     string   `json:"telephone"`
 	Address       string   `json:"address"`
+	AddressExt	  string `json:"address_ext"`
 	Email         string   `json:"email"`
 	IntentSubject []string `json:"intent_subject"`
 	Note          string   `json:"note"`
@@ -31,6 +32,7 @@ type UpdateStudentRequest struct {
 	Telephone     string   `json:"telephone"`
 	Email         string   `json:"email"`
 	Address       string   `json:"address"`
+	AddressExt string `json:"address_ext"`
 	IntentSubject []string `json:"intent_subject"`
 	OrderSourceID int      `json:"order_source_id"`
 }
@@ -60,6 +62,7 @@ type StudentInfo struct {
 	Gender          bool     `json:"gender"`
 	Telephone       string   `json:"telephone"`
 	Address         string   `json:"address"`
+	AddressExt	    string `json:"address_ext"`
 	Email           string   `json:"email"`
 	IntentSubject   []string `json:"intent_subject"`
 	AuthorID        int      `json:"authorID"`
@@ -77,6 +80,7 @@ type StudentSummaryInfo struct {
 	Telephone string `json:"telephone"`
 	Address   string `json:"address"`
 	Note      string `json:"note"`
+	AddressExt string `json:"address_ext"`
 
 	AuthorId  int `json:"author_id"`
 }

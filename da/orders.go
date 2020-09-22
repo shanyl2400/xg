@@ -41,18 +41,13 @@ type Order struct {
 	IntentSubjects string `gorm:"type:varchar(255);NOT NULL;column:intent_subjects"`
 	PublisherID    int    `gorm:"type:int;NOT NULL;column:publisher_id;index"`
 
+	OrderSource	int `gorm:"type:int;NOT NULL;column:order_source;index"`
+
 	Status int `gorm:"type:int;NOT NULL;column:status;index"`
 
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`
 	CreatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:created_at"`
 	DeletedAt *time.Time `gorm:"type:datetime;column:deleted_at"`
-}
-
-type SearchOrdersCondition struct {
-	IDList          []int
-	StudentIDList   []int
-	ToOrgIDList     []int
-	PublisherIDList []int
 }
 
 type OrderPayRecord struct {
@@ -129,6 +124,7 @@ type SearchOrderCondition struct {
 	OrderIDList    []int
 	StudentIDList  []int
 	ToOrgIDList    []int
+	OrderSourceList []int
 	IntentSubjects string
 	PublisherID    int
 
@@ -167,6 +163,10 @@ func (s SearchOrderCondition) GetConditions() (string, []interface{}) {
 	if len(s.Status) > 0 {
 		wheres = append(wheres, "status IN (?)")
 		values = append(values, s.Status)
+	}
+	if len(s.OrderSourceList) > 0 {
+		wheres = append(wheres, "order_source IN (?)")
+		values = append(values, s.OrderSourceList)
 	}
 
 	where := strings.Join(wheres, " and ")

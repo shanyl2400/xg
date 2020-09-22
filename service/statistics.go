@@ -122,34 +122,48 @@ func (s *StatisticsService) SearchYearRecords(ctx context.Context, key string) (
 	return ret, nil
 }
 
-func (s *StatisticsService) AddStudent(ctx context.Context, tx *gorm.DB, count int) error {
+func (s *StatisticsService) AddStudent(ctx context.Context, tx *gorm.DB, authorId, count int) error {
 	log.Info.Printf("AddStudent, count: %#v\n", count)
-	return s.addValue(ctx, tx, entity.StudentStatisticsKey, count)
+	err := s.addValue(ctx, tx, StatisticKeyId(entity.StudentAuthorStatisticsKey, authorId), count, true)
+	if err != nil{
+		return err
+	}
+	return s.addValue(ctx, tx, entity.StudentStatisticsKey, count, true)
 }
 func (s *StatisticsService) AddPerformance(ctx context.Context, tx *gorm.DB, info entity.OrderPerformanceInfo, performance int) error {
 	log.Info.Printf("AddPerformance, value: %#v\n", info)
-
-	err := s.addValue(ctx, tx, StatisticKeyId(entity.OrgPerformanceStatisticsKey, info.OrgId), performance)
-	if err != nil{
-		return err
-	}
-	err = s.addValue(ctx, tx, StatisticKeyId(entity.AuthorPerformanceStatisticsKey, info.AuthorId), performance)
-	if err != nil{
-		return err
-	}
-	err = s.addValue(ctx, tx, StatisticKeyId(entity.PublisherPerformanceStatisticsKey, info.PublisherId), performance)
-	if err != nil{
-		return err
+	addCount := false
+	//大于0表示成交，计算成交量
+	if performance > 0 {
+		addCount = true
 	}
 
-	err = s.addValue(ctx, tx, entity.PerformanceStatisticsKey, performance)
+	err := s.addValue(ctx, tx, StatisticKeyId(entity.OrgPerformanceStatisticsKey, info.OrgId), performance, addCount)
+	if err != nil{
+		return err
+	}
+	err = s.addValue(ctx, tx, StatisticKeyId(entity.AuthorPerformanceStatisticsKey, info.AuthorId), performance, addCount)
+	if err != nil{
+		return err
+	}
+	err = s.addValue(ctx, tx, StatisticKeyId(entity.PublisherPerformanceStatisticsKey, info.PublisherId), performance, addCount)
+	if err != nil{
+		return err
+	}
+
+	err = s.addValue(ctx, tx, StatisticKeyId(entity.OrderSourcePerformanceStatisticsKey, info.OrderSourceId), performance, addCount)
+	if err != nil{
+		return err
+	}
+
+	err = s.addValue(ctx, tx, entity.PerformanceStatisticsKey, performance, addCount)
 	if err != nil{
 		return err
 	}
 	return nil
 }
 
-func (s *StatisticsService) addValue(ctx context.Context, tx *gorm.DB, key string, value int) error {
+func (s *StatisticsService) addValue(ctx context.Context, tx *gorm.DB, key string, value int, addCount bool) error {
 	now := time.Now()
 	condition := da.SearchStatisticsRecordCondition{
 		Key:    key,
@@ -165,7 +179,10 @@ func (s *StatisticsService) addValue(ctx context.Context, tx *gorm.DB, key strin
 	if len(records) > 0 {
 		record := records[0]
 		record.Value = record.Value + value
-		err = da.GetStatisticsRecordModel().UpdateStatisticsRecord(ctx, tx, record.ID, record.Value)
+		if addCount {
+			record.Count = record.Count + 1
+		}
+		err = da.GetStatisticsRecordModel().UpdateStatisticsRecord(ctx, tx, record.ID, record.Value, record.Count)
 		if err != nil {
 			log.Warning.Printf("UpdateStatisticsRecord failed, record: %#v, err: %v\n", record, err)
 			return err
@@ -173,11 +190,16 @@ func (s *StatisticsService) addValue(ctx context.Context, tx *gorm.DB, key strin
 		return nil
 	}
 
+	count := 0
+	if addCount {
+		count = 1
+	}
 	record := &da.StatisticsRecord{
 		Key:    key,
 		Value:  value,
 		Year:   now.Year(),
 		Month:  int(now.Month()),
+		Count: count,
 		Author: 0,
 	}
 	_, err = da.GetStatisticsRecordModel().CreateStatisticsRecord(ctx, tx, record)

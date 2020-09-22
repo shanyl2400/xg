@@ -10,6 +10,7 @@ import (
 type IOrderSourceModel interface{
 	CreateOrderSources(ctx context.Context, name string)(int, error)
 	ListOrderSources(ctx context.Context) ([]*OrderSource, error)
+	GetOrderSourceById(ctx context.Context, orderSourceId int) (*OrderSource, error)
 }
 
 type OrderSource struct {
@@ -41,6 +42,15 @@ func (d *DBOrderSourceModel) ListOrderSources(ctx context.Context) ([]*OrderSour
 		return nil, err
 	}
 	return result, nil
+}
+
+func (d *DBOrderSourceModel) GetOrderSourceById(ctx context.Context, orderSourceId int) (*OrderSource, error){
+	orderSource := new(OrderSource)
+	err := db.Get().Where(&OrderSource{ID: orderSourceId}).First(&orderSource).Error
+	if err != nil {
+		return nil, err
+	}
+	return orderSource, nil
 }
 
 var(
