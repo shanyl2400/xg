@@ -138,6 +138,7 @@ func Get() *gin.Engine {
 		statistics.GET("/graph/org", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.orgGraph)
 		statistics.GET("/graph/dispatch", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchOrder}), s.dispatchGraph)
 		statistics.GET("/graph/enter", s.mustLogin, s.hasPermission([]int{entity.AuthEnterStudent}), s.enterGraph)
+		statistics.GET("/graph/order_source/:id", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.orderSourceGraph)
 	}
 
 	uploader := api.Group("/upload")

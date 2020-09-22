@@ -3,6 +3,7 @@ package route
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"strconv"
 	"xg/entity"
 	"xg/service"
 )
@@ -111,6 +112,37 @@ func (s *Server) dispatchGraph(c *gin.Context) {
 	})
 }
 
+
+// @Summary orderSourceGraph
+// @Description get order source data graph
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Tags statistics
+// @Success 200 {object} PerformanceGraphResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/statistics/graph/order_source/{id} [get]
+func (s *Server) orderSourceGraph(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	performanceRecords, err := service.GetStatisticsService().SearchYearRecords(c.Request.Context(),
+		service.StatisticKeyId(entity.OrderSourcePerformanceStatisticsKey, id))
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, PerformanceGraphResponse{
+		Graph: &entity.PerformancesGraph{
+			PerformancesGraph: performanceRecords,
+		},
+		ErrMsg:   "success",
+	})
+}
 
 // @Summary enterGraph
 // @Description get enter data graph
