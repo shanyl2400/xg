@@ -57,7 +57,13 @@ func (d *DBOrgModel) CreateOrg(ctx context.Context, tx *gorm.DB, org Org) (int, 
 
 func (d *DBOrgModel) UpdateOrg(ctx context.Context, tx *gorm.DB, id int, org Org) error {
 	now := time.Now()
-	err := db.Get().Model(Org{}).Where(&Org{ID: id}).Updates(Org{Status: org.Status, Subjects: org.Subjects, Address: org.Address, AddressExt: org.AddressExt, UpdatedAt: &now}).Error
+	err := db.Get().Model(Org{}).Where(&Org{ID: id}).Updates(Org{
+		Status: org.Status,
+		Subjects: org.Subjects,
+		Address: org.Address,
+		AddressExt: org.AddressExt,
+		Telephone: org.Telephone,
+		UpdatedAt: &now}).Error
 	if err != nil {
 		return err
 	}

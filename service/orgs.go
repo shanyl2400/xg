@@ -339,7 +339,7 @@ func (s *OrgService) UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *e
 	if err != nil{
 		return err
 	}
-
+	log.Trace.Printf("OrgId:%v, req:%#v\n", orgId, req)
 	err = db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
 		//更新主机构
 		err := s.updateOrgById(ctx, tx, &entity.UpdateOrgRequest{
@@ -444,7 +444,16 @@ func (o *OrgService) prepareUpdateSubOrgs(ctx context.Context, orgId int, req *e
 		if req.SubOrgs[i].ID == 0 {
 			insertOrgsReq = append(insertOrgsReq, req.SubOrgs[i])
 		}else{
-			updateOrgsReq = append(updateOrgsReq, req.SubOrgs[i])
+			flag := false
+			for i :=range subOrgs {
+				//若该id不在组织中，则忽略
+				if req.SubOrgs[i].ID == subOrgs[i].ID {
+					flag = true
+				}
+			}
+			if flag {
+				updateOrgsReq = append(updateOrgsReq, )
+			}
 		}
 	}
 
@@ -552,6 +561,7 @@ func (s *OrgService) updateOrgById(ctx context.Context, tx *gorm.DB, req *entity
 		Subjects: strings.Join(req.Subjects, ","),
 		Address:  req.Address,
 		AddressExt: req.AddressExt,
+		Telephone: req.Telephone,
 		//Status:   req.Status,
 	})
 	if err != nil{

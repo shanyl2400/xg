@@ -86,8 +86,8 @@ func Get() *gin.Engine {
 		org.PUT("/:id/review/reject", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.rejectOrg)
 		org.PUT("/:id/review/approve", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.approveOrg)
 
-		org.PUT("/:id/admin", s.mustLogin, s.hasPermission([]int{entity.AuthManageOrg}), s.updateOrgById)
-		org.PUT("/api/org/self", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.updateSelfOrgById)
+		org.PUT("/", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.updateSelfOrgById)
+		org.PUT("/:id", s.mustLogin, s.hasPermission([]int{entity.AuthManageOrg}), s.updateOrgById)
 	}
 	orgs := api.Group("/orgs")
 	{

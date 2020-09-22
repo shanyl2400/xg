@@ -91,6 +91,7 @@ var (
 			OrgData: entity.CreateOrgRequest{
 				Name:      "测试机构" + RandString(2),
 				Address:   RandArray(addresses),
+				AddressExt: RandString(10),
 				Telephone: RandTelephone(),
 			},
 			SubOrgs: []*entity.CreateOrgRequest{
@@ -98,18 +99,21 @@ var (
 					Name:      "校区" + RandString(2),
 					Subjects:  RandArrayList(subjects, 2),
 					Address:   RandArray(addresses),
+					AddressExt: RandString(10),
 					Telephone: "",
 				},
 				{
 					Name:      "校区" + RandString(2),
 					Subjects:  RandArrayList(subjects, 2),
 					Address:   RandArray(addresses),
+					AddressExt: RandString(10),
 					Telephone: "",
 				},
 				{
 					Name:      "校区" + RandString(2),
 					Subjects:  RandArrayList(subjects, 2),
 					Address:   RandArray(addresses),
+					AddressExt: RandString(10),
 					Telephone: "",
 				},
 			},
@@ -119,6 +123,7 @@ var (
 			OrgData: entity.CreateOrgRequest{
 				Name:      "测试机构" + RandString(2),
 				Address:   RandArray(addresses),
+				AddressExt: RandString(10),
 				Telephone: RandTelephone(),
 			},
 			SubOrgs: []*entity.CreateOrgRequest{
@@ -126,18 +131,21 @@ var (
 					Name:      "校区" + RandString(2),
 					Subjects:  RandArrayList(subjects, 2),
 					Address:   RandArray(addresses),
+					AddressExt: RandString(10),
 					Telephone: "",
 				},
 				{
 					Name:      "校区" + RandString(2),
 					Subjects:  RandArrayList(subjects, 2),
 					Address:   RandArray(addresses),
+					AddressExt: RandString(10),
 					Telephone: "",
 				},
 				{
 					Name:      "校区" + RandString(2),
 					Subjects:  RandArrayList(subjects, 2),
 					Address:   RandArray(addresses),
+					AddressExt: RandString(10),
 					Telephone: "",
 				},
 			},
@@ -146,6 +154,7 @@ var (
 			OrgData: entity.CreateOrgRequest{
 				Name:      "测试机构" + RandString(1),
 				Address:   RandArray(addresses),
+				AddressExt: RandString(10),
 				Telephone: RandTelephone(),
 			},
 			SubOrgs: []*entity.CreateOrgRequest{
@@ -153,6 +162,7 @@ var (
 					Name:      "校区" + RandString(2),
 					Subjects:  RandArrayList(subjects, 2),
 					Address:   RandArray(addresses),
+					AddressExt: RandString(10),
 					Telephone: "",
 				},
 			},
@@ -161,6 +171,7 @@ var (
 			OrgData: entity.CreateOrgRequest{
 				Name:      "测试机构" + RandString(2),
 				Address:   RandArray(addresses),
+				AddressExt: RandString(10),
 				Telephone: RandTelephone(),
 			},
 			SubOrgs: []*entity.CreateOrgRequest{
@@ -168,12 +179,14 @@ var (
 					Name:      "校区" + RandString(2),
 					Subjects:  RandArrayList(subjects, 2),
 					Address:   RandArray(addresses),
+					AddressExt: RandString(10),
 					Telephone: "",
 				},
 				{
 					Name:      "校区" + RandString(2),
 					Subjects:  RandArrayList(subjects, 2),
 					Address:   RandArray(addresses),
+					AddressExt: RandString(10),
 					Telephone: "",
 				},
 			},

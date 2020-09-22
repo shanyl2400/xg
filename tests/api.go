@@ -406,6 +406,44 @@ func (a *APIClient) RevokeOrgById(ctx context.Context, id int, token string) err
 	return responseObj.Error()
 }
 
+func (a *APIClient) UpdateOrgById(ctx context.Context, id int, params entity.UpdateOrgWithSubOrgsRequest, token string) error {
+	req := JSONRequest{
+		URL:      fmt.Sprintf("/api/org/%v", id),
+		Method:   "PUT",
+		JSONBody: params,
+		Token:    token,
+	}
+	resp, err := req.DoRequest(ctx)
+	if err != nil {
+		return err
+	}
+	responseObj := new(route.Response)
+	err = json.Unmarshal(resp, responseObj)
+	if err != nil {
+		return err
+	}
+	return responseObj.Error()
+}
+
+func (a *APIClient) UpdateSelfOrgById(ctx context.Context, params entity.UpdateOrgWithSubOrgsRequest, token string) error {
+	req := JSONRequest{
+		URL:      fmt.Sprintf("/api/org"),
+		Method:   "PUT",
+		JSONBody: params,
+		Token:    token,
+	}
+	resp, err := req.DoRequest(ctx)
+	if err != nil {
+		return err
+	}
+	responseObj := new(route.Response)
+	err = json.Unmarshal(resp, responseObj)
+	if err != nil {
+		return err
+	}
+	return responseObj.Error()
+}
+
 func (a *APIClient) RejectPendingOrgById(ctx context.Context, id int, token string) error {
 	req := JSONRequest{
 		URL:      fmt.Sprintf("/api/org/%v/review/reject", id),
