@@ -590,6 +590,10 @@ func (o *OrderService) getOrderInfoDetails(ctx context.Context, orders []*da.Ord
 
 	orderInfos := make([]*entity.OrderInfoDetails, len(orders))
 	for i := range orders {
+		orderSourceName := ""
+		if orderSourceMaps[orders[i].OrderSource] != nil {
+			orderSourceName = orderSourceMaps[orders[i].OrderSource].Name
+		}
 		orderInfos[i] = &entity.OrderInfoDetails{
 			OrderInfo: entity.OrderInfo{
 				ID:            orders[i].ID,
@@ -604,7 +608,7 @@ func (o *OrderService) getOrderInfoDetails(ctx context.Context, orders []*da.Ord
 			StudentTelephone: studentMaps[orders[i].StudentID].Telephone,
 			OrgName:          orgMaps[orders[i].ToOrgID].Name,
 			PublisherName:    userMaps[orders[i].PublisherID].Name,
-			OrderSourceName:  orderSourceMaps[orders[i].OrderSource].Name,
+			OrderSourceName:  orderSourceName,
 		}
 	}
 	return orderInfos, nil

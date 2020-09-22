@@ -123,3 +123,20 @@ func TestUpdateSelfOrg(t *testing.T) {
 		t.Logf("SUB ORG [%v]: %#v", i, orgRes.Org.SubOrgs[i])
 	}
 }
+
+func TestSearchOrder(t *testing.T) {
+	client := new(APIClient)
+	ctx := context.Background()
+	superToken := getSuperToken(t)
+
+	res, err := client.SearchOrders(ctx, &entity.SearchOrderCondition{
+		OrderSourceList: []int{1},
+	}, superToken)
+	if !assert.NoError(t, err) {
+		return
+	}
+	t.Log("Total:", res.Data.Total)
+	for i := range res.Data.Orders {
+		t.Log(res.Data.Orders[i])
+	}
+}
