@@ -29,6 +29,7 @@ var (
 
 	ErrInvalidUserRoleOrg = errors.New("invalid user role & org")
 	ErrCreateSuperUser    = errors.New("can't create super user")
+	ErrInvalidStatisticKey = errors.New("invalid statistics key")
 )
 
 type IUserService interface{

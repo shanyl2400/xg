@@ -373,8 +373,6 @@ func Test_009(t *testing.T) {
 	t.Log("Done")
 }
 
-
-
 func TestCheckPerformance(t *testing.T) {
 	client := new(APIClient)
 	ctx := context.Background()
@@ -478,7 +476,7 @@ func TestCheckPerformance(t *testing.T) {
 
 	//5.登录审核员
 	tryCreateCheckUser(t)
-	checkRes, err := client.Login(ctx, "check0", "123456")
+	checkRes, err := client.Login(ctx, "check1", "123456")
 	if !assert.NoError(t, err) {
 		return
 	}

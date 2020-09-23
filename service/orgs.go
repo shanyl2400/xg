@@ -34,7 +34,7 @@ type OrgService struct {
 func (s *OrgService) CreateOrg(ctx context.Context, req *entity.CreateOrgRequest, operator *entity.JWTUser) (int, error) {
 	log.Info.Printf("create org, req: %#v\n", req)
 
-	req.SupportRoleID = []int{entity.RoleOutOrg}
+	req.SupportRoleID = []int{entity.RoleOutOrg, entity.RoleSeniorOutOrg}
 	id, err := s.createOrg(ctx, db.Get(), req, operator)
 	if err != nil{
 		log.Warning.Printf("Create org failed, req: %#v, err: %v\n", req, err)
@@ -46,7 +46,7 @@ func (s *OrgService) CreateOrg(ctx context.Context, req *entity.CreateOrgRequest
 func (s *OrgService) CreateOrgWithSubOrgs(ctx context.Context, req *entity.CreateOrgWithSubOrgsRequest, operator *entity.JWTUser) (int, error) {
 	log.Info.Printf("create org with sub orgs, req: %#v\n", req)
 	cid, err := db.GetTransResult(ctx, func(ctx context.Context, tx *gorm.DB) (interface{}, error) {
-		req.OrgData.SupportRoleID = []int{entity.RoleOutOrg}
+		req.OrgData.SupportRoleID = []int{entity.RoleOutOrg, entity.RoleSeniorOutOrg}
 		cid, err := s.createOrg(ctx, tx, &req.OrgData, operator)
 		if err != nil {
 			log.Warning.Printf("Create org failed, req: %#v, err: %v\n", req, err)
@@ -54,7 +54,7 @@ func (s *OrgService) CreateOrgWithSubOrgs(ctx context.Context, req *entity.Creat
 		}
 		for i := range req.SubOrgs {
 			status := entity.OrgStatusCreated
-			req.SubOrgs[i].SupportRoleID = []int{entity.RoleOutOrg}
+			//req.SubOrgs[i].SupportRoleID = []int{entity.RoleOutOrg, entity.RoleSeniorOutOrg}
 
 			//获取经纬度信息
 			if req.SubOrgs[i].Longitude == 0 && req.SubOrgs[i].Latitude == 0 {
@@ -393,7 +393,7 @@ func (s *OrgService) UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *e
 				AddressExt: updateEntity.InsertOrgList[i].AddressExt,
 				ParentID:  orgId,
 				Telephone: updateEntity.InsertOrgList[i].Telephone,
-				SupportRoleID: entity.IntArrayToString([]int{entity.RoleOutOrg}),
+				//SupportRoleID: entity.IntArrayToString([]int{entity.RoleOutOrg, entity.RoleSeniorOutOrg}),
 				Longitude: updateEntity.InsertOrgList[i].Longitude,
 				Latitude: updateEntity.InsertOrgList[i].Latitude,
 			})

@@ -23,8 +23,8 @@ func AutoMigrate() {
 	db.Get().AutoMigrate(User{})
 	db.Get().AutoMigrate(StatisticsRecord{})
 
-	db.Get().AutoMigrate(NewStatisticsRecord{})
-	db.Get().Model(&NewStatisticsRecord{}).AddIndex("idx_new_statistics_date","year","month","day")
+	db.Get().AutoMigrate(OrderStatisticsRecord{})
+	db.Get().Model(&OrderStatisticsRecord{}).AddIndex("idx_new_statistics_date","year","month","day")
 }
 
 func InitData(flag bool) {
@@ -194,7 +194,7 @@ func initRole() {
 		panic(err)
 	}
 
-	outOrgId2, err := GetRoleModel().CreateRoleWithID(context.Background(), entity.RoleOutOrg, "高级机构账号")
+	outOrgId2, err := GetRoleModel().CreateRoleWithID(context.Background(), entity.RoleSeniorOutOrg, "高级机构账号")
 	if err != nil {
 		panic(err)
 	}

@@ -105,13 +105,13 @@ func (s *DBOrderStatisticsModel) CreateOrderStatisticsRecord(ctx context.Context
 	return c.ID, nil
 }
 func (s *DBOrderStatisticsModel) UpdateOrderStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value, count int) error {
-	record := new(StatisticsRecord)
+	record := new(OrderStatisticsRecord)
 	now := time.Now()
 	record.UpdatedAt = &now
 	record.Value = value
 	record.Count = count
-	whereRecord := &StatisticsRecord{ID: rid}
-	err := tx.Model(StatisticsRecord{}).Where(whereRecord).Updates(&record).Error
+	whereRecord := &OrderStatisticsRecord{ID: rid}
+	err := tx.Model(OrderStatisticsRecord{}).Where(whereRecord).Updates(&record).Error
 	if err != nil {
 		return err
 	}

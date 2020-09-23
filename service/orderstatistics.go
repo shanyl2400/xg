@@ -3,11 +3,16 @@ package service
 import (
 	"context"
 	"github.com/jinzhu/gorm"
+	"sync"
 	"time"
 	"xg/da"
 	"xg/db"
 	"xg/entity"
 	"xg/log"
+)
+const(
+	OrderStatisticKeyStudent = "student"
+	OrderStatisticKeyOrder = "order"
 )
 
 type OrderStatisticRecordId struct {
@@ -17,7 +22,6 @@ type OrderStatisticRecordId struct {
 	PublisherId int `json:"publisher_id"`
 	OrderSource int `json:"order_source"`
 }
-
 
 type OrderStatisticsService struct {
 }
@@ -87,9 +91,8 @@ func (s *OrderStatisticsService) Summary(ctx context.Context) (*entity.SummaryIn
 	}, nil
 }
 
-func (s *OrderStatisticsService) SearchRecords(ctx context.Context, id OrderStatisticRecordId) ([]*da.OrderStatisticsRecord, error) {
-	log.Info.Printf("SearchYearRecords, key: %#v\n", id)
-	condition := s.idToCondition(id)
+func (s *OrderStatisticsService) SearchRecords(ctx context.Context, condition da.SearchOrderStatisticsRecordCondition) ([]*da.OrderStatisticsRecord, error) {
+	log.Info.Printf("SearchYearRecords, condition: %#v\n", condition)
 	records, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
 	if err != nil {
 		log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
@@ -98,9 +101,8 @@ func (s *OrderStatisticsService) SearchRecords(ctx context.Context, id OrderStat
 	return records, nil
 }
 
-func (s *OrderStatisticsService) SearchRecordsTotal(ctx context.Context, id OrderStatisticRecordId) (*entity.TotalStatisticRecord, error) {
-	log.Info.Printf("SearchYearRecords, key: %#v\n", id)
-	condition := s.idToCondition(id)
+func (s *OrderStatisticsService) SearchRecordsTotal(ctx context.Context, condition da.SearchOrderStatisticsRecordCondition) (*entity.TotalStatisticRecord, error) {
+	log.Info.Printf("SearchYearRecords, condition: %#v\n", condition)
 	records, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
 	if err != nil {
 		log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
@@ -116,9 +118,12 @@ func (s *OrderStatisticsService) SearchRecordsTotal(ctx context.Context, id Orde
 }
 
 
-func (s *OrderStatisticsService) SearchRecordsMonth(ctx context.Context, id OrderStatisticRecordId) ([]*entity.StatisticRecord, error) {
-	log.Info.Printf("SearchYearRecords, key: %#v\n", id)
-	condition := s.idToCondition(id)
+func (s *OrderStatisticsService) SearchRecordsMonth(ctx context.Context, condition da.SearchOrderStatisticsRecordCondition) ([]*entity.StatisticRecord, error) {
+	log.Info.Printf("SearchYearRecords, condition: %#v\n", condition)
+	if condition.Key == "" {
+		log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v\n", condition)
+		return nil, ErrInvalidStatisticKey
+	}
 	records, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
 	if err != nil {
 		log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
@@ -141,7 +146,7 @@ func (s *OrderStatisticsService) SearchRecordsMonth(ctx context.Context, id Orde
 				count = count + monthRecord[i][j].Count
 			}
 			ret[i-1] = &entity.StatisticRecord{
-				Key:   id.Key,
+				Key:   condition.Key,
 				Year:  year,
 				Month: i,
 				Value: value,
@@ -149,7 +154,7 @@ func (s *OrderStatisticsService) SearchRecordsMonth(ctx context.Context, id Orde
 			}
 		} else {
 			ret[i-1] = &entity.StatisticRecord{
-				Key:   id.Key,
+				Key:   condition.Key,
 				Year:  year,
 				Month: i,
 				Value: 0,
@@ -211,6 +216,7 @@ func (s *OrderStatisticsService) addValue(ctx context.Context, tx *gorm.DB, id O
 		Value:  value,
 		Year:   now.Year(),
 		Month:  int(now.Month()),
+		Date: now.Day(),
 		Count: count,
 		Author: id.Author,
 		OrgId: id.OrgId,
@@ -246,4 +252,18 @@ func (s *OrderStatisticsService) idToCondition(id OrderStatisticRecordId) da.Sea
 		condition.PublisherId = []int{id.PublisherId}
 	}
 	return condition
+}
+
+var (
+	_orderStatisticsService     *OrderStatisticsService
+	_orderStatisticsServiceOnce sync.Once
+)
+
+func GetOrderStatisticsService() *OrderStatisticsService {
+	_orderStatisticsServiceOnce.Do(func() {
+		if _orderStatisticsService == nil {
+			_orderStatisticsService = new(OrderStatisticsService)
+		}
+	})
+	return _orderStatisticsService
 }

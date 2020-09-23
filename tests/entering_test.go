@@ -90,11 +90,14 @@ func tryCreateCheckUser(t *testing.T){
 	}
 	superToken := res.Data.Token
 
-	client.CreateUser(ctx, &entity.CreateUserRequest{
-		Name:   "check0",
-		OrgId:  1,
-		RoleId: 6,
+	_, err = client.CreateUser(ctx, &entity.CreateUserRequest{
+		Name:   "check1",
+		OrgId:  entity.RootOrgId,
+		RoleId: entity.RoleChecker,
 	}, superToken)
+	if !assert.NoError(t, err) {
+		return
+	}
 }
 
 

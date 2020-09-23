@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"xg/da"
 	"xg/entity"
 	"xg/service"
 )
@@ -19,7 +20,7 @@ import (
 // @Failure 400 {object} Response
 // @Router /api/statistics/summary [get]
 func (s *Server) summary(c *gin.Context){
-	summary, err := service.GetStatisticsService().Summary(c.Request.Context())
+	summary, err := service.GetOrderStatisticsService().Summary(c.Request.Context())
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
@@ -41,12 +42,16 @@ func (s *Server) summary(c *gin.Context){
 // @Failure 400 {object} Response
 // @Router /api/statistics/graph [get]
 func (s *Server) graph(c *gin.Context) {
-	studentsRecords, err := service.GetStatisticsService().SearchYearRecords(c.Request.Context(), entity.StudentStatisticsKey)
+	studentsRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(), da.SearchOrderStatisticsRecordCondition{
+		Key:         service.OrderStatisticKeyStudent,
+	})
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
-	performanceRecords, err := service.GetStatisticsService().SearchYearRecords(c.Request.Context(), entity.PerformanceStatisticsKey)
+	performanceRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(), da.SearchOrderStatisticsRecordCondition{
+		Key: service.OrderStatisticKeyOrder,
+	})
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
@@ -72,8 +77,21 @@ func (s *Server) graph(c *gin.Context) {
 // @Router /api/statistics/graph/org [get]
 func (s *Server) orgGraph(c *gin.Context) {
 	user := s.getJWTUser(c)
-	performanceRecords, err := service.GetStatisticsService().SearchYearRecords(c.Request.Context(),
-		service.StatisticKeyId(entity.OrgPerformanceStatisticsKey, user.OrgId))
+	subOrgs, err := service.GetOrgService().GetSubOrgs(c.Request.Context(), user.OrgId)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	orgIds := []int{user.OrgId}
+	for i := range subOrgs {
+		orgIds = append(orgIds, subOrgs[i].ID)
+	}
+
+	performanceRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(),
+		da.SearchOrderStatisticsRecordCondition{
+			Key: service.OrderStatisticKeyOrder,
+			OrgId: orgIds,
+		})
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
@@ -98,8 +116,11 @@ func (s *Server) orgGraph(c *gin.Context) {
 // @Router /api/statistics/graph/dispatch [get]
 func (s *Server) dispatchGraph(c *gin.Context) {
 	user := s.getJWTUser(c)
-	performanceRecords, err := service.GetStatisticsService().SearchYearRecords(c.Request.Context(),
-		service.StatisticKeyId(entity.PublisherPerformanceStatisticsKey, user.UserId))
+	performanceRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(),
+		da.SearchOrderStatisticsRecordCondition{
+			Key: service.OrderStatisticKeyOrder,
+			PublisherId: []int{user.UserId},
+		})
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
@@ -131,8 +152,11 @@ func (s *Server) orderSourceGraph(c *gin.Context) {
 		s.responseErr(c, http.StatusBadRequest, err)
 		return
 	}
-	performanceRecords, err := service.GetStatisticsService().SearchYearRecords(c.Request.Context(),
-		service.StatisticKeyId(entity.OrderSourcePerformanceStatisticsKey, id))
+	performanceRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(),
+		da.SearchOrderStatisticsRecordCondition{
+			Key: service.OrderStatisticKeyOrder,
+			OrderSource: []int{id},
+		})
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
@@ -157,15 +181,21 @@ func (s *Server) orderSourceGraph(c *gin.Context) {
 // @Router /api/statistics/graph/enter [get]
 func (s *Server) enterGraph(c *gin.Context) {
 	user := s.getJWTUser(c)
-	publisherPerformanceRecords, err := service.GetStatisticsService().SearchYearRecords(c.Request.Context(),
-		service.StatisticKeyId(entity.PublisherPerformanceStatisticsKey, user.UserId))
+	publisherPerformanceRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(),
+		da.SearchOrderStatisticsRecordCondition{
+			Key: service.OrderStatisticKeyOrder,
+			PublisherId: []int{user.UserId},
+		})
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	authorPerformanceRecords, err := service.GetStatisticsService().SearchYearRecords(c.Request.Context(),
-		service.StatisticKeyId(entity.AuthorPerformanceStatisticsKey, user.UserId))
+	authorPerformanceRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(),
+		da.SearchOrderStatisticsRecordCondition{
+		Key: service.OrderStatisticKeyOrder,
+		Author: []int{user.UserId},
+	})
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return

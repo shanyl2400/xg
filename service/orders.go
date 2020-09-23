@@ -267,14 +267,26 @@ func (o *OrderService) ConfirmOrderPay(ctx context.Context, orderPayId int, stat
 			}
 			orderInfo, err := o.GetOrderById(ctx, payment.OrderID, operator)
 
-			err = GetStatisticsService().AddPerformance(ctx, tx, entity.OrderPerformanceInfo{
+			//err = GetStatisticsService().AddPerformance(ctx, tx, entity.OrderPerformanceInfo{
+			//	OrgId:       orderInfo.ToOrgID,
+			//	AuthorId:    orderInfo.StudentSummary.AuthorId,
+			//	PublisherId: orderInfo.PublisherID,
+			//	OrderSourceId: orderInfo.OrderSource,
+			//}, performance)
+			//if err != nil {
+			//	log.Warning.Printf("Add performance failed, payment: %#v, performance: %#v, err: %v\n", payment, performance, err)
+			//	return err
+			//}
+
+			err = GetOrderStatisticsService().AddPerformance(ctx, tx, OrderStatisticRecordId{
+				Key:         OrderStatisticKeyOrder,
+				Author:      orderInfo.StudentSummary.AuthorId,
 				OrgId:       orderInfo.ToOrgID,
-				AuthorId:    orderInfo.StudentSummary.AuthorId,
 				PublisherId: orderInfo.PublisherID,
-				OrderSourceId: orderInfo.OrderSource,
+				OrderSource: orderInfo.OrderSource,
 			}, performance)
 			if err != nil {
-				log.Warning.Printf("Add performance failed, payment: %#v, performance: %#v, err: %v\n", payment, performance, err)
+				log.Warning.Printf("Add new performance failed, payment: %#v, performance: %#v, err: %v\n", payment, performance, err)
 				return err
 			}
 		}

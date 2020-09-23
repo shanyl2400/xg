@@ -27,6 +27,7 @@ type IStudentService interface{
 }
 
 type StudentService struct {
+	sync.Mutex
 }
 
 func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStudentRequest, operator *entity.JWTUser) (int, int, error) {
@@ -89,6 +90,8 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 	}
 	log.Info.Printf("create student, student: %#v, err: %v\n", student, err)
 
+	s.Lock()
+	defer s.Unlock()
 	id, err := db.GetTransResult(ctx, func(ctx context.Context, tx *gorm.DB) (interface{}, error) {
 		//添加学生记录
 		id, err := da.GetStudentModel().CreateStudent(ctx, tx, student)
@@ -96,9 +99,19 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 			log.Warning.Printf("Create student failed, student: %#v, err: %v\n", student, err)
 			return -1, err
 		}
-		err = GetStatisticsService().AddStudent(ctx, tx, operator.UserId, 1)
+		//err = GetStatisticsService().AddStudent(ctx, tx, operator.UserId, 1)
+		//if err != nil {
+		//	log.Warning.Printf("Add student statistics failed, student: %#v, err: %v\n", student, err)
+		//	return -1, err
+		//}
+
+		err = GetOrderStatisticsService().AddStudent(ctx, tx, OrderStatisticRecordId{
+			Key:         OrderStatisticKeyStudent,
+			Author: operator.UserId,
+			OrderSource: student.OrderSourceID,
+		}, 1)
 		if err != nil {
-			log.Warning.Printf("Add student statistics failed, student: %#v, err: %v\n", student, err)
+			log.Warning.Printf("Add student new statistics failed, student: %#v, err: %v\n", student, err)
 			return -1, err
 		}
 		return id, nil
@@ -168,7 +181,7 @@ func (s *StudentService) GetStudentById(ctx context.Context, id int, operator *e
 		publisherIds[i] = orders[i].PublisherID
 	}
 	_, publishers, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
-		IDList: publisherIds,
+		IDList: utils.UniqueInts(publisherIds),
 	})
 	if err != nil {
 		log.Warning.Printf("SearchUsers failed, publisherIds: %#v, err: %v\n", publisherIds, err)
@@ -279,7 +292,7 @@ func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchSt
 	}
 
 	_, users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
-		IDList: authorIds,
+		IDList: utils.UniqueInts(authorIds),
 	})
 	if err != nil {
 		log.Warning.Printf("Get User failed, ids: %#v, req: %#v, err: %v\n", authorIds, ss, err)

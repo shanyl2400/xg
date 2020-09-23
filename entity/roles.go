@@ -8,6 +8,7 @@ const (
 	RoleOrgManager = 5
 	RoleChecker = 6
 	RoleOutOrg = 7
+	RoleSeniorOutOrg = 8
 )
 
 type Role struct {
