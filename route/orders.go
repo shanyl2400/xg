@@ -3,6 +3,7 @@ package route
 import (
 	"net/http"
 	"strconv"
+	"time"
 	"xg/entity"
 	"xg/service"
 
@@ -234,6 +235,40 @@ func (s *Server) signupOrder(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
+
+// @Summary depositOrder
+// @Description deposit order by id
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param id path string true "order id"
+// @Param request body entity.OrderPayRequest true "order signup request"
+// @Tags order
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/order/{id}/deposit [put]
+func (s *Server) depositOrder(c *gin.Context) {
+	req := new(entity.OrderPayRequest)
+	err := c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	id, ok := s.getParamInt(c, "id")
+	if !ok {
+		return
+	}
+	req.OrderID = id
+	user := s.getJWTUser(c)
+	err = service.GetOrderService().DepositOrder(c.Request.Context(), req, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
 // @Summary revokeOrder
 // @Description revoke order by id
 // @Accept json
@@ -254,6 +289,34 @@ func (s *Server) revokeOrder(c *gin.Context) {
 	}
 	user := s.getJWTUser(c)
 	err = service.GetOrderService().RevokeOrder(c.Request.Context(), id, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
+
+// @Summary invalidOrder
+// @Description invalid order by id
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param id path string true "order id"
+// @Tags order
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/order/{id}/invalid [put]
+func (s *Server) invalidOrder(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	user := s.getJWTUser(c)
+	err = service.GetOrderService().InvalidOrder(c.Request.Context(), id, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
@@ -449,11 +512,11 @@ func buildOrderCondition(c *gin.Context) *entity.SearchOrderCondition {
 	page := c.Query("page")
 	pageSize := c.Query("page_size")
 
-	return &entity.SearchOrderCondition{
+	condition :=  &entity.SearchOrderCondition{
 		StudentIDList:   parseInts(studentIds),
 		ToOrgIDList:     parseInts(toOrgIds),
 		IntentSubjects:  intentSubjects,
-		PublisherID:     parseInt(publisherID),
+		PublisherID:     parseInts(publisherID),
 		OrderSourceList: parseInts(orderSources),
 
 		Status:  parseInts(status),
@@ -462,4 +525,15 @@ func buildOrderCondition(c *gin.Context) *entity.SearchOrderCondition {
 		PageSize: parseInt(pageSize),
 		Page:     parseInt(page),
 	}
+
+	createStartAtStr := c.Query("create_start_at")
+	createEndAtStr := c.Query("create_end_at")
+	if createStartAtStr != "" && createEndAtStr != "" {
+		createStartAt := time.Unix(int64(parseInt(createStartAtStr)), 0)
+		createEndAt := time.Unix(int64(parseInt(createEndAtStr)), 0)
+		condition.CreateStartAt = &createStartAt
+		condition.CreateEndAt = &createEndAt
+	}
+
+	return condition
 }

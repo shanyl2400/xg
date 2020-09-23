@@ -82,9 +82,47 @@ func (a *APIClient) SignUpOrder(ctx context.Context, orq *entity.OrderPayRequest
 	return responseObj.Error()
 }
 
+func (a *APIClient) DepositOrder(ctx context.Context, orq *entity.OrderPayRequest, token string) error {
+	req := JSONRequest{
+		URL:      fmt.Sprintf("/api/order/%v/deposit", orq.OrderID),
+		Method:   "PUT",
+		JSONBody: orq,
+		Token:    token,
+	}
+	resp, err := req.DoRequest(ctx)
+	if err != nil {
+		return err
+	}
+	responseObj := new(route.Response)
+	err = json.Unmarshal(resp, responseObj)
+	if err != nil {
+		return err
+	}
+	return responseObj.Error()
+}
+
 func (a *APIClient) RevokeOrder(ctx context.Context, orderId int, token string) error {
 	req := JSONRequest{
 		URL:      fmt.Sprintf("/api/order/%v/revoke", orderId),
+		Method:   "PUT",
+		Token:    token,
+	}
+	resp, err := req.DoRequest(ctx)
+	if err != nil {
+		return err
+	}
+	responseObj := new(route.Response)
+	err = json.Unmarshal(resp, responseObj)
+	if err != nil {
+		return err
+	}
+	return responseObj.Error()
+}
+
+
+func (a *APIClient) InvalidOrder(ctx context.Context, orderId int, token string) error {
+	req := JSONRequest{
+		URL:      fmt.Sprintf("/api/order/%v/invalid", orderId),
 		Method:   "PUT",
 		Token:    token,
 	}
@@ -177,7 +215,7 @@ func (a *APIClient) RejectPayment(ctx context.Context, orderPayId int, token str
 
 func (a *APIClient) AddOrderRemark(ctx context.Context, orderId int, content string, token string) error {
 	req := JSONRequest{
-		URL:      fmt.Sprintf("/api/payment/%v/mark", orderId),
+		URL:      fmt.Sprintf("/api/order/%v/mark", orderId),
 		Method:   "POST",
 		JSONBody: &entity.OrderMarkRequest{
 			Content: content,
@@ -229,12 +267,16 @@ func (a *APIClient) SearchOrders(ctx context.Context, condition *entity.SearchOr
 	query["student_ids"] = buildInts(condition.StudentIDList)
 	query["to_org_ids"] = buildInts(condition.ToOrgIDList)
 	query["intent_subjects"] = condition.IntentSubjects
-	query["publisher_id"] = buildInt(condition.PublisherID)
+	query["publisher_id"] = buildInts(condition.PublisherID)
 	query["order_sources"] = buildInts(condition.OrderSourceList)
 	query["status"] = buildInts(condition.Status)
 	query["order_by"] = condition.OrderBy
 	query["page"] = buildInt(condition.Page)
 	query["page_size"] = buildInt(condition.PageSize)
+	if condition.CreateStartAt != nil && condition.CreateEndAt != nil {
+		query["create_start_at"] = buildInt(int(condition.CreateStartAt.Unix()))
+		query["create_end_at"] = buildInt(int(condition.CreateEndAt.Unix()))
+	}
 
 	req := JSONRequest{
 		URL:      "/api/orders",
@@ -259,12 +301,15 @@ func (a *APIClient) SearchOrderWithAuthor(ctx context.Context, condition *entity
 	query["student_ids"] = buildInts(condition.StudentIDList)
 	query["to_org_ids"] = buildInts(condition.ToOrgIDList)
 	query["intent_subjects"] = condition.IntentSubjects
-	query["publisher_id"] = buildInt(condition.PublisherID)
 	query["order_sources"] = buildInts(condition.OrderSourceList)
 	query["status"] = buildInts(condition.Status)
 	query["order_by"] = condition.OrderBy
 	query["page"] = buildInt(condition.Page)
 	query["page_size"] = buildInt(condition.PageSize)
+	if condition.CreateStartAt != nil && condition.CreateEndAt != nil {
+		query["create_start_at"] = buildInt(int(condition.CreateStartAt.Unix()))
+		query["create_end_at"] = buildInt(int(condition.CreateEndAt.Unix()))
+	}
 
 	req := JSONRequest{
 		URL:      "/api/orders/author",
@@ -289,12 +334,16 @@ func (a *APIClient) SearchOrderWithOrgId(ctx context.Context, condition *entity.
 	query["student_ids"] = buildInts(condition.StudentIDList)
 	query["to_org_ids"] = buildInts(condition.ToOrgIDList)
 	query["intent_subjects"] = condition.IntentSubjects
-	query["publisher_id"] = buildInt(condition.PublisherID)
+	query["publisher_id"] = buildInts(condition.PublisherID)
 	query["order_sources"] = buildInts(condition.OrderSourceList)
 	query["status"] = buildInts(condition.Status)
 	query["order_by"] = condition.OrderBy
 	query["page"] = buildInt(condition.Page)
 	query["page_size"] = buildInt(condition.PageSize)
+	if condition.CreateStartAt != nil && condition.CreateEndAt != nil {
+		query["create_start_at"] = buildInt(int(condition.CreateStartAt.Unix()))
+		query["create_end_at"] = buildInt(int(condition.CreateEndAt.Unix()))
+	}
 
 	req := JSONRequest{
 		URL:      "/api/orders/org",

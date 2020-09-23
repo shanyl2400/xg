@@ -13,6 +13,7 @@ const (
 	AuthCheckOrg          = 10
 	AuthManageUser        = 11
 	AuthManageRole        = 12
+	AuthManageSelfOrg        = 13
 )
 
 type Auth struct {

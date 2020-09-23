@@ -27,6 +27,12 @@ type StatisticRecord struct {
 	Month int `json:"month"`
 }
 
+type TotalStatisticRecord struct {
+	Key   string `json:"key"`
+	Value int    `json:"value"`
+	Count int `json:"count"`
+}
+
 type StatisticGraph struct {
 	StudentsGraph     []*StatisticRecord `json:"students_graph"`
 	PerformancesGraph []*StatisticRecord `json:"performances_graph"`

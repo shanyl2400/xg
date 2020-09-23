@@ -14,7 +14,9 @@ import (
 type IOrderService interface{
 	CreateOrder(ctx context.Context, req *entity.CreateOrderRequest, operator *entity.JWTUser) (int, error)
 	SignUpOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error
+	DepositOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error
 	RevokeOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error
+	InvalidOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error
 	PayOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error
 	PaybackOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error
 	ConfirmOrderPay(ctx context.Context, orderPayId int, status int, operator *entity.JWTUser) error
@@ -85,7 +87,8 @@ func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequ
 		return err
 	}
 
-	if orderObj.Order.Status != entity.OrderStatusCreated {
+	if orderObj.Order.Status != entity.OrderStatusCreated &&
+		orderObj.Order.Status != entity.OrderStatusDeposit{
 		log.Warning.Printf("Check order status failed, req: %#v, order: %#v, err: %v\n", req, orderObj, err)
 		return ErrNoAuthToOperateOrder
 	}
@@ -116,9 +119,61 @@ func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequ
 	if err != nil{
 		return err
 	}
-
 	return nil
 }
+
+
+//交定金
+func (o *OrderService) DepositOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error {
+	//检查order状态
+	orderObj, err := da.GetOrderModel().GetOrderById(ctx, req.OrderID)
+	if err != nil {
+		log.Warning.Printf("Get org failed, req: %#v, err: %v\n", req, err)
+		return err
+	}
+
+	//检查是否为本机构的订单
+	err = o.checkOrderOrg(ctx, operator.OrgId, orderObj.Order.ToOrgID)
+	if err != nil {
+		log.Warning.Printf("Check org order failed, req: %#v, operator: %#v, err: %v\n", req, operator, err)
+		return err
+	}
+
+	if orderObj.Order.Status != entity.OrderStatusCreated {
+		log.Warning.Printf("Check order status failed, req: %#v, order: %#v, err: %v\n", req, orderObj, err)
+		return ErrNoAuthToOperateOrder
+	}
+
+	log.Info.Printf("Deposit order, req: %#v\n", req)
+	err = db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
+		//修改order状态
+		err = da.GetOrderModel().UpdateOrderStatusTx(ctx, tx, req.OrderID, entity.OrderStatusDeposit)
+		if err != nil {
+			log.Warning.Printf("Update order status failed, req: %#v, operator: %#v, err: %v\n", req, operator, err)
+			return err
+		}
+		//增加orderPay
+		payData := &da.OrderPayRecord{
+			OrderID: req.OrderID,
+			Mode:    entity.OrderPayModePay,
+			Title:   req.Title,
+			Amount:  req.Amount,
+			Status:  entity.OrderPayStatusPending,
+		}
+		_, err = da.GetOrderModel().AddOrderPayRecordTx(ctx, tx, payData)
+		if err != nil {
+			log.Warning.Printf("Add order pay failed, req: %#v, payData: %#v, err: %v\n", req, payData, err)
+			return err
+		}
+		return nil
+	})
+	if err != nil{
+		return err
+	}
+	return nil
+}
+
+//退费订单
 func (o *OrderService) RevokeOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error {
 	orderObj, err := da.GetOrderModel().GetOrderById(ctx, orderId)
 	if err != nil {
@@ -134,7 +189,8 @@ func (o *OrderService) RevokeOrder(ctx context.Context, orderId int, operator *e
 		return err
 	}
 
-	if orderObj.Order.Status != entity.OrderStatusCreated {
+	if orderObj.Order.Status != entity.OrderStatusSigned &&
+		orderObj.Order.Status != entity.OrderStatusDeposit{
 		log.Warning.Printf("Check order status failed, order: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
 		return nil
 	}
@@ -145,6 +201,35 @@ func (o *OrderService) RevokeOrder(ctx context.Context, orderId int, operator *e
 	}
 	return nil
 }
+
+//无效订单
+func (o *OrderService) InvalidOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error {
+	orderObj, err := da.GetOrderModel().GetOrderById(ctx, orderId)
+	if err != nil {
+		log.Warning.Printf("Invalid order failed, orderId: %#v, err: %v\n", orderId, err)
+		return err
+	}
+
+	log.Info.Printf("Invalid order, order: %#v\n", orderObj)
+	//检查是否为本机构的订单
+	err = o.checkOrderOrg(ctx, operator.OrgId, orderObj.Order.ToOrgID)
+	if err != nil {
+		log.Warning.Printf("Check order org failed, order: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
+		return err
+	}
+
+	if orderObj.Order.Status != entity.OrderStatusCreated {
+		log.Warning.Printf("Check order status failed, order: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
+		return nil
+	}
+	err = da.GetOrderModel().UpdateOrderStatusTx(ctx, db.Get(), orderId, entity.OrderStatusInvalid)
+	if err != nil {
+		log.Warning.Printf("Update order status failed, order: %#v, orderId: %#v, err: %v\n", orderObj, orderId, err)
+		return err
+	}
+	return nil
+}
+
 
 //付款
 func (o *OrderService) PayOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error {
@@ -281,6 +366,8 @@ func (o *OrderService) SearchOrders(ctx context.Context, condition *entity.Searc
 		IntentSubjects: condition.IntentSubjects,
 		PublisherID:    condition.PublisherID,
 		OrderSourceList: condition.OrderSourceList,
+		CreateStartAt: condition.CreateStartAt,
+		CreateEndAt: condition.CreateEndAt,
 		Status:         condition.Status,
 		OrderBy:        condition.OrderBy,
 		Page:           condition.Page,
@@ -304,7 +391,7 @@ func (o *OrderService) SearchOrders(ctx context.Context, condition *entity.Searc
 }
 
 func (o *OrderService) SearchOrderWithAuthor(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) (*entity.OrderInfoList, error) {
-	condition.PublisherID = operator.UserId
+	condition.PublisherID = []int{operator.UserId}
 	log.Info.Printf("Search order with author, condition: %#v\n", condition)
 	//查询订单
 	return o.SearchOrders(ctx, condition, operator)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
 	"xg/entity"
 )
 
@@ -153,5 +154,56 @@ func TestSearchOrder(t *testing.T) {
 	t.Log("Total:", res.Data.Total)
 	for i := range res.Data.Orders {
 		t.Log(res.Data.Orders[i])
+	}
+}
+
+
+func TestSearchOrder2(t *testing.T) {
+	client := new(APIClient)
+	ctx := context.Background()
+	superToken := getSuperToken(t)
+
+	startAt := time.Now().AddDate(0, 0, 0)
+	endAt := time.Now().AddDate(0, 0, 1)
+	res, err := client.SearchOrders(ctx, &entity.SearchOrderCondition{
+		CreateStartAt: &startAt,
+		CreateEndAt: &endAt,
+	}, superToken)
+	if !assert.NoError(t, err) {
+		return
+	}
+	t.Log("Total:", res.Data.Total)
+	for i := range res.Data.Orders {
+		t.Log(res.Data.Orders[i])
+	}
+}
+
+func TestRemarkOrder(t *testing.T) {
+	client := new(APIClient)
+	ctx := context.Background()
+	superToken := getSuperToken(t)
+
+	err := client.AddOrderRemark(ctx, 359, "Hello", superToken)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	loginRes, err := client.Login(ctx, "org0", "123456")
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	err = client.AddOrderRemark(ctx, 359, "Hello222", loginRes.Data.Token)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	orderRes, err := client.GetOrderById(ctx, 359, superToken)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	for i := range orderRes.Data.RemarkInfo {
+		t.Logf("%#v", orderRes.Data.RemarkInfo[i])
 	}
 }

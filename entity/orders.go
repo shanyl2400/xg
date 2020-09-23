@@ -3,9 +3,11 @@ package entity
 import "time"
 
 const (
-	OrderStatusCreated = iota + 1
-	OrderStatusSigned
-	OrderStatusRevoked
+	OrderStatusCreated =  1
+	OrderStatusSigned = 2
+	OrderStatusRevoked = 3
+	OrderStatusInvalid = 4
+	OrderStatusDeposit = 5
 
 	OrderPayStatusPending  = 1
 	OrderPayStatusChecked  = 2
@@ -28,8 +30,11 @@ type SearchOrderCondition struct {
 	StudentIDList   []int  `json:"student_id_list"`
 	ToOrgIDList     []int  `json:"to_org_id_list"`
 	IntentSubjects  string `json:"intent_subjects"`
-	PublisherID     int    `json:"publisher_id"`
+	PublisherID     []int    `json:"publisher_id"`
 	OrderSourceList []int  `json:"order_source"`
+
+	CreateStartAt *time.Time `json:"create_start_at"`
+	CreateEndAt *time.Time `json:"create_end_at"`
 
 	Status  []int  `json:"status"`
 	OrderBy string `json:"order_by"`

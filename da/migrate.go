@@ -22,6 +22,9 @@ func AutoMigrate() {
 	db.Get().AutoMigrate(Subject{})
 	db.Get().AutoMigrate(User{})
 	db.Get().AutoMigrate(StatisticsRecord{})
+
+	db.Get().AutoMigrate(NewStatisticsRecord{})
+	db.Get().Model(&NewStatisticsRecord{}).AddIndex("idx_new_statistics_date","year","month","day")
 }
 
 func InitData(flag bool) {
@@ -118,6 +121,11 @@ func initAuth() {
 	if err != nil {
 		panic(err)
 	}
+
+	err = GetAuthModel().CreateAuthWithID(context.Background(), entity.AuthManageSelfOrg, "管理本机构信息")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func initRole() {
@@ -182,6 +190,15 @@ func initRole() {
 		panic(err)
 	}
 	err = GetRoleModel().SetRoleAuth(context.Background(), db.Get(), outOrgId, []int{6})
+	if err != nil {
+		panic(err)
+	}
+
+	outOrgId2, err := GetRoleModel().CreateRoleWithID(context.Background(), entity.RoleOutOrg, "高级机构账号")
+	if err != nil {
+		panic(err)
+	}
+	err = GetRoleModel().SetRoleAuth(context.Background(), db.Get(), outOrgId2, []int{6, 13})
 	if err != nil {
 		panic(err)
 	}

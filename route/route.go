@@ -86,7 +86,7 @@ func Get() *gin.Engine {
 		org.PUT("/:id/review/reject", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.rejectOrg)
 		org.PUT("/:id/review/approve", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.approveOrg)
 
-		org.PUT("/", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.updateSelfOrgById)
+		org.PUT("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageSelfOrg}), s.updateSelfOrgById)
 		org.PUT("/:id", s.mustLogin, s.hasPermission([]int{entity.AuthManageOrg}), s.updateOrgById)
 	}
 	orgs := api.Group("/orgs")
@@ -101,7 +101,9 @@ func Get() *gin.Engine {
 		order.POST("/", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchSelfOrder, entity.AuthDispatchOrder}), s.createOrder)
 		order.GET("/:id", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchSelfOrder, entity.AuthDispatchOrder, entity.AuthListAllOrder, entity.AuthListOrgOrder}), s.getOrderByID)
 		order.PUT("/:id/signup", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.signupOrder)
+		order.PUT("/:id/deposit", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.depositOrder)
 		order.PUT("/:id/revoke", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.revokeOrder)
+		order.PUT("/:id/invalid", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.invalidOrder)
 		order.POST("/:id/mark", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchSelfOrder, entity.AuthDispatchOrder, entity.AuthListAllOrder, entity.AuthListOrgOrder}), s.addOrderMark)
 	}
 	orders := api.Group("/orders")

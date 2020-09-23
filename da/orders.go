@@ -126,7 +126,10 @@ type SearchOrderCondition struct {
 	ToOrgIDList    []int
 	OrderSourceList []int
 	IntentSubjects string
-	PublisherID    int
+	PublisherID    []int
+
+	CreateStartAt *time.Time
+	CreateEndAt *time.Time
 
 	Status []int
 
@@ -156,8 +159,8 @@ func (s SearchOrderCondition) GetConditions() (string, []interface{}) {
 		wheres = append(wheres, "JSON_CONTAINS(intent_subjects, ?)")
 		values = append(values, s.IntentSubjects)
 	}
-	if s.PublisherID > 0 {
-		wheres = append(wheres, "publisher_id = ?")
+	if len(s.PublisherID) > 0 {
+		wheres = append(wheres, "publisher_id IN (?)")
 		values = append(values, s.PublisherID)
 	}
 	if len(s.Status) > 0 {
@@ -169,7 +172,12 @@ func (s SearchOrderCondition) GetConditions() (string, []interface{}) {
 		values = append(values, s.OrderSourceList)
 	}
 
-	where := strings.Join(wheres, " and ")
+	if s.CreateStartAt != nil && s.CreateEndAt != nil {
+		wheres = append(wheres, "created_at BETWEEN ? AND ?")
+		values = append(values, s.CreateStartAt, s.CreateEndAt)
+	}
+
+	where := strings.Join(wheres, " AND ")
 
 	return where, values
 }
