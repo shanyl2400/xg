@@ -10,20 +10,13 @@ import (
 	"xg/entity"
 	"xg/log"
 )
-const(
-	OrderStatisticKeyStudent = "student"
-	OrderStatisticKeyOrder = "order"
-)
-
-type OrderStatisticRecordId struct {
-	Key string `json:"key"`
-	Author int `json:"author"`
-	OrgId int `json:"org_id"`
-	PublisherId int `json:"publisher_id"`
-	OrderSource int `json:"order_source"`
-}
 
 type OrderStatisticsService struct {
+}
+
+//名单数，无效人数，报名人数，成交业绩，成功率
+func (s *OrderStatisticsService) StatisticsTable(ctx context.Context, durationDay int) {
+
 }
 
 func (s *OrderStatisticsService) Summary(ctx context.Context) (*entity.SummaryInfo, error) {
@@ -165,26 +158,49 @@ func (s *OrderStatisticsService) SearchRecordsMonth(ctx context.Context, conditi
 	return ret, nil
 }
 
-func (s *OrderStatisticsService) AddStudent(ctx context.Context, tx *gorm.DB, id OrderStatisticRecordId, count int) error {
-	log.Info.Printf("AddStudent, count: %#v\n", count)
-	return s.addValue(ctx, tx, id, count, true)
+func (s *OrderStatisticsService) AddStudent(ctx context.Context, tx *gorm.DB, authorId, orderSourceId int) error {
+	log.Info.Printf("AddStudent, authorId: %#v, orderSourceId: %#v\n", authorId, orderSourceId)
+	return s.addValue(ctx, tx, entity.OrderStatisticRecordId{
+		Key:         entity.OrderStatisticKeyStudent,
+		Author:      authorId,
+		OrderSource: orderSourceId,
+	}, 1, true)
 }
-func (s *OrderStatisticsService) AddPerformance(ctx context.Context, tx *gorm.DB, id OrderStatisticRecordId, performance int) error {
-	log.Info.Printf("AddPerformance, value: %#v, performance: %#v\n", id, performance)
+
+func (s *OrderStatisticsService) AddNewOrder(ctx context.Context, tx *gorm.DB, osr entity.OrderStatisticRecordEntity) error {
+	return s.addOrder(ctx, tx, osr, entity.OrderStatisticKeyNewOrder, 1)
+}
+
+func (s *OrderStatisticsService) AddSignupOrder(ctx context.Context, tx *gorm.DB, osr entity.OrderStatisticRecordEntity) error {
+	return s.addOrder(ctx, tx, osr, entity.OrderStatisticKeySignupOrder, 1)
+}
+
+func (s *OrderStatisticsService) AddInvalidOrder(ctx context.Context, tx *gorm.DB, osr entity.OrderStatisticRecordEntity) error {
+	return s.addOrder(ctx, tx, osr, entity.OrderStatisticKeyInvalidOrder, 1)
+}
+
+func (s *OrderStatisticsService) AddPerformance(ctx context.Context, tx *gorm.DB, osr entity.OrderStatisticRecordEntity, performance int) error {
+	log.Info.Printf("AddPerformance, value: %#v, performance: %#v\n", osr, performance)
 	addCount := false
 	//大于0表示成交，计算成交量
 	if performance > 0 {
 		addCount = true
 	}
 
-	err := s.addValue(ctx, tx, id, performance, addCount)
+	err := s.addValue(ctx, tx, entity.OrderStatisticRecordId{
+		Key:         entity.OrderStatisticKeyOrder,
+		Author:      osr.Author,
+		OrgId:       osr.OrgId,
+		PublisherId: osr.PublisherId,
+		OrderSource: osr.OrderSource,
+	}, performance, addCount)
 	if err != nil{
 		return err
 	}
 	return nil
 }
 
-func (s *OrderStatisticsService) addValue(ctx context.Context, tx *gorm.DB, id OrderStatisticRecordId, value int, addCount bool) error {
+func (s *OrderStatisticsService) addValue(ctx context.Context, tx *gorm.DB, id entity.OrderStatisticRecordId, value int, addCount bool) error {
 	condition := s.idToCondition(id)
 
 	records, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, tx, condition)
@@ -231,7 +247,17 @@ func (s *OrderStatisticsService) addValue(ctx context.Context, tx *gorm.DB, id O
 	return nil
 }
 
-func (s *OrderStatisticsService) idToCondition(id OrderStatisticRecordId) da.SearchOrderStatisticsRecordCondition{
+func (s *OrderStatisticsService) addOrder(ctx context.Context, tx *gorm.DB, osr entity.OrderStatisticRecordEntity, key string, count int) error {
+	log.Info.Printf("AddNewOrder, count: %#v, key: %#v\n", count, key)
+	return s.addValue(ctx, tx, entity.OrderStatisticRecordId{
+		Key:         key,
+		Author:      osr.Author,
+		OrgId:       osr.OrgId,
+		PublisherId: osr.PublisherId,
+		OrderSource: osr.OrderSource,
+	}, count, true)
+}
+func (s *OrderStatisticsService) idToCondition(id entity.OrderStatisticRecordId) da.SearchOrderStatisticsRecordCondition{
 	now := time.Now()
 	condition := da.SearchOrderStatisticsRecordCondition{
 		Key:    id.Key,

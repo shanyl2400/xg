@@ -12,6 +12,30 @@ const (
 	OrderSourcePerformanceStatisticsKey = "order_source"
 )
 
+const(
+	OrderStatisticKeyStudent      = "student"
+	OrderStatisticKeyOrder        = "order"
+	OrderStatisticKeyInvalidOrder = "invalid_order"
+	OrderStatisticKeyNewOrder     = "new_order"
+	OrderStatisticKeySignupOrder  = "signup_order"
+)
+
+
+type OrderStatisticRecordId struct {
+	Key string `json:"key"`
+	Author int `json:"author"`
+	OrgId int `json:"org_id"`
+	PublisherId int `json:"publisher_id"`
+	OrderSource int `json:"order_source"`
+}
+
+type OrderStatisticRecordEntity struct {
+	Author int `json:"author"`
+	OrgId int `json:"org_id"`
+	PublisherId int `json:"publisher_id"`
+	OrderSource int `json:"order_source"`
+}
+
 type SummaryInfo struct {
 	OrgsTotal        int `json:"orgs_total"`
 	StudentsTotal    int `json:"students_total"`

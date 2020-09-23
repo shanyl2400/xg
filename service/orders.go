@@ -61,14 +61,33 @@ func (o *OrderService) CreateOrder(ctx context.Context, req *entity.CreateOrderR
 		OrderSource: 	student.OrderSourceID,
 		Status:         entity.OrderStatusCreated,
 	}
-	log.Info.Printf("create order: %#v\n", data)
-	id, err := da.GetOrderModel().CreateOrder(ctx, data)
+
+	id, err := db.GetTransResult(ctx, func(ctx context.Context, tx *gorm.DB) (interface{}, error) {
+		log.Info.Printf("create order: %#v\n", data)
+		id, err := da.GetOrderModel().CreateOrder(ctx, tx, data)
+		if err != nil {
+			log.Warning.Printf("Create order failed, data: %#v, err: %v\n", data, err)
+			return -1, err
+		}
+
+		record := entity.OrderStatisticRecordEntity{
+			Author:      student.AuthorID,
+			OrgId:       req.ToOrgID,
+			PublisherId: operator.UserId,
+			OrderSource: student.OrderSourceID,
+		}
+		err = GetOrderStatisticsService().AddNewOrder(ctx, tx, record)
+		if err != nil {
+			log.Warning.Printf("Add statistics record failed, record: %#v, err: %v\n", record, err)
+			return -1, err
+		}
+		return id, nil
+	})
 	if err != nil {
-		log.Warning.Printf("Create order failed, data: %#v, err: %v\n", data, err)
 		return -1, err
 	}
 
-	return id, nil
+	return id.(int), nil
 }
 
 //报名
@@ -114,6 +133,24 @@ func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequ
 			log.Warning.Printf("Add order pay failed, req: %#v, payData: %#v, err: %v\n", req, payData, err)
 			return err
 		}
+
+		student, err := GetStudentService().GetStudentById(ctx, orderObj.Order.StudentID, operator)
+		if err != nil {
+			log.Warning.Printf("Get student failed, StudentID: %#v, err: %v\n", orderObj.Order.StudentID, err)
+			return err
+		}
+		record := entity.OrderStatisticRecordEntity{
+			Author:      student.AuthorID,
+			OrgId:       orderObj.Order.ToOrgID,
+			PublisherId: orderObj.Order.PublisherID,
+			OrderSource: student.OrderSourceID,
+		}
+		err = GetOrderStatisticsService().AddSignupOrder(ctx, tx, record)
+		if err != nil {
+			log.Warning.Printf("Add statistics record failed, record: %#v, err: %v\n", record, err)
+			return err
+		}
+
 		return nil
 	})
 	if err != nil{
@@ -194,11 +231,35 @@ func (o *OrderService) RevokeOrder(ctx context.Context, orderId int, operator *e
 		log.Warning.Printf("Check order status failed, order: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
 		return nil
 	}
-	err = da.GetOrderModel().UpdateOrderStatusTx(ctx, db.Get(), orderId, entity.OrderStatusRevoked)
+	err = db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
+		err = da.GetOrderModel().UpdateOrderStatusTx(ctx, tx, orderId, entity.OrderStatusRevoked)
+		if err != nil {
+			log.Warning.Printf("Update order status failed, order: %#v, orderId: %#v, err: %v\n", orderObj, orderId, err)
+			return err
+		}
+
+		student, err := GetStudentService().GetStudentById(ctx, orderObj.Order.StudentID, operator)
+		if err != nil {
+			log.Warning.Printf("Get student failed, StudentID: %#v, err: %v\n", orderObj.Order.StudentID, err)
+			return err
+		}
+		record := entity.OrderStatisticRecordEntity{
+			Author:      student.AuthorID,
+			OrgId:       orderObj.Order.ToOrgID,
+			PublisherId: orderObj.Order.PublisherID,
+			OrderSource: student.OrderSourceID,
+		}
+		err = GetOrderStatisticsService().AddInvalidOrder(ctx, tx, record)
+		if err != nil {
+			log.Warning.Printf("Add statistics record failed, record: %#v, err: %v\n", record, err)
+			return err
+		}
+		return nil
+	})
 	if err != nil {
-		log.Warning.Printf("Update order status failed, order: %#v, orderId: %#v, err: %v\n", orderObj, orderId, err)
 		return err
 	}
+
 	return nil
 }
 
@@ -222,11 +283,35 @@ func (o *OrderService) InvalidOrder(ctx context.Context, orderId int, operator *
 		log.Warning.Printf("Check order status failed, order: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
 		return nil
 	}
-	err = da.GetOrderModel().UpdateOrderStatusTx(ctx, db.Get(), orderId, entity.OrderStatusInvalid)
+	err = db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
+		err = da.GetOrderModel().UpdateOrderStatusTx(ctx, db.Get(), orderId, entity.OrderStatusInvalid)
+		if err != nil {
+			log.Warning.Printf("Update order status failed, order: %#v, orderId: %#v, err: %v\n", orderObj, orderId, err)
+			return err
+		}
+
+		student, err := GetStudentService().GetStudentById(ctx, orderObj.Order.StudentID, operator)
+		if err != nil {
+			log.Warning.Printf("Get student failed, StudentID: %#v, err: %v\n", orderObj.Order.StudentID, err)
+			return err
+		}
+		record := entity.OrderStatisticRecordEntity{
+			Author:      student.AuthorID,
+			OrgId:       orderObj.Order.ToOrgID,
+			PublisherId: orderObj.Order.PublisherID,
+			OrderSource: student.OrderSourceID,
+		}
+		err = GetOrderStatisticsService().AddInvalidOrder(ctx, tx, record)
+		if err != nil {
+			log.Warning.Printf("Add statistics record failed, record: %#v, err: %v\n", record, err)
+			return err
+		}
+		return nil
+	})
 	if err != nil {
-		log.Warning.Printf("Update order status failed, order: %#v, orderId: %#v, err: %v\n", orderObj, orderId, err)
 		return err
 	}
+
 	return nil
 }
 
@@ -278,8 +363,7 @@ func (o *OrderService) ConfirmOrderPay(ctx context.Context, orderPayId int, stat
 			//	return err
 			//}
 
-			err = GetOrderStatisticsService().AddPerformance(ctx, tx, OrderStatisticRecordId{
-				Key:         OrderStatisticKeyOrder,
+			err = GetOrderStatisticsService().AddPerformance(ctx, tx, entity.OrderStatisticRecordEntity{
 				Author:      orderInfo.StudentSummary.AuthorId,
 				OrgId:       orderInfo.ToOrgID,
 				PublisherId: orderInfo.PublisherID,

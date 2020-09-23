@@ -43,14 +43,14 @@ func (s *Server) summary(c *gin.Context){
 // @Router /api/statistics/graph [get]
 func (s *Server) graph(c *gin.Context) {
 	studentsRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(), da.SearchOrderStatisticsRecordCondition{
-		Key:         service.OrderStatisticKeyStudent,
+		Key:         entity.OrderStatisticKeyStudent,
 	})
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
 	performanceRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(), da.SearchOrderStatisticsRecordCondition{
-		Key: service.OrderStatisticKeyOrder,
+		Key: entity.OrderStatisticKeyOrder,
 	})
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
@@ -89,7 +89,7 @@ func (s *Server) orgGraph(c *gin.Context) {
 
 	performanceRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(),
 		da.SearchOrderStatisticsRecordCondition{
-			Key: service.OrderStatisticKeyOrder,
+			Key: entity.OrderStatisticKeyOrder,
 			OrgId: orgIds,
 		})
 	if err != nil {
@@ -118,7 +118,7 @@ func (s *Server) dispatchGraph(c *gin.Context) {
 	user := s.getJWTUser(c)
 	performanceRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(),
 		da.SearchOrderStatisticsRecordCondition{
-			Key: service.OrderStatisticKeyOrder,
+			Key: entity.OrderStatisticKeyOrder,
 			PublisherId: []int{user.UserId},
 		})
 	if err != nil {
@@ -154,7 +154,7 @@ func (s *Server) orderSourceGraph(c *gin.Context) {
 	}
 	performanceRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(),
 		da.SearchOrderStatisticsRecordCondition{
-			Key: service.OrderStatisticKeyOrder,
+			Key: entity.OrderStatisticKeyOrder,
 			OrderSource: []int{id},
 		})
 	if err != nil {
@@ -183,7 +183,7 @@ func (s *Server) enterGraph(c *gin.Context) {
 	user := s.getJWTUser(c)
 	publisherPerformanceRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(),
 		da.SearchOrderStatisticsRecordCondition{
-			Key: service.OrderStatisticKeyOrder,
+			Key: entity.OrderStatisticKeyOrder,
 			PublisherId: []int{user.UserId},
 		})
 	if err != nil {
@@ -193,7 +193,7 @@ func (s *Server) enterGraph(c *gin.Context) {
 
 	authorPerformanceRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(),
 		da.SearchOrderStatisticsRecordCondition{
-		Key: service.OrderStatisticKeyOrder,
+		Key: entity.OrderStatisticKeyOrder,
 		Author: []int{user.UserId},
 	})
 	if err != nil {

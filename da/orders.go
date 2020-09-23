@@ -12,7 +12,7 @@ import (
 )
 
 type IOrderModel interface {
-	CreateOrder(ctx context.Context, o Order) (int, error)
+	CreateOrder(ctx context.Context, tx *gorm.DB, o Order) (int, error)
 	AddOrderPayRecord(ctx context.Context, o *OrderPayRecord) (int, error)
 	AddRemarkRecord(ctx context.Context, o *OrderRemarkRecord) (int, error)
 	AddOrderPayRecordTx(ctx context.Context, tx *gorm.DB, o *OrderPayRecord) (int, error)
@@ -184,7 +184,7 @@ func (s SearchOrderCondition) GetConditions() (string, []interface{}) {
 
 type DBOrderModel struct{}
 
-func (d *DBOrderModel) CreateOrder(ctx context.Context, o Order) (int, error) {
+func (d *DBOrderModel) CreateOrder(ctx context.Context, tx *gorm.DB, o Order) (int, error) {
 	now := time.Now()
 	o.CreatedAt = &now
 	o.UpdatedAt = &now
