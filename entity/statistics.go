@@ -77,3 +77,46 @@ type OrderPerformanceInfo struct {
 	PublisherId int `json:"publisher_id"`
 	OrderSourceId int `json:"order_source_id"`
 }
+
+//名单数，无效人数，报名人数，成交业绩，成功率
+type OrderStatisticTable struct {
+	Data []*OrderStatisticTableMonth `json:"data"`
+	DayData OrderStatisticTableItem `json:"day_data"`
+	WeekDayData OrderStatisticTableItem `json:"week_day_data"`
+	MonthDayData OrderStatisticTableItem `json:"month_day_data"`
+	ThreeMonthDayData OrderStatisticTableItem `json:"three_month_day_data"`
+}
+
+func (o *OrderStatisticTable) CalculateSucceed() {
+	o.DayData.CalculateSucceed()
+	o.WeekDayData.CalculateSucceed()
+	o.MonthDayData.CalculateSucceed()
+	o.ThreeMonthDayData.CalculateSucceed()
+}
+
+func NewOrderStatisticTable()*OrderStatisticTable {
+	tb := new(OrderStatisticTable)
+
+	//初始化12个月
+	for i := 0; i <= 12; i ++ {
+		tb.Data[i] = new(OrderStatisticTableMonth)
+	}
+	return tb
+}
+
+type OrderStatisticTableMonth struct {
+	Students int `json:"students"`
+	Orders int `json:"orders"`
+	InvalidOrders int `json:"invalid_orders"`
+	SignedOrder int `json:"signed_order"`
+	Performance int `json:"performance"`
+}
+
+type OrderStatisticTableItem struct {
+	OrderStatisticTableMonth
+	Succeed int `json:"succeed"`
+}
+
+func (o *OrderStatisticTableItem) CalculateSucceed() {
+	o.Succeed = o.SignedOrder / o.Orders
+}

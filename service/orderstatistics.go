@@ -11,12 +11,76 @@ import (
 	"xg/log"
 )
 
+const (
+	DayTimeDuration = time.Hour * 24
+)
 type OrderStatisticsService struct {
 }
 
 //名单数，无效人数，报名人数，成交业绩，成功率
-func (s *OrderStatisticsService) StatisticsTable(ctx context.Context, durationDay int) {
+func (s *OrderStatisticsService) StatisticsTable(ctx context.Context, et entity.OrderStatisticRecordEntity) (*entity.OrderStatisticTable, error){
+	records, err := s.searchLast3MonthRecords(ctx, et)
+	if err != nil{
+		return nil, err
+	}
+	ret := entity.NewOrderStatisticTable()
+	now := time.Now()
+	for i := range records {
+		recordDate := time.Date(records[i].Year, time.Month(records[i].Month), records[i].Date, 0, 0, 0, 0, time.Local)
+		//当日数据
+		if records[i].Year == now.Year()&&
+			records[i].Month == int(now.Month()) &&
+			records[i].Date == now.Day() {
+			ret.DayData.OrderStatisticTableMonth = s.handleRecord(ctx, ret.DayData.OrderStatisticTableMonth, records[i])
+		}
 
+		//本周数据
+		rYear, rWeek := recordDate.ISOWeek()
+		nYear, nWeek := now.ISOWeek()
+		if rYear == nYear && rWeek == nWeek {
+			ret.WeekDayData.OrderStatisticTableMonth = s.handleRecord(ctx, ret.WeekDayData.OrderStatisticTableMonth, records[i])
+		}
+
+		//当月数据
+		if records[i].Year == now.Year()&&
+			records[i].Month == int(now.Month()) {
+			ret.MonthDayData.OrderStatisticTableMonth = s.handleRecord(ctx, ret.MonthDayData.OrderStatisticTableMonth, records[i])
+		}
+
+		//三个月数据
+		timeDiff := now.Sub(recordDate)
+		if timeDiff < DayTimeDuration * 90 {
+			ret.ThreeMonthDayData.OrderStatisticTableMonth = s.handleRecord(ctx, ret.ThreeMonthDayData.OrderStatisticTableMonth, records[i])
+		}
+
+		//本年度
+		if records[i].Year == now.Year() {
+			if ret.Data[records[i].Month] == nil {
+				ret.Data[records[i].Month] = new(entity.OrderStatisticTableMonth)
+			}
+			data := s.handleRecord(ctx, *ret.Data[records[i].Month], records[i])
+			ret.Data[records[i].Month] = &data
+		}
+	}
+	//计算成功率
+	ret.CalculateSucceed()
+	return ret, nil
+}
+
+func (s *OrderStatisticsService) handleRecord(ctx context.Context, item entity.OrderStatisticTableMonth, record *da.OrderStatisticsRecord) entity.OrderStatisticTableMonth{
+	switch record.Key {
+	case entity.OrderStatisticKeyStudent:
+		item.Students = item.Students + record.Value
+	case entity.OrderStatisticKeyOrder:
+		item.Performance = item.Performance + record.Value
+	case entity.OrderStatisticKeyNewOrder:
+		item.Orders = item.Orders +record.Value
+	case entity.OrderStatisticKeySignupOrder:
+		item.SignedOrder = item.SignedOrder + record.Value
+	case entity.OrderStatisticKeyInvalidOrder:
+		item.InvalidOrders = item.InvalidOrders + record.Value
+	}
+	return item
 }
 
 func (s *OrderStatisticsService) Summary(ctx context.Context) (*entity.SummaryInfo, error) {
@@ -257,6 +321,61 @@ func (s *OrderStatisticsService) addOrder(ctx context.Context, tx *gorm.DB, osr 
 		OrderSource: osr.OrderSource,
 	}, count, true)
 }
+
+func (s *OrderStatisticsService) searchLast3MonthRecords(ctx context.Context, et entity.OrderStatisticRecordEntity) ([]*da.OrderStatisticsRecord, error){
+	condition := s.entityToCondition(et)
+	now := time.Now()
+
+	records := make([]*da.OrderStatisticsRecord, 0)
+	switch int(now.Month()) {
+	case 1:
+		condition.Year = now.Year()
+		condition.Month = []int{1}
+		records0, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
+		if err != nil{
+			log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
+			return nil, err
+		}
+		condition.Year = now.Year() - 1
+		condition.Month = []int{11, 12}
+		records1, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
+		if err != nil{
+			log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
+			return nil, err
+		}
+		records = append(records0, records1 ...)
+	case 2:
+		condition.Year = now.Year()
+		condition.Month = []int{1, 2}
+		records0, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
+		if err != nil{
+			log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
+			return nil, err
+		}
+
+		condition.Year = now.Year() - 1
+		condition.Month = []int{12}
+		records1, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
+		if err != nil{
+			log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
+			return nil, err
+		}
+
+		records = append(records0, records1 ...)
+	default:
+		month := int(now.Month())
+		condition.Month = []int{month, month - 1, month - 2}
+		condition.Year = now.Year()
+		records0, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
+		if err != nil{
+			log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
+			return nil, err
+		}
+		records = records0
+	}
+	return records, nil
+}
+
 func (s *OrderStatisticsService) idToCondition(id entity.OrderStatisticRecordId) da.SearchOrderStatisticsRecordCondition{
 	now := time.Now()
 	condition := da.SearchOrderStatisticsRecordCondition{
@@ -264,6 +383,25 @@ func (s *OrderStatisticsService) idToCondition(id entity.OrderStatisticRecordId)
 		Year:   now.Year(),
 		Month:  []int{int(now.Month())},
 		Date:  []int{now.Day()},
+	}
+	if id.Author > 0 {
+		condition.Author = []int{id.Author}
+	}
+	if id.OrgId > 0 {
+		condition.OrgId = []int{id.OrgId}
+	}
+	if id.OrderSource > 0 {
+		condition.OrderSource = []int{id.OrderSource}
+	}
+	if id.PublisherId > 0 {
+		condition.PublisherId = []int{id.PublisherId}
+	}
+	return condition
+}
+
+
+func (s *OrderStatisticsService) entityToCondition(id entity.OrderStatisticRecordEntity) da.SearchOrderStatisticsRecordCondition{
+	condition := da.SearchOrderStatisticsRecordCondition{
 	}
 	if id.Author > 0 {
 		condition.Author = []int{id.Author}
