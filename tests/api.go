@@ -678,6 +678,30 @@ func (a *APIClient) Summary(ctx context.Context, token string) (*route.SummaryRe
 	return responseObj, responseObj.Error()
 }
 
+func (a *APIClient) StatisticsTable(ctx context.Context, request entity.OrderStatisticRecordEntity, token string) (*route.StatisticTableResponse, error) {
+	query := make(map[string]string)
+	query["author"] = buildInt(request.Author)
+	query["org_id"] = buildInt(request.OrgId)
+	query["publisher_id"] = buildInt(request.PublisherId)
+	query["order_source"] = buildInt(request.OrderSource)
+	req := JSONRequest{
+		URL:      "/api/statistics/table",
+		Method:   "GET",
+		Query: query,
+		Token:    token,
+	}
+	resp, err := req.DoRequest(ctx)
+	if err != nil {
+		return nil, err
+	}
+	responseObj := new(route.StatisticTableResponse)
+	err = json.Unmarshal(resp, responseObj)
+	if err != nil {
+		return nil, err
+	}
+	return responseObj, responseObj.Error()
+}
+
 func (a *APIClient) Graph(ctx context.Context, token string) (*route.GraphResponse, error) {
 	req := JSONRequest{
 		URL:      "/api/statistics/graph",

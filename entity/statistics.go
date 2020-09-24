@@ -98,8 +98,8 @@ func NewOrderStatisticTable()*OrderStatisticTable {
 	tb := new(OrderStatisticTable)
 
 	//初始化12个月
-	for i := 0; i <= 12; i ++ {
-		tb.Data[i] = new(OrderStatisticTableMonth)
+	for i := 0; i < 12; i ++ {
+		tb.Data = append(tb.Data, new(OrderStatisticTableMonth))
 	}
 	return tb
 }
@@ -118,5 +118,9 @@ type OrderStatisticTableItem struct {
 }
 
 func (o *OrderStatisticTableItem) CalculateSucceed() {
-	o.Succeed = o.SignedOrder / o.Orders
+	if o.Orders == 0 {
+		o.Succeed = 0
+		return
+	}
+	o.Succeed = (o.SignedOrder * 1000) / o.Orders
 }

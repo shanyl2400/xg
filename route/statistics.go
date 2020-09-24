@@ -15,7 +15,7 @@ import (
 // @Produce json
 // @Param Authorization header string true "With the bearer"
 // @Tags statistics
-// @Success 200 {object} entity.SummaryInfo
+// @Success 200 {object} entity.SummaryResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/statistics/summary [get]
@@ -31,13 +31,40 @@ func (s *Server) summary(c *gin.Context){
 	})
 }
 
+// @Summary statisticsTable
+// @Description get system data statisticsTable
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param author query int false "get statistic with author_id"
+// @Param org_id query int false "get statistic with org_id"
+// @Param order_source query int false "get statistic with order_source"
+// @Param publisher_id query int  false "get statistic with publisher_id"
+// @Tags statistics
+// @Success 200 {object} entity.StatisticTableResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/statistics/table [get]
+func (s *Server) statisticsTable(c *gin.Context) {
+	req := buildOrderStatisticRecordEntity(c)
+	res, err := service.GetOrderStatisticsService().StatisticsTable(c.Request.Context(), *req)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, StatisticTableResponse{
+		Data: res,
+		ErrMsg:   "success",
+	})
+}
+
 // @Summary graph
 // @Description get system data graph
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "With the bearer"
 // @Tags statistics
-// @Success 200 {object} entity.StatisticGraph
+// @Success 200 {object} entity.GraphResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/statistics/graph [get]
@@ -208,4 +235,13 @@ func (s *Server) enterGraph(c *gin.Context) {
 		},
 		ErrMsg:   "success",
 	})
+}
+
+func buildOrderStatisticRecordEntity(c *gin.Context) *entity.OrderStatisticRecordEntity{
+	return &entity.OrderStatisticRecordEntity{
+		Author:      parseInt(c.Query("author")),
+		OrgId:       parseInt(c.Query("org_id")),
+		PublisherId: parseInt(c.Query("publisher_id")),
+		OrderSource: parseInt(c.Query("order_source")),
+	}
 }

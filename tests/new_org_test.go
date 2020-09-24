@@ -207,3 +207,48 @@ func TestRemarkOrder(t *testing.T) {
 		t.Logf("%#v", orderRes.Data.RemarkInfo[i])
 	}
 }
+
+
+func TestStatisticsStudent(t *testing.T) {
+	client := new(APIClient)
+	ctx := context.Background()
+	superToken := getSuperToken(t)
+
+	stu0Res, err := client.CreateStudent(ctx, students[0], superToken)
+	if !assert.NoError(t, err) {
+		return
+	}
+	_, err = client.CreateStudent(ctx, students[1], superToken)
+	if !assert.NoError(t, err) {
+		return
+	}
+	_, err = client.CreateStudent(ctx, students[2], superToken)
+	if !assert.NoError(t, err) {
+		return
+	}
+	_, err = client.CreateStudent(ctx, students[3], superToken)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	_, err = client.CreateOrder(ctx, &entity.CreateOrderRequest{
+		StudentID:      stu0Res.Result.ID,
+		ToOrgID:        3,
+		IntentSubjects: []string{"美术-绘画"},
+	}, superToken)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	statisticRes, err := client.StatisticsTable(ctx, entity.OrderStatisticRecordEntity{
+		Author:      1,
+	}, superToken)
+	if !assert.NoError(t, err) {
+		return
+	}
+
+	t.Logf("%#v", statisticRes.Data)
+	for i := range statisticRes.Data.Data {
+		t.Logf("month[%v] %#v", i, statisticRes.Data.Data[i])
+	}
+}

@@ -55,32 +55,17 @@ func (s *OrderStatisticsService) StatisticsTable(ctx context.Context, et entity.
 
 		//本年度
 		if records[i].Year == now.Year() {
-			if ret.Data[records[i].Month] == nil {
-				ret.Data[records[i].Month] = new(entity.OrderStatisticTableMonth)
+			month := records[i].Month - 1
+			if ret.Data[month] == nil {
+				ret.Data[month] = new(entity.OrderStatisticTableMonth)
 			}
-			data := s.handleRecord(ctx, *ret.Data[records[i].Month], records[i])
-			ret.Data[records[i].Month] = &data
+			data := s.handleRecord(ctx, *ret.Data[month], records[i])
+			ret.Data[month] = &data
 		}
 	}
 	//计算成功率
 	ret.CalculateSucceed()
 	return ret, nil
-}
-
-func (s *OrderStatisticsService) handleRecord(ctx context.Context, item entity.OrderStatisticTableMonth, record *da.OrderStatisticsRecord) entity.OrderStatisticTableMonth{
-	switch record.Key {
-	case entity.OrderStatisticKeyStudent:
-		item.Students = item.Students + record.Value
-	case entity.OrderStatisticKeyOrder:
-		item.Performance = item.Performance + record.Value
-	case entity.OrderStatisticKeyNewOrder:
-		item.Orders = item.Orders +record.Value
-	case entity.OrderStatisticKeySignupOrder:
-		item.SignedOrder = item.SignedOrder + record.Value
-	case entity.OrderStatisticKeyInvalidOrder:
-		item.InvalidOrders = item.InvalidOrders + record.Value
-	}
-	return item
 }
 
 func (s *OrderStatisticsService) Summary(ctx context.Context) (*entity.SummaryInfo, error) {
@@ -323,7 +308,7 @@ func (s *OrderStatisticsService) addOrder(ctx context.Context, tx *gorm.DB, osr 
 }
 
 func (s *OrderStatisticsService) searchLast3MonthRecords(ctx context.Context, et entity.OrderStatisticRecordEntity) ([]*da.OrderStatisticsRecord, error){
-	condition := s.entityToCondition(et)
+	condition := s.entityToCondition(ctx, et)
 	now := time.Now()
 
 	records := make([]*da.OrderStatisticsRecord, 0)
@@ -375,7 +360,21 @@ func (s *OrderStatisticsService) searchLast3MonthRecords(ctx context.Context, et
 	}
 	return records, nil
 }
-
+func (s *OrderStatisticsService) handleRecord(ctx context.Context, item entity.OrderStatisticTableMonth, record *da.OrderStatisticsRecord) entity.OrderStatisticTableMonth{
+	switch record.Key {
+	case entity.OrderStatisticKeyStudent:
+		item.Students = item.Students + record.Value
+	case entity.OrderStatisticKeyOrder:
+		item.Performance = item.Performance + record.Value
+	case entity.OrderStatisticKeyNewOrder:
+		item.Orders = item.Orders +record.Value
+	case entity.OrderStatisticKeySignupOrder:
+		item.SignedOrder = item.SignedOrder + record.Value
+	case entity.OrderStatisticKeyInvalidOrder:
+		item.InvalidOrders = item.InvalidOrders + record.Value
+	}
+	return item
+}
 func (s *OrderStatisticsService) idToCondition(id entity.OrderStatisticRecordId) da.SearchOrderStatisticsRecordCondition{
 	now := time.Now()
 	condition := da.SearchOrderStatisticsRecordCondition{
@@ -400,14 +399,26 @@ func (s *OrderStatisticsService) idToCondition(id entity.OrderStatisticRecordId)
 }
 
 
-func (s *OrderStatisticsService) entityToCondition(id entity.OrderStatisticRecordEntity) da.SearchOrderStatisticsRecordCondition{
-	condition := da.SearchOrderStatisticsRecordCondition{
-	}
+func (s *OrderStatisticsService) entityToCondition(ctx context.Context, id entity.OrderStatisticRecordEntity) da.SearchOrderStatisticsRecordCondition{
+	condition := da.SearchOrderStatisticsRecordCondition{}
+
 	if id.Author > 0 {
 		condition.Author = []int{id.Author}
 	}
 	if id.OrgId > 0 {
-		condition.OrgId = []int{id.OrgId}
+		subOrgs, err := GetOrgService().GetSubOrgs(ctx, id.OrgId)
+		if err != nil{
+			log.Warning.Println("Can't get sub orgs, error:", err)
+			condition.OrgId = []int{id.OrgId}
+		}else{
+			ids := make([]int, len(subOrgs))
+			for i := range ids {
+				ids[i] = subOrgs[i].ID
+			}
+			ids = append(ids, id.OrgId)
+			condition.OrgId = ids
+		}
+
 	}
 	if id.OrderSource > 0 {
 		condition.OrderSource = []int{id.OrderSource}

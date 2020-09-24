@@ -189,6 +189,17 @@ func (r SummaryResponse) Error() error{
 	return errors.New(r.ErrMsg)
 }
 
+type StatisticTableResponse struct {
+	Data *entity.OrderStatisticTable `json:"data"`
+	ErrMsg 	string        `json:"err_msg"`
+}
+func (r StatisticTableResponse) Error() error{
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
+
 type GraphResponse struct {
 	Graph *entity.StatisticGraph `json:"graph"`
 	ErrMsg 	string        `json:"err_msg"`
