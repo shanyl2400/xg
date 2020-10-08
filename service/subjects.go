@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"time"
 	"xg/da"
@@ -60,7 +61,8 @@ func (s *SubjectService) ListSubjects(ctx context.Context, parentID int) ([]*ent
 func (s *SubjectService) CreateSubject(ctx context.Context, req entity.CreateSubjectRequest) (int, error) {
 	level := 1
 	log.Info.Printf("CreateSubject, req: %#v\n", req)
-	if req.Name == "" {
+
+	if strings.TrimSpace(req.Name) == "" {
 		log.Warning.Printf("CreateSubject invalid name, req: %#v\n", req)
 		return -1, ErrInvalidSubjctName
 	}
