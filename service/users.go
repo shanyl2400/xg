@@ -25,12 +25,13 @@ var (
 	ErrNotSuperOrg      = errors.New("not super org")
 
 	ErrDuplicateUserName = errors.New("duplicate user name")
-	ErrOperateOnRootOrg  = errors.New("Can't operate on root org")
+	ErrOperateOnRootOrg  = errors.New("can't operate on root org")
 
 	ErrInvalidUserRoleOrg  = errors.New("invalid user role & org")
 	ErrCreateSuperUser     = errors.New("can't create super user")
 	ErrInvalidStatisticKey = errors.New("invalid statistics key")
 	ErrInvalidOrderId      = errors.New("invalid order id")
+	ErrInvalidSubjctName   = errors.New("invalid subject name")
 )
 
 type IUserService interface {

@@ -9,7 +9,7 @@ import (
 	"xg/log"
 )
 
-type ISubjectService interface{
+type ISubjectService interface {
 	ListSubjects(ctx context.Context, parentID int) ([]*entity.Subject, error)
 	CreateSubject(ctx context.Context, req entity.CreateSubjectRequest) (int, error)
 }
@@ -60,6 +60,10 @@ func (s *SubjectService) ListSubjects(ctx context.Context, parentID int) ([]*ent
 func (s *SubjectService) CreateSubject(ctx context.Context, req entity.CreateSubjectRequest) (int, error) {
 	level := 1
 	log.Info.Printf("CreateSubject, req: %#v\n", req)
+	if req.Name == "" {
+		log.Warning.Printf("CreateSubject invalid name, req: %#v\n", req)
+		return -1, ErrInvalidSubjctName
+	}
 	if req.ParentId > 0 {
 		parentSubject, err := da.GetSubjectModel().GetSubjectById(ctx, req.ParentId)
 		if err != nil {
@@ -78,7 +82,7 @@ func (s *SubjectService) CreateSubject(ctx context.Context, req entity.CreateSub
 		CreatedAt: &now,
 	}
 	id, err := da.GetSubjectModel().CreateSubject(ctx, data)
-	if err != nil{
+	if err != nil {
 		log.Warning.Printf("Search subjects from sub orgs failed, req: %#v, data: %#v, err: %v\n", req, data, err)
 		return -1, err
 	}

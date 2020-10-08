@@ -32,9 +32,10 @@ func (s *Server) listSubjects(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, SubjectsObjResponse{
 		Subjects: subjects,
-		ErrMsg:  "success",
+		ErrMsg:   "success",
 	})
 }
+
 // @Summary createSubject
 // @Description create a new subject
 // @Accept json
@@ -60,7 +61,7 @@ func (s *Server) createSubject(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, IdResponse{
-		ID: id,
-		ErrMsg:  "success",
+		ID:     id,
+		ErrMsg: "success",
 	})
 }
