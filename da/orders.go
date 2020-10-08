@@ -41,7 +41,7 @@ type Order struct {
 	IntentSubjects string `gorm:"type:varchar(255);NOT NULL;column:intent_subjects"`
 	PublisherID    int    `gorm:"type:int;NOT NULL;column:publisher_id;index"`
 
-	OrderSource	int `gorm:"type:int;NOT NULL;column:order_source;index"`
+	OrderSource int `gorm:"type:int;NOT NULL;column:order_source;index"`
 
 	Status int `gorm:"type:int;NOT NULL;column:status;index"`
 
@@ -121,15 +121,15 @@ func (s SearchPayRecordCondition) GetConditions() (string, []interface{}) {
 }
 
 type SearchOrderCondition struct {
-	OrderIDList    []int
-	StudentIDList  []int
-	ToOrgIDList    []int
+	OrderIDList     []int
+	StudentIDList   []int
+	ToOrgIDList     []int
 	OrderSourceList []int
-	IntentSubjects string
-	PublisherID    []int
+	IntentSubjects  string
+	PublisherID     []int
 
 	CreateStartAt *time.Time
-	CreateEndAt *time.Time
+	CreateEndAt   *time.Time
 
 	Status []int
 
@@ -156,8 +156,8 @@ func (s SearchOrderCondition) GetConditions() (string, []interface{}) {
 		values = append(values, s.ToOrgIDList)
 	}
 	if s.IntentSubjects != "" {
-		wheres = append(wheres, "JSON_CONTAINS(intent_subjects, ?)")
-		values = append(values, s.IntentSubjects)
+		wheres = append(wheres, "intent_subjects LIKE ?")
+		values = append(values, "%"+s.IntentSubjects+"%")
 	}
 	if len(s.PublisherID) > 0 {
 		wheres = append(wheres, "publisher_id IN (?)")

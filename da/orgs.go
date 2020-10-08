@@ -28,15 +28,15 @@ type IOrgModel interface {
 	SearchOrgsWithDistance(ctx context.Context, s SearchOrgsCondition, l *entity.Coordinate) (int, []*OrgWithDistance, error)
 }
 type Org struct {
-	ID        int    `gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
-	Name      string `gorm:"type:varchar(128);NOT NULL;column:name"`
-	Subjects  string `gorm:"type:varchar(255);NOT NULL;column:subjects"`
-	Address   string `gorm:"type:varchar(255);NOT NULL; column:address"`
-	AddressExt string `gorm:"type:varchar(255);NOT NULL; column:address_ext"`
-	ParentID  int    `gorm:"type:int;NOT NULL;column:parent_id;index"`
-	Telephone string `gorm:"type:varchar(64);NOT NULL; column:telephone"`
-	Longitude float64 `gorm:"type:double(9,6);NOT NULL; column:longitude; default:0"`
-	Latitude float64 `gorm:"type:double(9,6);NOT NULL; column:latitude; default:0"`
+	ID         int     `gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
+	Name       string  `gorm:"type:varchar(128);NOT NULL;column:name"`
+	Subjects   string  `gorm:"type:varchar(255);NOT NULL;column:subjects"`
+	Address    string  `gorm:"type:varchar(255);NOT NULL; column:address"`
+	AddressExt string  `gorm:"type:varchar(255);NOT NULL; column:address_ext"`
+	ParentID   int     `gorm:"type:int;NOT NULL;column:parent_id;index"`
+	Telephone  string  `gorm:"type:varchar(64);NOT NULL; column:telephone"`
+	Longitude  float64 `gorm:"type:double(9,6);NOT NULL; column:longitude; default:0"`
+	Latitude   float64 `gorm:"type:double(9,6);NOT NULL; column:latitude; default:0"`
 
 	Status        int    `gorm:"type:int;NOT NULL;column:status;index"`
 	SupportRoleID string `gorm:"type:varchar(255);NOT NULL;column:support_role_ids"`
@@ -45,7 +45,6 @@ type Org struct {
 	CreatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:created_at"`
 	DeletedAt *time.Time `gorm:"type:datetime;column:deleted_at"`
 }
-
 
 type OrgWithDistance struct {
 	Org
@@ -68,12 +67,12 @@ func (d *DBOrgModel) CreateOrg(ctx context.Context, tx *gorm.DB, org Org) (int, 
 func (d *DBOrgModel) UpdateOrg(ctx context.Context, tx *gorm.DB, id int, org Org) error {
 	now := time.Now()
 	err := db.Get().Model(Org{}).Where(&Org{ID: id}).Updates(Org{
-		Status: org.Status,
-		Subjects: org.Subjects,
-		Address: org.Address,
+		Status:     org.Status,
+		Subjects:   org.Subjects,
+		Address:    org.Address,
 		AddressExt: org.AddressExt,
-		Telephone: org.Telephone,
-		UpdatedAt: &now}).Error
+		Telephone:  org.Telephone,
+		UpdatedAt:  &now}).Error
 	if err != nil {
 		return err
 	}
@@ -117,8 +116,8 @@ func (d *DBOrgModel) ListOrgsByIDs(ctx context.Context, ids []int) ([]*Org, erro
 	return orgList, nil
 }
 
-func (d *DBOrgModel) DeleteOrgById(ctx context.Context, tx *gorm.DB, ids []int) error{
-	err :=tx.Delete(&Org{}, ids).Error
+func (d *DBOrgModel) DeleteOrgById(ctx context.Context, tx *gorm.DB, ids []int) error {
+	err := tx.Delete(&Org{}, ids).Error
 	if err != nil {
 		return err
 	}
@@ -180,6 +179,8 @@ func (d *DBOrgModel) SearchOrgsWithDistance(ctx context.Context, s SearchOrgsCon
 	}
 	if s.OrderBy != "" {
 		tx = tx.Order(s.OrderBy)
+	} else {
+		tx = tx.Order("distance")
 	}
 	err = tx.Model(Org{}).Select([]string{
 		"*",

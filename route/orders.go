@@ -68,7 +68,7 @@ func (s *Server) searchOrder(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, OrderInfoListResponse{
-		Data:     orders,
+		Data:   orders,
 		ErrMsg: "success",
 	})
 }
@@ -100,7 +100,7 @@ func (s *Server) searchOrderWithAuthor(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, OrderInfoListResponse{
-		Data:     orders,
+		Data:   orders,
 		ErrMsg: "success",
 	})
 }
@@ -132,7 +132,7 @@ func (s *Server) searchOrderWithOrgID(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, OrderInfoListResponse{
-		Data:     orders,
+		Data:   orders,
 		ErrMsg: "success",
 	})
 }
@@ -163,7 +163,7 @@ func (s *Server) getOrderByID(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, OrderRecordResponse{
-		Data:     order,
+		Data:   order,
 		ErrMsg: "success",
 	})
 }
@@ -197,7 +197,7 @@ func (s *Server) searchPendingPayRecord(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, OrderPaymentRecordListResponse{
-		Data:     records,
+		Data:   records,
 		ErrMsg: "success",
 	})
 }
@@ -234,7 +234,6 @@ func (s *Server) signupOrder(c *gin.Context) {
 	}
 	s.responseSuccess(c)
 }
-
 
 // @Summary depositOrder
 // @Description deposit order by id
@@ -295,7 +294,6 @@ func (s *Server) revokeOrder(c *gin.Context) {
 	}
 	s.responseSuccess(c)
 }
-
 
 // @Summary invalidOrder
 // @Description invalid order by id
@@ -409,7 +407,7 @@ func (s *Server) acceptPayment(c *gin.Context) {
 		return
 	}
 	user := s.getJWTUser(c)
-	err = service.GetOrderService().ConfirmOrderPay(c.Request.Context(), id, entity.OrderPayStatusChecked , user)
+	err = service.GetOrderService().ConfirmOrderPay(c.Request.Context(), id, entity.OrderPayStatusChecked, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
@@ -436,7 +434,7 @@ func (s *Server) rejectPayment(c *gin.Context) {
 		return
 	}
 	user := s.getJWTUser(c)
-	err = service.GetOrderService().ConfirmOrderPay(c.Request.Context(), id, entity.OrderPayStatusRejected , user)
+	err = service.GetOrderService().ConfirmOrderPay(c.Request.Context(), id, entity.OrderPayStatusRejected, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
@@ -512,7 +510,7 @@ func buildOrderCondition(c *gin.Context) *entity.SearchOrderCondition {
 	page := c.Query("page")
 	pageSize := c.Query("page_size")
 
-	condition :=  &entity.SearchOrderCondition{
+	condition := &entity.SearchOrderCondition{
 		StudentIDList:   parseInts(studentIds),
 		ToOrgIDList:     parseInts(toOrgIds),
 		IntentSubjects:  intentSubjects,

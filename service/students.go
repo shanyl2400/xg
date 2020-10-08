@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/jinzhu/gorm"
 	"strings"
 	"sync"
 	"time"
@@ -11,13 +10,15 @@ import (
 	"xg/entity"
 	"xg/log"
 	"xg/utils"
+
+	"github.com/jinzhu/gorm"
 )
 
 const (
 	ChallengeDate = 60 * time.Hour * 24
 )
 
-type IStudentService interface{
+type IStudentService interface {
 	CreateStudent(ctx context.Context, c *entity.CreateStudentRequest, operator *entity.JWTUser) (int, int, error)
 	UpdateStudent(ctx context.Context, id int, req *entity.UpdateStudentRequest) error
 	GetStudentById(ctx context.Context, id int, operator *entity.JWTUser) (*entity.StudentInfosWithOrders, error)
@@ -37,7 +38,7 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 	condition := da.SearchStudentCondition{
 		Telephone: c.Telephone,
 		OrderBy:   "created_at",
-		Status: entity.StudentCreated,
+		Status:    entity.StudentCreated,
 		PageSize:  1,
 		Page:      0,
 	}
@@ -66,9 +67,9 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 	//获取经纬度信息
 	if c.Longitude == 0 && c.Latitude == 0 {
 		cor, err := utils.GetAddressLocation(c.Address + c.AddressExt)
-		if err != nil{
+		if err != nil {
 			log.Warning.Printf("Get address failed, req: %#v, err: %v\n", c, err)
-		}else{
+		} else {
 			c.Latitude = cor.Latitude
 			c.Longitude = cor.Longitude
 		}
@@ -78,14 +79,14 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 		Gender:        c.Gender,
 		Telephone:     c.Telephone,
 		Address:       c.Address,
-		AddressExt:		c.AddressExt,
+		AddressExt:    c.AddressExt,
 		Email:         c.Email,
 		IntentSubject: strings.Join(c.IntentSubject, ","),
 		Status:        status,
 		AuthorID:      operator.UserId,
 		OrderSourceID: c.OrderSourceID,
-		Latitude: c.Latitude,
-		Longitude: c.Longitude,
+		Latitude:      c.Latitude,
+		Longitude:     c.Longitude,
 		Note:          c.Note,
 	}
 	log.Info.Printf("create student, student: %#v, err: %v\n", student, err)
@@ -112,7 +113,7 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 		}
 		return id, nil
 	})
-	if err != nil{
+	if err != nil {
 		return -1, -1, err
 	}
 	return id.(int), status, nil
@@ -123,9 +124,9 @@ func (s *StudentService) UpdateStudent(ctx context.Context, id int, req *entity.
 	//获取经纬度信息
 	if req.Longitude == 0 && req.Latitude == 0 {
 		cor, err := utils.GetAddressLocation(req.Address + req.AddressExt)
-		if err != nil{
+		if err != nil {
 			log.Warning.Printf("Get address failed, req: %#v, err: %v\n", req, err)
-		}else{
+		} else {
 			req.Latitude = cor.Latitude
 			req.Longitude = cor.Longitude
 		}
@@ -135,15 +136,15 @@ func (s *StudentService) UpdateStudent(ctx context.Context, id int, req *entity.
 		Gender:        req.Gender,
 		Telephone:     req.Telephone,
 		Address:       req.Address,
-		AddressExt: req.AddressExt,
+		AddressExt:    req.AddressExt,
 		Email:         req.Email,
 		IntentSubject: strings.Join(req.IntentSubject, ","),
 		OrderSourceID: req.OrderSourceID,
-		Longitude: req.Longitude,
-		Latitude: req.Latitude,
+		Longitude:     req.Longitude,
+		Latitude:      req.Latitude,
 	}
 	err := da.GetStudentModel().UpdateStudent(ctx, id, data)
-	if err != nil{
+	if err != nil {
 		log.Warning.Printf("Update student failed, req: %#v, data: %#v, err: %v\n", req, data, err)
 		return err
 	}
@@ -224,7 +225,7 @@ func (s *StudentService) GetStudentById(ctx context.Context, id int, operator *e
 			Gender:          student.Gender,
 			Telephone:       student.Telephone,
 			Address:         student.Address,
-			AddressExt: 	 student.AddressExt,
+			AddressExt:      student.AddressExt,
 			AuthorID:        student.AuthorID,
 			Email:           student.Email,
 			AuthorName:      user.Name,
@@ -272,7 +273,7 @@ func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchSt
 		Address:      ss.Address,
 		AuthorIDList: ss.AuthorIDList,
 		IntentString: ss.IntentSubject,
-		Status: 	 ss.Status,
+		Status:       ss.Status,
 		OrderBy:      ss.OrderBy,
 		PageSize:     ss.PageSize,
 		Page:         ss.Page,
@@ -308,7 +309,7 @@ func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchSt
 			Gender:        students[i].Gender,
 			Telephone:     students[i].Telephone,
 			Address:       students[i].Address,
-			AddressExt:	   students[i].AddressExt,
+			AddressExt:    students[i].AddressExt,
 			AuthorID:      students[i].AuthorID,
 			Email:         students[i].Email,
 			AuthorName:    authorNameMaps[students[i].AuthorID],

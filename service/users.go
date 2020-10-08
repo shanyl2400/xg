@@ -27,12 +27,13 @@ var (
 	ErrDuplicateUserName = errors.New("duplicate user name")
 	ErrOperateOnRootOrg  = errors.New("Can't operate on root org")
 
-	ErrInvalidUserRoleOrg = errors.New("invalid user role & org")
-	ErrCreateSuperUser    = errors.New("can't create super user")
+	ErrInvalidUserRoleOrg  = errors.New("invalid user role & org")
+	ErrCreateSuperUser     = errors.New("can't create super user")
 	ErrInvalidStatisticKey = errors.New("invalid statistics key")
+	ErrInvalidOrderId      = errors.New("invalid order id")
 )
 
-type IUserService interface{
+type IUserService interface {
 	Login(ctx context.Context, name, password string) (*entity.UserLoginResponse, error)
 	UpdatePassword(ctx context.Context, newPassword string, operator *entity.JWTUser) error
 	ResetPassword(ctx context.Context, userId int, operator *entity.JWTUser) error
@@ -199,7 +200,7 @@ func (u *UserService) CreateUser(ctx context.Context, req *entity.CreateUserRequ
 		RoleId:   req.RoleId,
 	}
 	id, err := da.GetUsersModel().CreateUser(ctx, data)
-	if err != nil{
+	if err != nil {
 		log.Warning.Printf("Create user failed, req: %#v, data: %#v, err: %v\n", req, data, err)
 		return id, err
 	}
