@@ -50,7 +50,6 @@ func main() {
 	//迁移数据库
 	da.AutoMigrate()
 	da.InitData(true)
-	da.Migrate0(true)
 
 	engine.Run(":8088")
 }
