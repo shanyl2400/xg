@@ -2,12 +2,14 @@ package route
 
 import (
 	"fmt"
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 	"xg/entity"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
@@ -18,15 +20,24 @@ func Get() *gin.Engine {
 	s := new(Server)
 
 	allowOrigin := os.Getenv("allow_origin")
-	fmt.Println("Allow Origin:", allowOrigin)
+	allowOriginParts := strings.Split(allowOrigin, ",")
+	fmt.Println("Allow Origin:", allowOriginParts)
+	if len(allowOriginParts) < 1 {
+		panic("invalid allow origin")
+	}
 	route.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{allowOrigin},
+		AllowOrigins:     allowOriginParts,
 		AllowMethods:     []string{"PUT", "GET", "POST", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Cookie"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		AllowOriginFunc: func(origin string) bool {
-			return origin == allowOrigin
+			for i := range allowOriginParts {
+				if origin == allowOriginParts[i] {
+					return true
+				}
+			}
+			return false
 		},
 		MaxAge: 12 * time.Hour,
 	}))
