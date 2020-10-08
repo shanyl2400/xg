@@ -6,6 +6,7 @@ import (
 	"xg/crypto"
 	"xg/db"
 	"xg/entity"
+	"xg/log"
 )
 
 func AutoMigrate() {
@@ -24,7 +25,7 @@ func AutoMigrate() {
 	db.Get().AutoMigrate(StatisticsRecord{})
 
 	db.Get().AutoMigrate(OrderStatisticsRecord{})
-	db.Get().Model(&OrderStatisticsRecord{}).AddIndex("idx_new_statistics_date","year","month","day")
+	db.Get().Model(&OrderStatisticsRecord{}).AddIndex("idx_new_statistics_date", "year", "month", "day")
 }
 
 func InitData(flag bool) {
@@ -125,6 +126,27 @@ func initAuth() {
 	err = GetAuthModel().CreateAuthWithID(context.Background(), entity.AuthManageSelfOrg, "管理本机构信息")
 	if err != nil {
 		panic(err)
+	}
+}
+
+func Migrate0(flag bool) {
+	if !flag {
+		return
+	}
+	err := GetAuthModel().CreateAuthWithID(context.Background(), entity.AuthManageSelfOrg, "管理本机构信息")
+	if err != nil {
+		log.Error.Println(err)
+		return
+	}
+	outOrgId2, err := GetRoleModel().CreateRoleWithID(context.Background(), entity.RoleSeniorOutOrg, "高级机构账号")
+	if err != nil {
+		log.Error.Println(err)
+		return
+	}
+	err = GetRoleModel().SetRoleAuth(context.Background(), db.Get(), outOrgId2, []int{6, 13})
+	if err != nil {
+		log.Error.Println(err)
+		return
 	}
 }
 

@@ -27,11 +27,11 @@ func loadConfig() {
 	amapKey := os.Getenv("amap_key")
 
 	c := &conf.Config{
-		DBConnectionString: dbConn,
+		DBConnectionString:    dbConn,
 		RedisConnectionString: redisConn,
-		LogPath: logPath,
-		UploadPath: uploadPath,
-		AMapKey: amapKey,
+		LogPath:               logPath,
+		UploadPath:            uploadPath,
+		AMapKey:               amapKey,
 	}
 	conf.Set(c)
 }
@@ -50,6 +50,7 @@ func main() {
 	//迁移数据库
 	da.AutoMigrate()
 	da.InitData(true)
+	da.Migrate0(true)
 
 	engine.Run(":8088")
 }
