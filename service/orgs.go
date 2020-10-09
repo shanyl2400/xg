@@ -498,7 +498,7 @@ func (o *OrgService) prepareUpdateSubOrgs(ctx context.Context, orgId int, req *e
 				}
 			}
 			if flag {
-				updateOrgsReq = append(updateOrgsReq, )
+				updateOrgsReq = append(updateOrgsReq, req.SubOrgs[i])
 			}
 		}
 	}
@@ -516,6 +516,20 @@ func (o *OrgService) prepareUpdateSubOrgs(ctx context.Context, orgId int, req *e
 		if !flag {
 			deletedIds = append(deletedIds, subOrgs[i].ID)
 		}
+	}
+
+	//更新org信息
+	if req.OrgData.Name != "" {
+		orgObj.Name = req.OrgData.Name
+	}
+	if req.OrgData.Address != "" {
+		orgObj.Address = req.OrgData.Address
+	}
+	if req.OrgData.AddressExt != "" {
+		orgObj.Address = req.OrgData.AddressExt
+	}
+	if req.OrgData.Telephone != "" {
+		orgObj.Address = req.OrgData.Telephone
 	}
 	orgInfo := &entity.Org{
 		ID:            orgObj.ID,
