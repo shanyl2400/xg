@@ -313,10 +313,19 @@ func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsC
 	condition.IsSubOrg = true
 
 	log.Info.Printf("SearchSubOrgs, condition: %#v\n", condition)
+	if condition.StudentID < 0 {
+		log.Warning.Printf("Student id invalid, condition: %#v\n", condition)
+		return 0, nil, ErrStudentIdNeeded
+	}
+	student, err := da.GetStudentModel().GetStudentById(ctx, condition.StudentID)
+	if err != nil {
+		log.Warning.Printf("Search student failed, condition: %#v, err: %v\n", condition, err)
+		return 0, nil, err
+	}
 
 	count, orgs, err := da.GetOrgModel().SearchOrgsWithDistance(ctx, condition, &entity.Coordinate{
-		Longitude: 100,
-		Latitude:  150,
+		Longitude: student.Longitude,
+		Latitude:  student.Latitude,
 	})
 	if err != nil {
 		log.Warning.Printf("Search org failed, condition: %#v, err: %v\n", condition, err)

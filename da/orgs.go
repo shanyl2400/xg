@@ -197,6 +197,7 @@ type SearchOrgsCondition struct {
 	Subjects []string
 	Address  string
 	Status   []int
+	StudentID int
 
 	ParentIDs []int
 	IsSubOrg  bool

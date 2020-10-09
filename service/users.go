@@ -32,6 +32,8 @@ var (
 	ErrInvalidStatisticKey = errors.New("invalid statistics key")
 	ErrInvalidOrderId      = errors.New("invalid order id")
 	ErrInvalidSubjctName   = errors.New("invalid subject name")
+
+	ErrStudentIdNeeded = errors.New("student id is needed")
 )
 
 type IUserService interface {
