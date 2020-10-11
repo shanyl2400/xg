@@ -341,11 +341,18 @@ func buildOrgsSearchCondition(c *gin.Context) da.SearchOrgsCondition {
 	if subjectsParam != "" {
 		subjects = strings.Split(subjectsParam, ",")
 	}
+	parentID := parseInt(c.Query("parent_id"))
+
+	parentIDs := []int{}
+	if parentID > 0 {
+		parentIDs = []int{parentID}
+	}
 	return da.SearchOrgsCondition{
 		Subjects:  subjects,
 		Address:   c.Query("address"),
 		OrderBy:   orderBy,
 		StudentID: parseInt(c.Query("student_id")),
+		ParentIDs: parentIDs,
 
 		PageSize: parseInt(pageSize),
 		Page:     parseInt(page),
