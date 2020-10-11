@@ -453,11 +453,17 @@ func (s *OrgService) UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *e
 		}
 
 		//删除
-		err = da.GetOrgModel().DeleteOrgById(ctx, tx, updateEntity.DeletedIds)
-		if err != nil {
-			log.Warning.Printf("Delete sub org failed, orgId: %#v, req: %#v, err: %v\n", orgId, req, err)
-			return err
+		for i := range updateEntity.DeletedIds {
+			err = da.GetOrgModel().UpdateOrg(ctx, tx, updateEntity.DeletedIds[i], da.Org{
+				Status: entity.OrgStatusRevoked,
+			})
+			// err = da.GetOrgModel().DeleteOrgById(ctx, tx, updateEntity.DeletedIds)
+			if err != nil {
+				log.Warning.Printf("Delete sub org failed, orgId: %#v, req: %#v, err: %v\n", orgId, req, err)
+				return err
+			}
 		}
+
 		return nil
 	})
 	if err != nil {

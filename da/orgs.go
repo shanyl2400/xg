@@ -128,6 +128,7 @@ func (d *DBOrgModel) DeleteOrgById(ctx context.Context, tx *gorm.DB, ids []int) 
 func (d *DBOrgModel) GetOrgsByParentId(ctx context.Context, parentId int) ([]*Org, error) {
 	condition := SearchOrgsCondition{
 		ParentIDs: []int{parentId},
+		Status:    []int{entity.OrgStatusCertified},
 	}
 	where, values := condition.GetConditions()
 	result := make([]*Org, 0)

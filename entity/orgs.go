@@ -16,14 +16,14 @@ const (
 )
 
 type Org struct {
-	ID        int      `json:"id"`
-	Name      string   `json:"name"`
-	Subjects  []string `json:"subjects"`
-	Address   string   `json:"address"`
-	AddressExt string `json:"address_ext"`
-	ParentID  int      `json:"parent_id"`
-	Telephone string   `json:"telephone"`
-	SupportRoleID []int `json:"support_role_id"`
+	ID            int      `json:"id"`
+	Name          string   `json:"name"`
+	Subjects      []string `json:"subjects"`
+	Address       string   `json:"address"`
+	AddressExt    string   `json:"address_ext"`
+	ParentID      int      `json:"parent_id"`
+	Telephone     string   `json:"telephone"`
+	SupportRoleID []int    `json:"support_role_id"`
 
 	Status int `json:"status"`
 
@@ -31,28 +31,28 @@ type Org struct {
 }
 
 type SubOrgWithDistance struct {
-	ID        int      `json:"id"`
-	Name      string   `json:"name"`
-	Subjects  []string `json:"subjects"`
-	Address   string   `json:"address"`
-	AddressExt string `json:"address_ext"`
-	ParentID  int      `json:"parent_id"`
-	Telephone string   `json:"telephone"`
-	SupportRoleID []int `json:"support_role_id"`
+	ID            int      `json:"id"`
+	Name          string   `json:"name"`
+	Subjects      []string `json:"subjects"`
+	Address       string   `json:"address"`
+	AddressExt    string   `json:"address_ext"`
+	ParentID      int      `json:"parent_id"`
+	Telephone     string   `json:"telephone"`
+	SupportRoleID []int    `json:"support_role_id"`
 
-	Status int `json:"status"`
+	Status   int     `json:"status"`
 	Distance float64 `json:"distance"`
 }
 
 type CreateOrgRequest struct {
-	Name      string   `json:"name"`
-	Subjects  []string `json:"subjects"`
-	Address   string   `json:"address"`
-	AddressExt string `json:"address_ext"`
-	Telephone string   `json:"telephone"`
-	SupportRoleID	[]int `json:"support_role_id"`
-	Longitude	 float64 `json:"longitude"`
-	Latitude float64 `json:"latitude"`
+	Name          string   `json:"name"`
+	Subjects      []string `json:"subjects"`
+	Address       string   `json:"address"`
+	AddressExt    string   `json:"address_ext"`
+	Telephone     string   `json:"telephone"`
+	SupportRoleID []int    `json:"support_role_id"`
+	Longitude     float64  `json:"longitude"`
+	Latitude      float64  `json:"latitude"`
 
 	Status   int `json:"status"`
 	ParentID int `json:"parent_id"`
@@ -69,38 +69,38 @@ type UpdateOrgWithSubOrgsRequest struct {
 }
 
 type CreateOrUpdateOrgRequest struct {
-	ID        int      `json:"id"`
-	Name      string   `json:"name"`
-	Subjects  []string `json:"subjects"`
-	Address   string   `json:"address"`
-	AddressExt string `json:"address_ext"`
-	Telephone string   `json:"telephone"`
+	ID         int      `json:"id"`
+	Name       string   `json:"name"`
+	Subjects   []string `json:"subjects"`
+	Address    string   `json:"address"`
+	AddressExt string   `json:"address_ext"`
+	Telephone  string   `json:"telephone"`
 
-	Longitude	 float64 `json:"longitude"`
-	Latitude float64 `json:"latitude"`
+	Longitude float64 `json:"longitude"`
+	Latitude  float64 `json:"latitude"`
 }
 
 type UpdateSubOrgsEntity struct {
-	UpdateOrgReq CreateOrUpdateOrgRequest `json:"update_org_req"`
-	InsertOrgList []*CreateOrUpdateOrgRequest `json:"insert_org_list"`
+	UpdateOrgReq   CreateOrUpdateOrgRequest    `json:"update_org_req"`
+	InsertOrgList  []*CreateOrUpdateOrgRequest `json:"insert_org_list"`
 	UpdateOrgsList []*CreateOrUpdateOrgRequest `json:"update_orgs_list"`
-	DeletedIds []int `json:"deleted_ids"`
-	OrgInfo *Org `json:"org_info"`
+	DeletedIds     []int                       `json:"deleted_ids"`
+	OrgInfo        *Org                        `json:"org_info"`
 }
 
 type UpdateOrgRequest struct {
-	ID        int      `json:"id"`
-	Subjects  []string `json:"subjects"`
-	Address   string   `json:"address"`
-	AddressExt string `json:"address_ext"`
-	Telephone string   `json:"telephone"`
-	Longitude	 float64 `json:"longitude"`
-	Latitude float64 `json:"latitude"`
+	ID         int      `json:"id"`
+	Subjects   []string `json:"subjects"`
+	Address    string   `json:"address"`
+	AddressExt string   `json:"address_ext"`
+	Telephone  string   `json:"telephone"`
+	Longitude  float64  `json:"longitude"`
+	Latitude   float64  `json:"latitude"`
 
 	Status int `json:"status"`
 }
 
-func IntArrayToString(a []int) string{
+func IntArrayToString(a []int) string {
 	if len(a) < 1 {
 		return ""
 	}
@@ -118,7 +118,7 @@ func StringToIntArray(s string) []int {
 	parts := strings.Split(s, ",")
 	for i := range parts {
 		id, err := strconv.Atoi(parts[i])
-		if err != nil{
+		if err != nil {
 			log.Warning.Println("Can't convert ids, str: ", s, ", part: ", parts[i])
 			continue
 		}
@@ -129,5 +129,5 @@ func StringToIntArray(s string) []int {
 
 type Coordinate struct {
 	Longitude float64 `json:"longitude"`
-	Latitude float64 `json:"latitude"`
+	Latitude  float64 `json:"latitude"`
 }
