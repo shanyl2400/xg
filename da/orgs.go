@@ -71,6 +71,8 @@ func (d *DBOrgModel) UpdateOrg(ctx context.Context, tx *gorm.DB, id int, org Org
 		Subjects:   org.Subjects,
 		Address:    org.Address,
 		AddressExt: org.AddressExt,
+		Longitude:  org.Longitude,
+		Latitude:   org.Latitude,
 		Telephone:  org.Telephone,
 		UpdatedAt:  &now}).Error
 	if err != nil {
@@ -194,9 +196,9 @@ func (d *DBOrgModel) SearchOrgsWithDistance(ctx context.Context, s SearchOrgsCon
 }
 
 type SearchOrgsCondition struct {
-	Subjects []string
-	Address  string
-	Status   []int
+	Subjects  []string
+	Address   string
+	Status    []int
 	StudentID int
 
 	ParentIDs []int

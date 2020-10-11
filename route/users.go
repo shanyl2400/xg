@@ -44,8 +44,8 @@ func (s *Server) login(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, UserLoginResponse{
-		Data: data,
-		ErrMsg:  "success",
+		Data:   data,
+		ErrMsg: "success",
 	})
 }
 
@@ -96,7 +96,7 @@ func (s *Server) listUserAuthority(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, AuthorizationListResponse{
 		AuthList: auth,
-		ErrMsg:  "success",
+		ErrMsg:   "success",
 	})
 }
 
@@ -119,9 +119,9 @@ func (s *Server) listUsers(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, UserListResponse{
-		Total: total,
-		Users: users,
-		ErrMsg:  "success",
+		Total:  total,
+		Users:  users,
+		ErrMsg: "success",
 	})
 }
 
@@ -174,20 +174,20 @@ func (s *Server) createUser(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, IdResponse{
-		ID: id,
-		ErrMsg:  "success",
+		ID:     id,
+		ErrMsg: "success",
 	})
 }
-
 
 func buildUsersSearchCondition(c *gin.Context) da.SearchUserCondition {
 	orderBy := c.Query("order_by")
 	page := c.Query("page")
 	pageSize := c.Query("page_size")
+	orgID := c.Query("org_id")
 	return da.SearchUserCondition{
-		OrderBy: orderBy,
-
-		PageSize: parseInt(pageSize),
-		Page:     parseInt(page),
+		OrderBy:   orderBy,
+		OrgIdList: parseInts(orgID),
+		PageSize:  parseInt(pageSize),
+		Page:      parseInt(page),
 	}
 }

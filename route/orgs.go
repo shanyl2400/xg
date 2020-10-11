@@ -16,11 +16,11 @@ type OrgListInfo struct {
 	Total int           `json:"total"`
 }
 
-
 type SubOrgListInfo struct {
 	Orgs  []*entity.SubOrgWithDistance `json:"orgs"`
-	Total int           `json:"total"`
+	Total int                          `json:"total"`
 }
+
 // @Summary listOrgs
 // @Description list all organizations
 // @Accept json
@@ -43,7 +43,7 @@ func (s *Server) listOrgs(c *gin.Context) {
 			Orgs:  orgs,
 			Total: count,
 		},
-		ErrMsg:  "success",
+		ErrMsg: "success",
 	})
 }
 
@@ -68,7 +68,7 @@ func (s *Server) listPendingOrgs(c *gin.Context) {
 			Orgs:  orgs,
 			Total: count,
 		},
-		ErrMsg:  "success",
+		ErrMsg: "success",
 	})
 }
 
@@ -95,7 +95,7 @@ func (s *Server) searchSubOrgs(c *gin.Context) {
 			Orgs:  orgs,
 			Total: count,
 		},
-		ErrMsg:  "success",
+		ErrMsg: "success",
 	})
 }
 
@@ -128,7 +128,6 @@ func (s *Server) getOrgById(c *gin.Context) {
 		ErrMsg: "success",
 	})
 }
-
 
 // @Summary getOrgSubjectsById
 // @Description get org subjects by id
@@ -185,8 +184,8 @@ func (s *Server) createOrg(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, IdResponse{
-		ID: id,
-		ErrMsg:   "success",
+		ID:     id,
+		ErrMsg: "success",
 	})
 }
 
@@ -282,7 +281,7 @@ func (s *Server) revokeOrg(c *gin.Context) {
 // @Success 200 {object} Response
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
-// @Router /api/org/{id}/admin [put]
+// @Router /api/org/{id} [put]
 func (s *Server) updateOrgById(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -305,7 +304,6 @@ func (s *Server) updateOrgById(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
-
 // @Summary updateSelfOrgById
 // @Description update orgs
 // @Accept json
@@ -317,7 +315,7 @@ func (s *Server) updateOrgById(c *gin.Context) {
 // @Success 200 {object} Response
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
-// @Router /api/org/self [put]
+// @Router /api/org [put]
 func (s *Server) updateSelfOrgById(c *gin.Context) {
 	req := new(entity.UpdateOrgWithSubOrgsRequest)
 	err := c.ShouldBind(req)
@@ -344,9 +342,9 @@ func buildOrgsSearchCondition(c *gin.Context) da.SearchOrgsCondition {
 		subjects = strings.Split(subjectsParam, ",")
 	}
 	return da.SearchOrgsCondition{
-		Subjects: subjects,
-		Address:  c.Query("address"),
-		OrderBy: orderBy,
+		Subjects:  subjects,
+		Address:   c.Query("address"),
+		OrderBy:   orderBy,
 		StudentID: parseInt(c.Query("student_id")),
 
 		PageSize: parseInt(pageSize),
