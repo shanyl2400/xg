@@ -150,6 +150,7 @@ func buildCondition(c *gin.Context) *entity.SearchStudentRequest {
 	intentSubjects := c.Query("intent_subjects")
 
 	orderBy := c.Query("order_by")
+	noDispatchOrder := c.Query("no_dispatch_order")
 
 	pageSizeStr := c.Query("page_size")
 	pageStr := c.Query("page")
@@ -178,6 +179,11 @@ func buildCondition(c *gin.Context) *entity.SearchStudentRequest {
 		authorIdList = append(authorIdList, authorId)
 	}
 
+	ndo := false
+	if noDispatchOrder == "true" {
+		ndo = true
+	}
+
 	return &entity.SearchStudentRequest{
 		Name:         name,
 		Telephone:    telephone,
@@ -185,6 +191,7 @@ func buildCondition(c *gin.Context) *entity.SearchStudentRequest {
 		AuthorIDList: authorIdList,
 		IntentSubject: intentSubjects,
 		Status: 		status,
+		NoDispatchOrder: ndo,
 		OrderBy:      orderBy,
 		PageSize:     pageSize,
 		Page:         page,

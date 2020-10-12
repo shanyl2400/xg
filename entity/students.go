@@ -52,6 +52,8 @@ type SearchStudentRequest struct {
 	AuthorIDList []int `json:"author_id_list"`
 	Status int `json:"status"`
 
+	NoDispatchOrder bool `json:"no_dispatch_order"`
+
 	OrderBy  string `json:"order_by"`
 	PageSize int    `json:"page_size"`
 	Page     int    `json:"page"`
@@ -74,6 +76,7 @@ type StudentInfo struct {
 	AuthorID        int      `json:"authorID"`
 	AuthorName      string   `json:"authorName"`
 	Status          int      `json:"status"`
+	OrderCount int `json:"order_count"`
 	Note            string   `json:"note"`
 	OrderSourceID   int      `json:"order_source_id"`
 	OrderSourceName string   `json:"order_source_name"`

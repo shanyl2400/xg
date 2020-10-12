@@ -25,6 +25,8 @@ type IStudentService interface {
 	SearchPrivateStudents(ctx context.Context, ss *entity.SearchStudentRequest, operator *entity.JWTUser) (int, []*entity.StudentInfo, error)
 	SearchStudents(ctx context.Context, ss *entity.SearchStudentRequest, operator *entity.JWTUser) (int, []*entity.StudentInfo, error)
 	AddStudentNote(ctx context.Context, c entity.AddStudentNoteRequest) error
+
+	UpdateStudentOrderCount(ctx context.Context, tx *gorm.DB, id int, count int) error
 }
 
 type StudentService struct {
@@ -119,6 +121,25 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 	return id.(int), status, nil
 }
 
+func (s *StudentService) UpdateStudentOrderCount(ctx context.Context, tx *gorm.DB, id int, count int) error{
+	log.Info.Printf("UpdateStudentOrderCount, id: %#v, count: %#v\n", id, count)
+	//获取经纬度信息
+	student, err := da.GetStudentModel().GetStudentById(ctx, id)
+	if err != nil {
+		log.Warning.Printf("Get student failed, id: %#v, err: %v\n", id, err)
+		return err
+	}
+	data := da.Student{
+		OrderCount: student.OrderCount + count,
+	}
+	err = da.GetStudentModel().UpdateStudent(ctx, tx, id, data)
+	if err != nil {
+		log.Warning.Printf("Update student failed, id: %#v, student: %#v, err: %v\n", id, student, err)
+		return err
+	}
+	return nil
+}
+
 func (s *StudentService) UpdateStudent(ctx context.Context, id int, req *entity.UpdateStudentRequest) error {
 	log.Info.Printf("UpdateStudent, id: %#v, req: %#v\n", id, req)
 	//获取经纬度信息
@@ -143,7 +164,7 @@ func (s *StudentService) UpdateStudent(ctx context.Context, id int, req *entity.
 		Longitude:     req.Longitude,
 		Latitude:      req.Latitude,
 	}
-	err := da.GetStudentModel().UpdateStudent(ctx, id, data)
+	err := da.GetStudentModel().UpdateStudent(ctx, db.Get(), id, data)
 	if err != nil {
 		log.Warning.Printf("Update student failed, req: %#v, data: %#v, err: %v\n", req, data, err)
 		return err
@@ -234,6 +255,7 @@ func (s *StudentService) GetStudentById(ctx context.Context, id int, operator *e
 			IntentSubject:   strings.Split(student.IntentSubject, ","),
 			Status:          student.Status,
 			Note:            student.Note,
+			OrderCount: student.OrderCount,
 		},
 	}
 
@@ -274,6 +296,7 @@ func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchSt
 		AuthorIDList: ss.AuthorIDList,
 		IntentString: ss.IntentSubject,
 		Status:       ss.Status,
+		NoDispatchOrder: ss.NoDispatchOrder,
 		OrderBy:      ss.OrderBy,
 		PageSize:     ss.PageSize,
 		Page:         ss.Page,
@@ -316,6 +339,7 @@ func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchSt
 			IntentSubject: strings.Split(students[i].IntentSubject, ","),
 			Status:        students[i].Status,
 			Note:          students[i].Note,
+			OrderCount: 	students[i].OrderCount,
 		}
 	}
 	return total, res, nil

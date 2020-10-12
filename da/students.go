@@ -12,7 +12,7 @@ import (
 
 type IStudentsModel interface {
 	CreateStudent(ctx context.Context, tx *gorm.DB, student Student) (int, error)
-	UpdateStudent(ctx context.Context, id int, student Student) error
+	UpdateStudent(ctx context.Context, tx *gorm.DB, id int, student Student) error
 	GetStudentById(ctx context.Context, id int) (*Student, error)
 	SearchStudents(ctx context.Context, s SearchStudentCondition) (int, []*Student, error)
 	CountStudents(ctx context.Context) (int, error)
@@ -30,6 +30,8 @@ type Student struct {
 	Status        int    `gorm:"type:int;NOT NULL;column:status;index"`
 	Note          string `gorm:"type:text;NOT NULL;column:note"`
 	OrderSourceID int    `gorm:"type:int;NOT NULL;column:order_source_id"`
+
+	OrderCount int 		`gorm:"type:int;NOT NULL;column:order_count"`
 
 	Longitude float64 `gorm:"type:double(9,6);NOT NULL; column:longitude; default:0"`
 	Latitude float64 `gorm:"type:double(9,6);NOT NULL; column:latitude; default:0"`
@@ -62,11 +64,11 @@ func (d *DBStudentsModel) CreateStudent(ctx context.Context, tx *gorm.DB, studen
 	}
 	return student.ID, nil
 }
-func (d *DBStudentsModel) UpdateStudent(ctx context.Context, id int, student Student) error {
+func (d *DBStudentsModel) UpdateStudent(ctx context.Context, tx *gorm.DB, id int, student Student) error {
 	now := time.Now()
 	student.UpdatedAt = &now
 	//student.ID = id
-	err := db.Get().Model(Student{ID: id}).Updates(&student).Error
+	err := tx.Model(Student{ID: id}).Updates(&student).Error
 	if err != nil {
 		return err
 	}
@@ -128,6 +130,7 @@ type SearchStudentCondition struct {
 	Address       string `json:"address"`
 	IntentString  string `json:"intent_string"`
 	Status        int    `json:"status"`
+	NoDispatchOrder	  bool `json:"no_dispatch_order"`
 
 	AuthorIDList []int `json:"author_id_list"`
 
@@ -164,6 +167,9 @@ func (s SearchStudentCondition) GetConditions() (string, []interface{}) {
 	if s.Status > 0 {
 		wheres = append(wheres, "status=?")
 		values = append(values, s.Status)
+	}
+	if s.NoDispatchOrder {
+		wheres = append(wheres, "order_count = 0")
 	}
 
 	if len(s.AuthorIDList) > 0 {

@@ -82,6 +82,13 @@ func (o *OrderService) CreateOrder(ctx context.Context, req *entity.CreateOrderR
 			log.Warning.Printf("Add statistics record failed, record: %#v, err: %v\n", record, err)
 			return -1, err
 		}
+
+		err = GetStudentService().UpdateStudentOrderCount(ctx, tx, req.StudentID, 1)
+		if err != nil {
+			log.Warning.Printf("Update student order count failed, req: %#v, err: %v\n", req, err)
+			return -1, err
+		}
+
 		return id, nil
 	})
 	if err != nil {
@@ -321,6 +328,12 @@ func (o *OrderService) InvalidOrder(ctx context.Context, orderId int, operator *
 		err = GetOrderStatisticsService().AddInvalidOrder(ctx, tx, record)
 		if err != nil {
 			log.Warning.Printf("Add statistics record failed, record: %#v, err: %v\n", record, err)
+			return err
+		}
+
+		err = GetStudentService().UpdateStudentOrderCount(ctx, tx, orderObj.Order.StudentID, -1)
+		if err != nil {
+			log.Warning.Printf("Update student order count failed, orderObj: %#v, err: %v\n", orderObj, err)
 			return err
 		}
 		return nil
