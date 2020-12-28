@@ -2,6 +2,7 @@ package da
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -175,6 +176,8 @@ type SearchOrderCondition struct {
 	IntentSubjects  string
 	PublisherID     []int
 
+	StudentKeywords string
+
 	CreateStartAt *time.Time
 	CreateEndAt   *time.Time
 
@@ -217,6 +220,20 @@ func (s SearchOrderCondition) GetConditions() (string, []interface{}) {
 	if len(s.OrderSourceList) > 0 {
 		wheres = append(wheres, "order_source IN (?)")
 		values = append(values, s.OrderSourceList)
+	}
+	//search order by students info
+	if s.StudentKeywords != "" {
+		studentsTable := "students"
+		orderTable := "orders"
+		sql := fmt.Sprintf(`select id from %v where (%v.name like ? or %v.telephone like ?) and %v.id = %v.student_id and deleted_at = NULL`,
+			studentsTable,
+			studentsTable,
+			studentsTable,
+			studentsTable,
+			orderTable)
+		condition := fmt.Sprintf("exists (%v)", sql)
+		wheres = append(wheres, condition)
+		values = append(values, s.StudentKeywords+"%", s.StudentKeywords+"%")
 	}
 
 	if s.CreateStartAt != nil && s.CreateEndAt != nil {

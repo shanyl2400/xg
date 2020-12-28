@@ -35,6 +35,8 @@ var (
 
 	ErrStudentIdNeeded = errors.New("student id is needed")
 	ErrInvalidRemarkID = errors.New("mark remark id invalid")
+
+	ErrInvalidSearchTime = errors.New("invalid search statistic time")
 )
 
 type IUserService interface {

@@ -593,6 +593,7 @@ func (o *OrderService) SearchOrders(ctx context.Context, condition *entity.Searc
 		PublisherID:     condition.PublisherID,
 		OrderSourceList: condition.OrderSourceList,
 		CreateStartAt:   condition.CreateStartAt,
+		StudentKeywords: condition.StudentsKeywords,
 		CreateEndAt:     condition.CreateEndAt,
 		Status:          condition.Status,
 		OrderBy:         condition.OrderBy,

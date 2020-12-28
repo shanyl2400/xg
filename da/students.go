@@ -20,21 +20,21 @@ type IStudentsModel interface {
 
 type Student struct {
 	ID            int    `gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
-	Name          string `gorm:"type:varchar(128);NOT NULL;column:name"`
+	Name          string `gorm:"type:varchar(128);NOT NULL;column:name;index"`
 	Gender        bool   `gorm:"type:int;NOT NULL;column:gender"`
-	Telephone     string `gorm:"type:varchar(20);NOT NULL;column:telephone"`
+	Telephone     string `gorm:"type:varchar(20);NOT NULL;column:telephone;index"`
 	Address       string `gorm:"type:varchar(128);NOT NULL;column:address"`
-	AddressExt	  string `gorm:"type:varchar(256);NOT NULL;column:address_ext"`
+	AddressExt    string `gorm:"type:varchar(256);NOT NULL;column:address_ext"`
 	Email         string `gorm:"type:varchar(128);NOT NULL;column:email"`
 	IntentSubject string `gorm:"type:varchar(255);NOT NULL;column:intent_subject"`
 	Status        int    `gorm:"type:int;NOT NULL;column:status;index"`
 	Note          string `gorm:"type:text;NOT NULL;column:note"`
 	OrderSourceID int    `gorm:"type:int;NOT NULL;column:order_source_id"`
 
-	OrderCount int 		`gorm:"type:int;NOT NULL;column:order_count"`
+	OrderCount int `gorm:"type:int;NOT NULL;column:order_count"`
 
 	Longitude float64 `gorm:"type:double(9,6);NOT NULL; column:longitude; default:0"`
-	Latitude float64 `gorm:"type:double(9,6);NOT NULL; column:latitude; default:0"`
+	Latitude  float64 `gorm:"type:double(9,6);NOT NULL; column:latitude; default:0"`
 
 	AuthorID int `gorm:"type:int;NOT NULL;column:author_id"`
 
@@ -124,13 +124,13 @@ func parsePage(page, pageSize int) (int, int) {
 }
 
 type SearchStudentCondition struct {
-	StudentIDList []int  `json:"student_id_list"`
-	Name          string `json:"name"`
-	Telephone     string `json:"telephone"`
-	Address       string `json:"address"`
-	IntentString  string `json:"intent_string"`
-	Status        int    `json:"status"`
-	NoDispatchOrder	  bool `json:"no_dispatch_order"`
+	StudentIDList   []int  `json:"student_id_list"`
+	Name            string `json:"name"`
+	Telephone       string `json:"telephone"`
+	Address         string `json:"address"`
+	IntentString    string `json:"intent_string"`
+	Status          int    `json:"status"`
+	NoDispatchOrder bool   `json:"no_dispatch_order"`
 
 	AuthorIDList []int `json:"author_id_list"`
 

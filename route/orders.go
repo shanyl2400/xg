@@ -48,6 +48,7 @@ func (s *Server) createOrder(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param student_ids query string false "search order with student_ids"
 // @Param to_org_ids query string false "search order with to_org_ids"
+// @Param students_keywords query string false "search order by students info"
 // @Param intent_subjects query string false "search order with intent_subjects"
 // @Param publisher_id query int  false "search order with publisher_id"
 // @Param status query string  false "search order with status"
@@ -81,6 +82,7 @@ func (s *Server) searchOrder(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param student_ids query string false "search order with student_ids"
 // @Param to_org_ids query string false "search order with to_org_ids"
+// @Param students_keywords query string false "search order by students info"
 // @Param intent_subjects query string false "search order with intent_subjects"
 // @Param status query string  false "search order with status"
 // @Param order_by query string false "search order order by column name"
@@ -113,6 +115,7 @@ func (s *Server) searchOrderWithAuthor(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param student_ids query string false "search order with student_ids"
 // @Param intent_subjects query string false "search order with intent_subjects"
+// @Param students_keywords query string false "search order by students info"
 // @Param status query string  false "search order with status"
 // @Param publisher_id query int  false "search order with publisher_id"
 // @Param order_by query string false "search order order by column name"
@@ -586,13 +589,15 @@ func buildOrderCondition(c *gin.Context) *entity.SearchOrderCondition {
 	orderBy := c.Query("order_by")
 	page := c.Query("page")
 	pageSize := c.Query("page_size")
+	studentsKeywords := c.Query("students_keywords")
 
 	condition := &entity.SearchOrderCondition{
-		StudentIDList:   parseInts(studentIds),
-		ToOrgIDList:     parseInts(toOrgIds),
-		IntentSubjects:  intentSubjects,
-		PublisherID:     parseInts(publisherID),
-		OrderSourceList: parseInts(orderSources),
+		StudentIDList:    parseInts(studentIds),
+		ToOrgIDList:      parseInts(toOrgIds),
+		StudentsKeywords: studentsKeywords,
+		IntentSubjects:   intentSubjects,
+		PublisherID:      parseInts(publisherID),
+		OrderSourceList:  parseInts(orderSources),
 
 		Status:  parseInts(status),
 		OrderBy: orderBy,

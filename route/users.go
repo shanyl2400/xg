@@ -183,11 +183,15 @@ func buildUsersSearchCondition(c *gin.Context) da.SearchUserCondition {
 	orderBy := c.Query("order_by")
 	page := c.Query("page")
 	pageSize := c.Query("page_size")
+	roleID := c.Query("role_id")
 	orgID := c.Query("org_id")
+	name := c.Query("name")
 	return da.SearchUserCondition{
-		OrderBy:   orderBy,
-		OrgIdList: parseInts(orgID),
-		PageSize:  parseInt(pageSize),
-		Page:      parseInt(page),
+		OrderBy:    orderBy,
+		Name:       name,
+		OrgIdList:  parseInts(orgID),
+		RoleIdList: parseInts(roleID),
+		PageSize:   parseInt(pageSize),
+		Page:       parseInt(page),
 	}
 }

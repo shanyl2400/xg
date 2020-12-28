@@ -30,7 +30,7 @@ type IOrgModel interface {
 }
 type Org struct {
 	ID         int     `gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
-	Name       string  `gorm:"type:varchar(128);NOT NULL;column:name"`
+	Name       string  `gorm:"type:varchar(128);NOT NULL;column:name;index"`
 	Subjects   string  `gorm:"type:varchar(255);NOT NULL;column:subjects"`
 	Address    string  `gorm:"type:varchar(255);NOT NULL; column:address"`
 	AddressExt string  `gorm:"type:varchar(255);NOT NULL; column:address_ext"`
@@ -214,6 +214,7 @@ func (d *DBOrgModel) SearchOrgsWithDistance(ctx context.Context, s SearchOrgsCon
 type SearchOrgsCondition struct {
 	Subjects  []string
 	Address   string
+	Name      string
 	Status    []int
 	StudentID int
 
@@ -232,6 +233,10 @@ func (s SearchOrgsCondition) GetConditions() (string, []interface{}) {
 	if len(s.Status) > 0 {
 		wheres = append(wheres, "status IN (?)")
 		values = append(values, s.Status)
+	}
+	if s.Name != "" {
+		wheres = append(wheres, "name like ?")
+		values = append(values, "%"+s.Name+"%")
 	}
 
 	if len(s.Subjects) != 0 {

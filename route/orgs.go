@@ -350,6 +350,7 @@ func buildOrgsSearchCondition(c *gin.Context) da.SearchOrgsCondition {
 	return da.SearchOrgsCondition{
 		Subjects:  subjects,
 		Address:   c.Query("address"),
+		Name:      c.Query("name"),
 		OrderBy:   orderBy,
 		StudentID: parseInt(c.Query("student_id")),
 		ParentIDs: parentIDs,

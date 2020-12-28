@@ -30,11 +30,12 @@ type CreateOrderRequest struct {
 }
 
 type SearchOrderCondition struct {
-	StudentIDList   []int  `json:"student_id_list"`
-	ToOrgIDList     []int  `json:"to_org_id_list"`
-	IntentSubjects  string `json:"intent_subjects"`
-	PublisherID     []int  `json:"publisher_id"`
-	OrderSourceList []int  `json:"order_source"`
+	StudentIDList    []int  `json:"student_id_list"`
+	ToOrgIDList      []int  `json:"to_org_id_list"`
+	IntentSubjects   string `json:"intent_subjects"`
+	PublisherID      []int  `json:"publisher_id"`
+	OrderSourceList  []int  `json:"order_source"`
+	StudentsKeywords string `json:"students_keywords"`
 
 	CreateStartAt *time.Time `json:"create_start_at"`
 	CreateEndAt   *time.Time `json:"create_end_at"`
