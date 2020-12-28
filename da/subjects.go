@@ -6,10 +6,13 @@ import (
 	"sync"
 	"time"
 	"xg/db"
+
+	"github.com/jinzhu/gorm"
 )
 
 type ISubjectModel interface {
 	CreateSubject(ctx context.Context, subject Subject) (int, error)
+	CreateSubjectTx(ctx context.Context, tx *gorm.DB, subject Subject) (int, error)
 
 	GetSubjectById(ctx context.Context, id int) (*Subject, error)
 	SearchSubject(ctx context.Context, s SearchSubjectCondition) ([]*Subject, error)
@@ -60,6 +63,17 @@ func (d *DBSubjectModel) CreateSubject(ctx context.Context, subject Subject) (in
 	subject.CreatedAt = &now
 	subject.UpdatedAt = &now
 	err := db.Get().Create(&subject).Error
+	if err != nil {
+		return -1, err
+	}
+	return subject.ID, nil
+}
+
+func (d *DBSubjectModel) CreateSubjectTx(ctx context.Context, tx *gorm.DB, subject Subject) (int, error) {
+	now := time.Now()
+	subject.CreatedAt = &now
+	subject.UpdatedAt = &now
+	err := tx.Create(&subject).Error
 	if err != nil {
 		return -1, err
 	}

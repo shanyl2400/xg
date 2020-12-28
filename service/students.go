@@ -121,7 +121,7 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 	return id.(int), status, nil
 }
 
-func (s *StudentService) UpdateStudentOrderCount(ctx context.Context, tx *gorm.DB, id int, count int) error{
+func (s *StudentService) UpdateStudentOrderCount(ctx context.Context, tx *gorm.DB, id int, count int) error {
 	log.Info.Printf("UpdateStudentOrderCount, id: %#v, count: %#v\n", id, count)
 	//获取经纬度信息
 	student, err := da.GetStudentModel().GetStudentById(ctx, id)
@@ -255,7 +255,7 @@ func (s *StudentService) GetStudentById(ctx context.Context, id int, operator *e
 			IntentSubject:   strings.Split(student.IntentSubject, ","),
 			Status:          student.Status,
 			Note:            student.Note,
-			OrderCount: student.OrderCount,
+			OrderCount:      student.OrderCount,
 		},
 	}
 
@@ -290,16 +290,16 @@ func (s *StudentService) SearchPrivateStudents(ctx context.Context, ss *entity.S
 func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchStudentRequest, operator *entity.JWTUser) (int, []*entity.StudentInfo, error) {
 	log.Info.Printf("SearchStudents, condition: %#v\n", ss)
 	condition := da.SearchStudentCondition{
-		Name:         ss.Name,
-		Telephone:    ss.Telephone,
-		Address:      ss.Address,
-		AuthorIDList: ss.AuthorIDList,
-		IntentString: ss.IntentSubject,
-		Status:       ss.Status,
+		Name:            ss.Name,
+		Telephone:       ss.Telephone,
+		Address:         ss.Address,
+		AuthorIDList:    ss.AuthorIDList,
+		IntentString:    ss.IntentSubject,
+		Status:          ss.Status,
 		NoDispatchOrder: ss.NoDispatchOrder,
-		OrderBy:      ss.OrderBy,
-		PageSize:     ss.PageSize,
-		Page:         ss.Page,
+		OrderBy:         ss.OrderBy,
+		PageSize:        ss.PageSize,
+		Page:            ss.Page,
 	}
 	total, students, err := da.GetStudentModel().SearchStudents(ctx, condition)
 	if err != nil {
@@ -339,7 +339,9 @@ func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchSt
 			IntentSubject: strings.Split(students[i].IntentSubject, ","),
 			Status:        students[i].Status,
 			Note:          students[i].Note,
-			OrderCount: 	students[i].OrderCount,
+			OrderCount:    students[i].OrderCount,
+			CreatedAt:     students[i].CreatedAt,
+			UpdatedAt:     students[i].UpdatedAt,
 		}
 	}
 	return total, res, nil

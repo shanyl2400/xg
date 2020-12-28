@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"xg/da"
 	"xg/entity"
 	"xg/service"
 
@@ -182,7 +183,7 @@ func (s *Server) getOrderByID(c *gin.Context) {
 // @Param page_size query int true "order pay record list page size"
 // @Param page query int true "order pay record list page index"
 // @Tags order
-// @Success 200 {object} entity.PayRecordInfoList
+// @Success 200 {object} entity.OrderRemarkList
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/orders/pending [get]
@@ -200,6 +201,34 @@ func (s *Server) searchPendingPayRecord(c *gin.Context) {
 		Data:   records,
 		ErrMsg: "success",
 	})
+}
+
+// @Summary searchOrderRemarks
+// @Description search order remarks
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param author_ids query string false "search order pay record with author_ids"
+// @Param mode query int false "search order pay record with mode"
+// @Param status query string  false "search order pay record with status"
+// @Param order_by query string false "search order pay record by column name"
+// @Param page_size query int true "order pay record list page size"
+// @Param page query int true "order pay record list page index"
+// @Tags order
+// @Success 200 {object} entity.OrderRemarkList
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/orders/remarks [get]
+func (s *Server) searchOrderRemarks(c *gin.Context) {
+	req := buildOrderRemarkCondition(c)
+	user := s.getJWTUser(c)
+
+	records, err := service.GetOrderService().SearchOrderRemarks(c.Request.Context(), req, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, records)
 }
 
 // @Summary signupOrder
@@ -475,6 +504,35 @@ func (s *Server) addOrderMark(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
+// @Summary markOrderRemark
+// @Description mark order remarks
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param request body entity.MarkOrderRemarkRequest true "mark order remarks requests"
+// @Tags order
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/orders/marks [put]
+func (s *Server) markOrderRemarks(c *gin.Context) {
+	req := new(entity.MarkOrderRemarkRequest)
+	err := c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+
+	user := s.getJWTUser(c)
+	err = service.GetOrderService().MarkOrderRemark(c.Request.Context(), req.IDs, req.Status, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+
+}
+
 func buildSearchPayRecordCondition(c *gin.Context) *entity.SearchPayRecordCondition {
 	payRecordIds := c.Query("pay_record_ids")
 	orderIds := c.Query("order_ids")
@@ -497,6 +555,25 @@ func buildSearchPayRecordCondition(c *gin.Context) *entity.SearchPayRecordCondit
 		PageSize: parseInt(pageSize),
 		Page:     parseInt(page),
 	}
+}
+
+func buildOrderRemarkCondition(c *gin.Context) *da.SearchRemarkRecordCondition {
+	status := c.Query("status")
+	orderIds := c.Query("order_ids")
+	authorIds := c.Query("author_ids")
+	orderBy := c.Query("order_by")
+	page := c.Query("page")
+	pageSize := c.Query("page_size")
+	condition := &da.SearchRemarkRecordCondition{
+		OrderIDList:  parseInts(orderIds),
+		AuthorIDList: parseInts(authorIds),
+		StatusList:   parseInts(status),
+		OrderBy:      orderBy,
+
+		PageSize: parseInt(pageSize),
+		Page:     parseInt(page),
+	}
+	return condition
 }
 
 func buildOrderCondition(c *gin.Context) *entity.SearchOrderCondition {

@@ -6,13 +6,18 @@ import (
 	"sync"
 	"time"
 	"xg/da"
+	"xg/db"
 	"xg/entity"
 	"xg/log"
+
+	"github.com/jinzhu/gorm"
 )
 
 type ISubjectService interface {
 	ListSubjects(ctx context.Context, parentID int) ([]*entity.Subject, error)
 	CreateSubject(ctx context.Context, req entity.CreateSubjectRequest) (int, error)
+	BatchCreateSubject(ctx context.Context, reqs []*entity.CreateSubjectRequest) error
+	ListSubjectsTree(ctx context.Context) ([]*entity.SubjectTreeNode, error)
 }
 
 type SubjectService struct {
@@ -58,6 +63,75 @@ func (s *SubjectService) ListSubjects(ctx context.Context, parentID int) ([]*ent
 	return res, nil
 }
 
+func (s *SubjectService) ListSubjectsTree(ctx context.Context) ([]*entity.SubjectTreeNode, error) {
+	subjects, err := da.GetSubjectModel().SearchSubject(ctx, da.SearchSubjectCondition{})
+	if err != nil {
+		log.Warning.Printf("Search subjects failed, err: %v\n", err)
+		return nil, err
+	}
+	subjectsMap := make(map[int]*entity.SubjectTreeNode)
+	for i := range subjects {
+		subjectsMap[subjects[i].ID] = &entity.SubjectTreeNode{
+			ID:    subjects[i].ID,
+			Level: subjects[i].Level,
+			Name:  subjects[i].Name,
+			Title: subjects[i].Name,
+			Value: subjects[i].Name,
+			Key:   subjects[i].ID,
+		}
+	}
+
+	rootSubjectsIDs := make([]int, 0)
+	for i := range subjects {
+		if subjects[i].ParentId != 0 {
+			subjectsMap[subjects[i].ParentId].Children = append(subjectsMap[subjects[i].ParentId].Children, subjectsMap[subjects[i].ID])
+		} else {
+			rootSubjectsIDs = append(rootSubjectsIDs, subjects[i].ID)
+		}
+	}
+
+	res := make([]*entity.SubjectTreeNode, 0)
+	for i := range rootSubjectsIDs {
+		fillSubjectsValue(subjectsMap[rootSubjectsIDs[i]], "")
+		res = append(res, subjectsMap[rootSubjectsIDs[i]])
+	}
+
+	return res, nil
+}
+
+func (s *SubjectService) ListSubjectsAll(ctx context.Context) ([]*entity.SubjectTreeNode, error) {
+	subjects, err := da.GetSubjectModel().SearchSubject(ctx, da.SearchSubjectCondition{})
+	if err != nil {
+		log.Warning.Printf("Search subjects failed, err: %v\n", err)
+		return nil, err
+	}
+	subjectsMap := make(map[int]*entity.SubjectTreeNode)
+	for i := range subjects {
+		subjectsMap[subjects[i].ID] = &entity.SubjectTreeNode{
+			ID:    subjects[i].ID,
+			Level: subjects[i].Level,
+			Name:  subjects[i].Name,
+			Title: subjects[i].Name,
+			Value: subjects[i].Name,
+			Key:   subjects[i].ID,
+		}
+	}
+
+	for i := range subjects {
+		if subjects[i].ParentId != 0 {
+			subjectsMap[subjects[i].ParentId].Children = append(subjectsMap[subjects[i].ParentId].Children, subjectsMap[subjects[i].ID])
+		}
+	}
+
+	res := make([]*entity.SubjectTreeNode, 0)
+	for k := range subjectsMap {
+		fillSubjectsValue(subjectsMap[k], "")
+		res = append(res, subjectsMap[k])
+	}
+
+	return res, nil
+}
+
 func (s *SubjectService) CreateSubject(ctx context.Context, req entity.CreateSubjectRequest) (int, error) {
 	level := 1
 	log.Info.Printf("CreateSubject, req: %#v\n", req)
@@ -89,6 +163,55 @@ func (s *SubjectService) CreateSubject(ctx context.Context, req entity.CreateSub
 		return -1, err
 	}
 	return id, nil
+}
+
+func (s *SubjectService) BatchCreateSubject(ctx context.Context, reqs []*entity.CreateSubjectRequest) error {
+	err := db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
+		for i := range reqs {
+			req := reqs[i]
+			level := 1
+			log.Info.Printf("CreateSubject, req: %#v\n", req)
+
+			if strings.TrimSpace(req.Name) == "" {
+				log.Warning.Printf("CreateSubject invalid name, req: %#v\n", req)
+				return ErrInvalidSubjctName
+			}
+			if req.ParentId > 0 {
+				parentSubject, err := da.GetSubjectModel().GetSubjectById(ctx, req.ParentId)
+				if err != nil {
+					log.Warning.Printf("Search subjects from sub orgs failed, req: %#v, err: %v\n", req, err)
+					return err
+				}
+				level = parentSubject.Level + 1
+			}
+			now := time.Now()
+			data := da.Subject{
+				Level:    level,
+				ParentId: req.ParentId,
+				Name:     req.Name,
+
+				UpdatedAt: &now,
+				CreatedAt: &now,
+			}
+			_, err := da.GetSubjectModel().CreateSubjectTx(ctx, tx, data)
+			if err != nil {
+				log.Warning.Printf("Search subjects from sub orgs failed, req: %#v, data: %#v, err: %v\n", req, data, err)
+				return err
+			}
+		}
+		return nil
+	})
+
+	return err
+}
+
+func fillSubjectsValue(subject *entity.SubjectTreeNode, prefix string) {
+	if prefix != "" {
+		subject.Value = prefix + "-" + subject.Name
+	}
+	for i := range subject.Children {
+		fillSubjectsValue(subject.Children[i], subject.Value)
+	}
 }
 
 func convertSubject(subject *da.Subject) *entity.Subject {

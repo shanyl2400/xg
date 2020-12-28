@@ -15,7 +15,8 @@ import (
 type Response struct {
 	ErrMsg string `json:"err_msg"`
 }
-func (r Response) Error() error{
+
+func (r Response) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -23,10 +24,11 @@ func (r Response) Error() error{
 }
 
 type IdResponse struct {
-	ID int `json:"id"`
+	ID     int    `json:"id"`
 	ErrMsg string `json:"err_msg"`
 }
-func (r IdResponse) Error() error{
+
+func (r IdResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -34,11 +36,11 @@ func (r IdResponse) Error() error{
 }
 
 type FileNameResponse struct {
-	Name string `json:"name"`
+	Name   string `json:"name"`
 	ErrMsg string `json:"err_msg"`
 }
 
-func (r FileNameResponse) Error() error{
+func (r FileNameResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -47,10 +49,10 @@ func (r FileNameResponse) Error() error{
 
 type SubjectsResponse struct {
 	Subjects []string `json:"subjects"`
-	ErrMsg string `json:"err_msg"`
+	ErrMsg   string   `json:"err_msg"`
 }
 
-func (r SubjectsResponse) Error() error{
+func (r SubjectsResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -59,9 +61,15 @@ func (r SubjectsResponse) Error() error{
 
 type SubjectsObjResponse struct {
 	Subjects []*entity.Subject `json:"subjects"`
-	ErrMsg string `json:"err_msg"`
+	ErrMsg   string            `json:"err_msg"`
 }
-func (r SubjectsObjResponse) Error() error{
+
+type SubjectsTreeObjResponse struct {
+	Subjects []*entity.SubjectTreeNode `json:"subjects"`
+	ErrMsg   string                    `json:"err_msg"`
+}
+
+func (r SubjectsObjResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -69,10 +77,11 @@ func (r SubjectsObjResponse) Error() error{
 }
 
 type AuthsListResponse struct {
-	ErrMsg string `json:"err_msg"`
+	ErrMsg   string         `json:"err_msg"`
 	AuthList []*entity.Auth `json:"auths"`
 }
-func (r AuthsListResponse) Error() error{
+
+func (r AuthsListResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -80,10 +89,11 @@ func (r AuthsListResponse) Error() error{
 }
 
 type AuthorizationListResponse struct {
-	ErrMsg string `json:"err_msg"`
+	ErrMsg   string         `json:"err_msg"`
 	AuthList []*entity.Auth `json:"authority"`
 }
-func (r AuthorizationListResponse) Error() error{
+
+func (r AuthorizationListResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -91,10 +101,11 @@ func (r AuthorizationListResponse) Error() error{
 }
 
 type OrderInfoListResponse struct {
-	Data *entity.OrderInfoList `json:"data"`
-	ErrMsg string `json:"err_msg"`
+	Data   *entity.OrderInfoList `json:"data"`
+	ErrMsg string                `json:"err_msg"`
 }
-func (r OrderInfoListResponse) Error() error{
+
+func (r OrderInfoListResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -102,10 +113,11 @@ func (r OrderInfoListResponse) Error() error{
 }
 
 type OrderRecordResponse struct {
-	Data *entity.OrderInfoWithRecords `json:"data"`
-	ErrMsg string `json:"err_msg"`
+	Data   *entity.OrderInfoWithRecords `json:"data"`
+	ErrMsg string                       `json:"err_msg"`
 }
-func (r OrderRecordResponse) Error() error{
+
+func (r OrderRecordResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -113,10 +125,11 @@ func (r OrderRecordResponse) Error() error{
 }
 
 type OrderPaymentRecordListResponse struct {
-	Data *entity.PayRecordInfoList `json:"data"`
-	ErrMsg string `json:"err_msg"`
+	Data   *entity.PayRecordInfoList `json:"data"`
+	ErrMsg string                    `json:"err_msg"`
 }
-func (r OrderPaymentRecordListResponse) Error() error{
+
+func (r OrderPaymentRecordListResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -125,9 +138,10 @@ func (r OrderPaymentRecordListResponse) Error() error{
 
 type OrderSourcesListResponse struct {
 	Sources []*entity.OrderSource `json:"sources"`
-	ErrMsg string `json:"err_msg"`
+	ErrMsg  string                `json:"err_msg"`
 }
-func (r OrderSourcesListResponse) Error() error{
+
+func (r OrderSourcesListResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -141,15 +155,16 @@ type OrgsListResponse struct {
 
 type SubOrgsListResponse struct {
 	Data   *SubOrgListInfo `json:"data"`
-	ErrMsg string       `json:"err_msg"`
+	ErrMsg string          `json:"err_msg"`
 }
-func (r SubOrgsListResponse) Error() error{
+
+func (r SubOrgsListResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
 	return errors.New(r.ErrMsg)
 }
-func (r OrgsListResponse) Error() error{
+func (r OrgsListResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -157,10 +172,11 @@ func (r OrgsListResponse) Error() error{
 }
 
 type OrgInfoResponse struct {
-	Org 	*entity.Org 	`json:"org"`
-	ErrMsg 	string        `json:"err_msg"`
+	Org    *entity.Org `json:"org"`
+	ErrMsg string      `json:"err_msg"`
 }
-func (r OrgInfoResponse) Error() error{
+
+func (r OrgInfoResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -168,10 +184,11 @@ func (r OrgInfoResponse) Error() error{
 }
 
 type RolesResponse struct {
-	Roles []*entity.Role `json:"roles"`
-	ErrMsg 	string        `json:"err_msg"`
+	Roles  []*entity.Role `json:"roles"`
+	ErrMsg string         `json:"err_msg"`
 }
-func (r RolesResponse) Error() error{
+
+func (r RolesResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -180,9 +197,10 @@ func (r RolesResponse) Error() error{
 
 type SummaryResponse struct {
 	Summary *entity.SummaryInfo `json:"summary"`
-	ErrMsg 	string        `json:"err_msg"`
+	ErrMsg  string              `json:"err_msg"`
 }
-func (r SummaryResponse) Error() error{
+
+func (r SummaryResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -190,10 +208,11 @@ func (r SummaryResponse) Error() error{
 }
 
 type StatisticTableResponse struct {
-	Data *entity.OrderStatisticTable `json:"data"`
-	ErrMsg 	string        `json:"err_msg"`
+	Data   *entity.OrderStatisticTable `json:"data"`
+	ErrMsg string                      `json:"err_msg"`
 }
-func (r StatisticTableResponse) Error() error{
+
+func (r StatisticTableResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -201,11 +220,11 @@ func (r StatisticTableResponse) Error() error{
 }
 
 type GraphResponse struct {
-	Graph *entity.StatisticGraph `json:"graph"`
-	ErrMsg 	string        `json:"err_msg"`
+	Graph  *entity.StatisticGraph `json:"graph"`
+	ErrMsg string                 `json:"err_msg"`
 }
 
-func (r GraphResponse) Error() error{
+func (r GraphResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -213,32 +232,35 @@ func (r GraphResponse) Error() error{
 }
 
 type PerformanceGraphResponse struct {
-	Graph *entity.PerformancesGraph `json:"graph"`
-	ErrMsg 	string        `json:"err_msg"`
+	Graph  *entity.PerformancesGraph `json:"graph"`
+	ErrMsg string                    `json:"err_msg"`
 }
-func (r PerformanceGraphResponse) Error() error{
-	if r.ErrMsg == "success" {
-		return nil
-	}
-	return errors.New(r.ErrMsg)
-}
-type AuthorPerformanceGraphResponse struct {
-	Graph *entity.AuthorPerformancesGraph `json:"graph"`
-	ErrMsg 	string        `json:"err_msg"`
-}
-func (r AuthorPerformanceGraphResponse) Error() error{
+
+func (r PerformanceGraphResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
 	return errors.New(r.ErrMsg)
 }
 
+type AuthorPerformanceGraphResponse struct {
+	Graph  *entity.AuthorPerformancesGraph `json:"graph"`
+	ErrMsg string                          `json:"err_msg"`
+}
+
+func (r AuthorPerformanceGraphResponse) Error() error {
+	if r.ErrMsg == "success" {
+		return nil
+	}
+	return errors.New(r.ErrMsg)
+}
 
 type OrgSubjectsResponse struct {
-	Subjects 	[]string	`json:"subjects"`
-	ErrMsg 	string        `json:"err_msg"`
+	Subjects []string `json:"subjects"`
+	ErrMsg   string   `json:"err_msg"`
 }
-func (r OrgSubjectsResponse) Error() error{
+
+func (r OrgSubjectsResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -247,9 +269,10 @@ func (r OrgSubjectsResponse) Error() error{
 
 type IDStatusResponse struct {
 	Result entity.CreateStudentResponse `json:"result"`
-	ErrMsg string `json:"err_msg"`
+	ErrMsg string                       `json:"err_msg"`
 }
-func (r IDStatusResponse) Error() error{
+
+func (r IDStatusResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -258,9 +281,10 @@ func (r IDStatusResponse) Error() error{
 
 type StudentWithDetailsListResponse struct {
 	Student *entity.StudentInfosWithOrders `json:"student"`
-	ErrMsg string `json:"err_msg"`
+	ErrMsg  string                         `json:"err_msg"`
 }
-func (r StudentWithDetailsListResponse) Error() error{
+
+func (r StudentWithDetailsListResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -269,9 +293,10 @@ func (r StudentWithDetailsListResponse) Error() error{
 
 type StudentListResponse struct {
 	Result *entity.StudentInfoList `json:"result"`
-	ErrMsg string `json:"err_msg"`
+	ErrMsg string                  `json:"err_msg"`
 }
-func (r StudentListResponse) Error() error{
+
+func (r StudentListResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -279,10 +304,11 @@ func (r StudentListResponse) Error() error{
 }
 
 type UserLoginResponse struct {
-	Data *entity.UserLoginResponse `json:"data"`
-	ErrMsg string `json:"err_msg"`
+	Data   *entity.UserLoginResponse `json:"data"`
+	ErrMsg string                    `json:"err_msg"`
 }
-func (r UserLoginResponse) Error() error{
+
+func (r UserLoginResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}
@@ -290,11 +316,12 @@ func (r UserLoginResponse) Error() error{
 }
 
 type UserListResponse struct {
-	Total int `json:"total"`
-	Users []*entity.UserInfo `json:"users"`
-	ErrMsg string `json:"err_msg"`
+	Total  int                `json:"total"`
+	Users  []*entity.UserInfo `json:"users"`
+	ErrMsg string             `json:"err_msg"`
 }
-func (r UserListResponse) Error() error{
+
+func (r UserListResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
 	}

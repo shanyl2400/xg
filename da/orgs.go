@@ -23,6 +23,7 @@ type IOrgModel interface {
 	DeleteOrgById(ctx context.Context, tx *gorm.DB, ids []int) error
 
 	GetOrgsByParentId(ctx context.Context, parentId int) ([]*Org, error)
+	GetOrgsByParentIdWithStatus(ctx context.Context, parentId int, status []int) ([]*Org, error)
 	SearchOrgs(ctx context.Context, s SearchOrgsCondition) (int, []*Org, error)
 
 	SearchOrgsWithDistance(ctx context.Context, s SearchOrgsCondition, l *entity.Coordinate) (int, []*OrgWithDistance, error)
@@ -129,6 +130,20 @@ func (d *DBOrgModel) GetOrgsByParentId(ctx context.Context, parentId int) ([]*Or
 	condition := SearchOrgsCondition{
 		ParentIDs: []int{parentId},
 		Status:    []int{entity.OrgStatusCertified},
+	}
+	where, values := condition.GetConditions()
+	result := make([]*Org, 0)
+	err := db.Get().Where(where, values...).Find(&result).Error
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (d *DBOrgModel) GetOrgsByParentIdWithStatus(ctx context.Context, parentId int, status []int) ([]*Org, error) {
+	condition := SearchOrgsCondition{
+		ParentIDs: []int{parentId},
+		Status:    status,
 	}
 	where, values := condition.GetConditions()
 	result := make([]*Org, 0)

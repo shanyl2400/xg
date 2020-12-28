@@ -3,8 +3,8 @@ package entity
 import "time"
 
 const (
-	OrderStatusCreated =  1
-	OrderStatusSigned = 2
+	OrderStatusCreated = 1
+	OrderStatusSigned  = 2
 	OrderStatusRevoked = 3
 	OrderStatusInvalid = 4
 	OrderStatusDeposit = 5
@@ -18,6 +18,9 @@ const (
 
 	OrderRemarkModeServer = 1
 	OrderRemarkModeClient = 2
+
+	OrderRemarkUnread = 1
+	OrderRemarkReaded = 2
 )
 
 type CreateOrderRequest struct {
@@ -30,11 +33,11 @@ type SearchOrderCondition struct {
 	StudentIDList   []int  `json:"student_id_list"`
 	ToOrgIDList     []int  `json:"to_org_id_list"`
 	IntentSubjects  string `json:"intent_subjects"`
-	PublisherID     []int    `json:"publisher_id"`
+	PublisherID     []int  `json:"publisher_id"`
 	OrderSourceList []int  `json:"order_source"`
 
 	CreateStartAt *time.Time `json:"create_start_at"`
-	CreateEndAt *time.Time `json:"create_end_at"`
+	CreateEndAt   *time.Time `json:"create_end_at"`
 
 	Status  []int  `json:"status"`
 	OrderBy string `json:"order_by"`
@@ -61,6 +64,11 @@ type OrderInfoList struct {
 	Orders []*OrderInfoDetails `json:"orders"`
 }
 
+type OrderRemarkList struct {
+	Total   int                  `json:"total"`
+	Records []*OrderRemarkRecord `json:"records"`
+}
+
 type PayRecordInfoList struct {
 	Total   int              `json:"total"`
 	Records []*PayRecordInfo `json:"records"`
@@ -82,6 +90,9 @@ type PayRecordInfo struct {
 	PublisherName string   `json:"publisher_name"`
 
 	Status int `json:"status"`
+
+	CreatedAt *time.Time `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
 }
 
 type OrderInfo struct {
@@ -90,9 +101,12 @@ type OrderInfo struct {
 	ToOrgID       int      `json:"to_org_id"`
 	IntentSubject []string `json:"intent_subject"`
 	PublisherID   int      `json:"publisher_id"`
-	OrderSource int `json:"order_source"`
+	OrderSource   int      `json:"order_source"`
 
 	Status int `json:"status"`
+
+	CreatedAt *time.Time `json:"created_at"`
+	UpdatedAt *time.Time `json:"updated_at"`
 }
 
 type OrderInfoDetails struct {
@@ -110,7 +124,7 @@ type OrderInfoWithRecords struct {
 	StudentSummary *StudentSummaryInfo `json:"student_summary"`
 	OrgName        string              `json:"org_name"`
 	PublisherName  string              `json:"publisher_name"`
-	AuthorName string `json:"author_name"`
+	AuthorName     string              `json:"author_name"`
 	PaymentInfo    []*OrderPayRecord
 	RemarkInfo     []*OrderRemarkRecord
 
@@ -150,4 +164,9 @@ type OrderPayRequest struct {
 type OrderMarkRequest struct {
 	OrderID int    `json:"order_id"`
 	Content string `json:"content"`
+}
+
+type MarkOrderRemarkRequest struct {
+	Status int   `json:"status"`
+	IDs    []int `json:"ids"`
 }

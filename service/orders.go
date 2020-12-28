@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"sync"
 	"xg/da"
@@ -10,6 +11,10 @@ import (
 	"xg/log"
 
 	"github.com/jinzhu/gorm"
+)
+
+var (
+	ErrInvalidOrderRemarkStatus = errors.New("invalid order remark status")
 )
 
 type IOrderService interface {
@@ -22,10 +27,12 @@ type IOrderService interface {
 	PaybackOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error
 	ConfirmOrderPay(ctx context.Context, orderPayId int, status int, operator *entity.JWTUser) error
 	AddOrderRemark(ctx context.Context, orderId int, content string, operator *entity.JWTUser) error
+	MarkOrderRemark(ctx context.Context, remarkIDs []int, status int, operator *entity.JWTUser) error
 	SearchOrderPayRecords(ctx context.Context, condition *entity.SearchPayRecordCondition, operator *entity.JWTUser) (*entity.PayRecordInfoList, error)
 	SearchOrders(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) (*entity.OrderInfoList, error)
 	SearchOrderWithAuthor(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) (*entity.OrderInfoList, error)
 	SearchOrderWithOrgId(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) (*entity.OrderInfoList, error)
+	SearchOrderRemarks(ctx context.Context, condition *da.SearchRemarkRecordCondition, operator *entity.JWTUser) (*entity.OrderRemarkList, error)
 	GetOrderById(ctx context.Context, orderId int, operator *entity.JWTUser) (*entity.OrderInfoWithRecords, error)
 }
 
@@ -411,6 +418,42 @@ func (o *OrderService) ConfirmOrderPay(ctx context.Context, orderPayId int, stat
 	return nil
 }
 
+func (o *OrderService) MarkOrderRemark(ctx context.Context, remarkIDs []int, status int, operator *entity.JWTUser) error {
+	if len(remarkIDs) < 1 {
+		return nil
+	}
+	if status != entity.OrderRemarkReaded && status != entity.OrderRemarkUnread {
+		log.Error.Printf("Invalid remark status, status: %#v, err: %v\n", status, ErrInvalidOrderRemarkStatus)
+		return ErrInvalidOrderRemarkStatus
+	}
+	_, records, err := da.GetOrderModel().SearchRemarkRecord(ctx, da.SearchRemarkRecordCondition{
+		RemarkRecordIDList: remarkIDs,
+	})
+	if err != nil {
+		log.Error.Printf("Get order remarks failed, remarkIDs: %#v, err: %v\n", remarkIDs, err)
+		return err
+	}
+	//root只能设置client, client只能设置root
+	mode := entity.OrderRemarkModeServer
+	if operator.OrgId == entity.RootOrgId {
+		mode = entity.OrderRemarkModeClient
+	}
+	//检查所有records方向是否正确
+	for i := range records {
+		if records[i].Mode != mode {
+			log.Error.Printf("Invalid remark mode, remark: %#v, expect mode:%v err: %v\n", records[i], mode, err)
+			return ErrInvalidRemarkID
+		}
+	}
+
+	err = da.GetOrderModel().UpdateOrderRemarkRecordTx(ctx, db.Get(), remarkIDs, status)
+	if err != nil {
+		log.Error.Printf("update order remarks status failed, remarkIDs: %#v, status: %v err: %v\n", remarkIDs, status, err)
+		return err
+	}
+	return nil
+}
+
 //TODO: search order pay record
 func (o *OrderService) AddOrderRemark(ctx context.Context, orderId int, content string, operator *entity.JWTUser) error {
 	orderObj, err := da.GetOrderModel().GetOrderById(ctx, orderId)
@@ -435,11 +478,39 @@ func (o *OrderService) AddOrderRemark(ctx context.Context, orderId int, content 
 		Mode:    mode,
 		Content: content,
 	}
-	_, err = da.GetOrderModel().AddRemarkRecord(ctx, data)
+	err = db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
+		_, err = da.GetOrderModel().AddRemarkRecordTx(ctx, tx, data)
+		if err != nil {
+			log.Warning.Printf("Add remark record failed, order: %#v, data: %#v, operator: %#v, err: %v\n", orderObj, data, operator, err)
+			return err
+		}
+		_, records, err := da.GetOrderModel().SearchRemarkRecord(ctx, da.SearchRemarkRecordCondition{
+			OrderIDList: []int{orderId},
+		})
+		if err != nil {
+			log.Error.Printf("search remarks failed, orderId: %v, err:%v", orderId, err)
+			return err
+		}
+		recordsIDs := make([]int, 0)
+		for i := range records {
+			if records[i].Mode != mode {
+				recordsIDs = append(recordsIDs, records[i].ID)
+			}
+		}
+		if len(recordsIDs) > 0 {
+			err = da.GetOrderModel().UpdateOrderRemarkRecordTx(ctx, tx, recordsIDs, entity.OrderRemarkReaded)
+			if err != nil {
+				log.Error.Printf("update remarks failed, recordsIDs: %v, err:%v", recordsIDs, err)
+				return err
+			}
+		}
+
+		return nil
+	})
 	if err != nil {
-		log.Warning.Printf("Add remark record failed, order: %#v, data: %#v, operator: %#v, err: %v\n", orderObj, data, operator, err)
 		return err
 	}
+
 	return nil
 }
 
@@ -471,6 +542,36 @@ func (o *OrderService) SearchOrderPayRecords(ctx context.Context, condition *ent
 		Total:   total,
 		Records: res,
 	}, nil
+}
+
+func (o *OrderService) SearchOrderRemarks(ctx context.Context, condition *da.SearchRemarkRecordCondition, operator *entity.JWTUser) (*entity.OrderRemarkList, error) {
+	if operator.OrgId == entity.RootOrgId {
+		condition.Mode = entity.OrderRemarkModeClient
+	} else {
+		condition.Mode = entity.OrderRemarkModeServer
+	}
+	total, records, err := da.GetOrderModel().SearchRemarkRecord(ctx, *condition)
+	if err != nil {
+		log.Warning.Printf("Search order failed, condition: %#v, err: %v\n", condition, err)
+		return nil, err
+	}
+	res := &entity.OrderRemarkList{
+		Total:   total,
+		Records: make([]*entity.OrderRemarkRecord, len(records)),
+	}
+	for i := range records {
+		res.Records[i] = &entity.OrderRemarkRecord{
+			ID:      records[i].ID,
+			OrderID: records[i].OrderID,
+			Author:  records[i].Author,
+			Mode:    records[i].Mode,
+			Content: records[i].Content,
+
+			UpdatedAt: records[i].UpdatedAt,
+			CreatedAt: records[i].CreatedAt,
+		}
+	}
+	return res, nil
 }
 
 func (o *OrderService) SearchOrders(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) (*entity.OrderInfoList, error) {
@@ -611,6 +712,8 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 			PublisherID:   orderObj.Order.PublisherID,
 			Status:        orderObj.Order.Status,
 			OrderSource:   orderObj.Order.OrderSource,
+			CreatedAt:     orderObj.Order.CreatedAt,
+			UpdatedAt:     orderObj.Order.UpdatedAt,
 		},
 		StudentSummary: &entity.StudentSummaryInfo{
 			ID:         student.ID,
@@ -621,6 +724,8 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 			AddressExt: student.AddressExt,
 			Note:       student.Note,
 			AuthorId:   student.AuthorID,
+			CreatedAt:  student.CreatedAt,
+			UpdatedAt:  student.UpdatedAt,
 		},
 		OrgName:         org.Name,
 		PublisherName:   publisherName,
@@ -719,11 +824,13 @@ func (o *OrderService) getPayRecordInfo(ctx context.Context, records []*da.Order
 	for i := range records {
 		order := ordersMap[records[i].OrderID]
 		res[i] = &entity.PayRecordInfo{
-			ID:      records[i].ID,
-			OrderID: records[i].OrderID,
-			Mode:    records[i].Mode,
-			Title:   records[i].Title,
-			Amount:  records[i].Amount,
+			ID:        records[i].ID,
+			OrderID:   records[i].OrderID,
+			Mode:      records[i].Mode,
+			Title:     records[i].Title,
+			Amount:    records[i].Amount,
+			CreatedAt: records[i].CreatedAt,
+			UpdatedAt: records[i].UpdatedAt,
 
 			StudentID:     order.StudentID,
 			ToOrgID:       order.ToOrgID,
@@ -807,6 +914,8 @@ func (o *OrderService) getOrderInfoDetails(ctx context.Context, orders []*da.Ord
 				PublisherID:   orders[i].PublisherID,
 				Status:        orders[i].Status,
 				OrderSource:   orders[i].OrderSource,
+				CreatedAt:     orders[i].CreatedAt,
+				UpdatedAt:     orders[i].UpdatedAt,
 			},
 			StudentName:      studentMaps[orders[i].StudentID].Name,
 			StudentTelephone: studentMaps[orders[i].StudentID].Telephone,

@@ -34,6 +34,7 @@ var (
 	ErrInvalidSubjctName   = errors.New("invalid subject name")
 
 	ErrStudentIdNeeded = errors.New("student id is needed")
+	ErrInvalidRemarkID = errors.New("mark remark id invalid")
 )
 
 type IUserService interface {

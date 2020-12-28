@@ -86,7 +86,10 @@ func Get() *gin.Engine {
 	}
 	subjects := api.Group("/subjects")
 	{
-		subjects.GET("/:parent_id", s.mustLogin, s.listSubjects)
+		subjects.POST("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageSubject}), s.batchCreateSubject)
+		subjects.GET("/details/:parent_id", s.mustLogin, s.listSubjects)
+		subjects.GET("/tree", s.mustLogin, s.listSubjectsTree)
+		subjects.GET("/all", s.mustLogin, s.listSubjectsAll)
 	}
 	org := api.Group("/org")
 	{
@@ -119,6 +122,8 @@ func Get() *gin.Engine {
 	}
 	orders := api.Group("/orders")
 	{
+		orders.GET("/remarks", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchSelfOrder, entity.AuthDispatchOrder, entity.AuthListAllOrder, entity.AuthListOrgOrder}), s.searchOrderRemarks)
+		orders.PUT("/marks", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchSelfOrder, entity.AuthDispatchOrder, entity.AuthListAllOrder, entity.AuthListOrgOrder}), s.markOrderRemarks)
 		orders.GET("/", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.searchOrder)
 		orders.GET("/author", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchOrder, entity.AuthDispatchSelfOrder}), s.searchOrderWithAuthor)
 		orders.GET("/org", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.searchOrderWithOrgID)

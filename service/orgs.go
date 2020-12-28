@@ -204,7 +204,7 @@ func (s *OrgService) GetOrgById(ctx context.Context, orgId int) (*entity.Org, er
 	if len(org.Subjects) > 0 {
 		subjects = strings.Split(org.Subjects, ",")
 	}
-	subOrgs, err := da.GetOrgModel().GetOrgsByParentId(ctx, orgId)
+	subOrgs, err := da.GetOrgModel().GetOrgsByParentIdWithStatus(ctx, orgId, []int{entity.OrgStatusCreated, entity.OrgStatusCertified})
 	if err != nil {
 		log.Warning.Printf("Get org by parent id failed, orgId: %#v, err: %v\n", orgId, err)
 		return nil, err

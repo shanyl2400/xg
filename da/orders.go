@@ -15,9 +15,11 @@ type IOrderModel interface {
 	CreateOrder(ctx context.Context, tx *gorm.DB, o Order) (int, error)
 	AddOrderPayRecord(ctx context.Context, o *OrderPayRecord) (int, error)
 	AddRemarkRecord(ctx context.Context, o *OrderRemarkRecord) (int, error)
+	AddRemarkRecordTx(ctx context.Context, tx *gorm.DB, o *OrderRemarkRecord) (int, error)
 	AddOrderPayRecordTx(ctx context.Context, tx *gorm.DB, o *OrderPayRecord) (int, error)
 	UpdateOrderStatusTx(ctx context.Context, db *gorm.DB, id, status int) error
 	UpdateOrderPayRecordTx(ctx context.Context, tx *gorm.DB, id, status int) error
+	UpdateOrderRemarkRecordTx(ctx context.Context, tx *gorm.DB, ids []int, status int) error
 
 	GetOrderById(ctx context.Context, id int) (*OrderInfo, error)
 	SearchOrder(ctx context.Context, s SearchOrderCondition) (int, []*Order, error)
@@ -26,6 +28,8 @@ type IOrderModel interface {
 	CountPayRecord(ctx context.Context, s SearchPayRecordCondition) (int, error)
 	GetPayRecordById(ctx context.Context, id int) (*OrderPayRecord, error)
 	SearchPayRecord(ctx context.Context, s SearchPayRecordCondition) (int, []*OrderPayRecord, error)
+
+	SearchRemarkRecord(ctx context.Context, s SearchRemarkRecordCondition) (int, []*OrderRemarkRecord, error)
 }
 
 type OrderInfo struct {
@@ -70,7 +74,7 @@ type OrderRemarkRecord struct {
 	Author  int    `gorm:"type:int;NOT NULL;column:author"`
 	Mode    int    `gorm:"type:int;NOT NULL;column:mode"`
 	Content string `gorm:"type:text;NOT NULL;column:content"`
-	Status  int    `gorm:"type:int;NOT NULL;column:status"`
+	Status  int    `gorm:"type:int;NOT NULL;DEFAULT 1;column:status"`
 
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`
 	CreatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:created_at"`
@@ -97,6 +101,49 @@ func (s SearchPayRecordCondition) GetConditions() (string, []interface{}) {
 	if len(s.PayRecordIDList) > 0 {
 		wheres = append(wheres, "id IN (?)")
 		values = append(values, s.PayRecordIDList)
+	}
+	if len(s.AuthorIDList) > 0 {
+		wheres = append(wheres, "author IN (?)")
+		values = append(values, s.AuthorIDList)
+	}
+	if len(s.OrderIDList) > 0 {
+		wheres = append(wheres, "order_id IN (?)")
+		values = append(values, s.OrderIDList)
+	}
+	if s.Mode > 0 {
+		wheres = append(wheres, "mode = ?")
+		values = append(values, s.Mode)
+	}
+	if len(s.StatusList) > 0 {
+		wheres = append(wheres, "status IN (?)")
+		values = append(values, s.StatusList)
+	}
+
+	where := strings.Join(wheres, " and ")
+
+	return where, values
+}
+
+type SearchRemarkRecordCondition struct {
+	RemarkRecordIDList []int
+	OrderIDList        []int
+	AuthorIDList       []int
+	Mode               int
+	StatusList         []int
+
+	OrderBy string
+
+	PageSize int
+	Page     int
+}
+
+func (s SearchRemarkRecordCondition) GetConditions() (string, []interface{}) {
+	wheres := make([]string, 0)
+	values := make([]interface{}, 0)
+
+	if len(s.RemarkRecordIDList) > 0 {
+		wheres = append(wheres, "id IN (?)")
+		values = append(values, s.RemarkRecordIDList)
 	}
 	if len(s.AuthorIDList) > 0 {
 		wheres = append(wheres, "author IN (?)")
@@ -229,6 +276,17 @@ func (d *DBOrderModel) AddRemarkRecord(ctx context.Context, o *OrderRemarkRecord
 	return o.ID, nil
 }
 
+func (d *DBOrderModel) AddRemarkRecordTx(ctx context.Context, tx *gorm.DB, o *OrderRemarkRecord) (int, error) {
+	now := time.Now()
+	o.CreatedAt = &now
+	o.UpdatedAt = &now
+	err := tx.Create(o).Error
+	if err != nil {
+		return -1, err
+	}
+	return o.ID, nil
+}
+
 func (d *DBOrderModel) UpdateOrderStatusTx(ctx context.Context, tx *gorm.DB, id, status int) error {
 	now := time.Now()
 	err := tx.Model(Order{}).Where(&Order{ID: id}).Updates(Order{Status: status, UpdatedAt: &now}).Error
@@ -241,6 +299,15 @@ func (d *DBOrderModel) UpdateOrderStatusTx(ctx context.Context, tx *gorm.DB, id,
 func (d *DBOrderModel) UpdateOrderPayRecordTx(ctx context.Context, tx *gorm.DB, id, status int) error {
 	now := time.Now()
 	err := tx.Model(OrderPayRecord{}).Where(&OrderPayRecord{ID: id}).Updates(OrderPayRecord{Status: status, UpdatedAt: &now}).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *DBOrderModel) UpdateOrderRemarkRecordTx(ctx context.Context, tx *gorm.DB, ids []int, status int) error {
+	now := time.Now()
+	err := tx.Model(OrderRemarkRecord{}).Where("id in (?)", ids).Updates(OrderRemarkRecord{Status: status, UpdatedAt: &now}).Error
 	if err != nil {
 		return err
 	}
@@ -307,6 +374,33 @@ func (d *DBOrderModel) SearchPayRecord(ctx context.Context, s SearchPayRecordCon
 
 	//获取学生名单
 	records := make([]*OrderPayRecord, 0)
+	tx := db.Get().Where(where, values...)
+	if s.PageSize > 0 {
+		offset, limit := parsePage(s.Page, s.PageSize)
+		tx = tx.Offset(offset).Limit(limit)
+	}
+	if s.OrderBy != "" {
+		tx = tx.Order(s.OrderBy)
+	}
+	err = tx.Find(&records).Error
+	if err != nil {
+		return 0, nil, err
+	}
+	return total, records, nil
+}
+
+func (d *DBOrderModel) SearchRemarkRecord(ctx context.Context, s SearchRemarkRecordCondition) (int, []*OrderRemarkRecord, error) {
+	where, values := s.GetConditions()
+
+	//获取数量
+	var total int
+	err := db.Get().Model(OrderRemarkRecord{}).Where(where, values...).Count(&total).Error
+	if err != nil {
+		return 0, nil, err
+	}
+
+	//获取学生名单
+	records := make([]*OrderRemarkRecord, 0)
 	tx := db.Get().Where(where, values...)
 	if s.PageSize > 0 {
 		offset, limit := parsePage(s.Page, s.PageSize)
