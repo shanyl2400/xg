@@ -15,3 +15,9 @@ func TestTimeDuration(t *testing.T) {
 	t1 = t1.AddDate(0, 0, 20)
 	t.Log(t1)
 }
+
+func TestForLoop(t *testing.T) {
+	for i := 100; i <= 100; i++ {
+		t.Log(i)
+	}
+}

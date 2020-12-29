@@ -477,6 +477,7 @@ func (o *OrderService) AddOrderRemark(ctx context.Context, orderId int, content 
 		Author:  operator.UserId,
 		Mode:    mode,
 		Content: content,
+		Status: entity.OrderRemarkUnread,
 	}
 	err = db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
 		_, err = da.GetOrderModel().AddRemarkRecordTx(ctx, tx, data)
@@ -559,6 +560,7 @@ func (o *OrderService) SearchOrderRemarks(ctx context.Context, condition *da.Sea
 		Total:   total,
 		Records: make([]*entity.OrderRemarkRecord, len(records)),
 	}
+
 	for i := range records {
 		res.Records[i] = &entity.OrderRemarkRecord{
 			ID:      records[i].ID,
@@ -594,6 +596,7 @@ func (o *OrderService) SearchOrders(ctx context.Context, condition *entity.Searc
 		OrderSourceList: condition.OrderSourceList,
 		CreateStartAt:   condition.CreateStartAt,
 		StudentKeywords: condition.StudentsKeywords,
+		Keywords: 		condition.Keywords,
 		CreateEndAt:     condition.CreateEndAt,
 		Status:          condition.Status,
 		OrderBy:         condition.OrderBy,
@@ -758,6 +761,7 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 			Content:   orderObj.RemarkInfo[i].Content,
 			UpdatedAt: orderObj.RemarkInfo[i].UpdatedAt,
 			CreatedAt: orderObj.RemarkInfo[i].CreatedAt,
+			Status: orderObj.RemarkInfo[i].Status,
 		}
 	}
 	res.PaymentInfo = payRecords

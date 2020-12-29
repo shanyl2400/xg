@@ -38,12 +38,11 @@ type OrderStatisticRecordEntity struct {
 }
 
 type StatisticRecordCondition struct {
-	Author      int        `json:"author"`
-	OrgId       int        `json:"org_id"`
-	PublisherId int        `json:"publisher_id"`
-	OrderSource int        `json:"order_source"`
+	OrderStatisticRecordEntity
 	StartAt     *time.Time `json:"start_at"`
 	EndAt       *time.Time `json:"end_at"`
+	
+	GroupBy string `json:"group_by"`
 }
 
 type SummaryInfo struct {
@@ -130,6 +129,12 @@ type OrderStatisticTableMonth struct {
 type OrderStatisticTableItem struct {
 	OrderStatisticTableMonth
 	Succeed int `json:"succeed"`
+}
+
+type OrderStatisticGroupTableItem struct {
+	GroupID   int    `json:"group_id"`
+	GroupName string `json:"group_name"`
+	OrderStatisticTableItem
 }
 
 func (o *OrderStatisticTableItem) CalculateSucceed() {

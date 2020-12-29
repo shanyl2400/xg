@@ -40,7 +40,7 @@ type OrderStatisticsRecord struct {
 
 type SearchOrderStatisticsRecordCondition struct {
 	Key    string `json:"key"`
-	Year   int    `json:"year"`
+	Year   []int    `json:"year"`
 	Month  []int    `json:"month"`
 	Date  []int    `json:"day"`
 	Author []int    `json:"author"`
@@ -57,8 +57,8 @@ func (s SearchOrderStatisticsRecordCondition) GetConditions() (string, []interfa
 		wheres = append(wheres, "`key` = ?")
 		values = append(values, s.Key)
 	}
-	if s.Year > 0 {
-		wheres = append(wheres, "`year` = ?")
+	if len(s.Year) > 0 {
+		wheres = append(wheres, "`year` IN (?)")
 		values = append(values, s.Year)
 	}
 	if len(s.Month) > 0 {

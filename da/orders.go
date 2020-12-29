@@ -177,6 +177,7 @@ type SearchOrderCondition struct {
 	PublisherID     []int
 
 	StudentKeywords string
+	Keywords string
 
 	CreateStartAt *time.Time
 	CreateEndAt   *time.Time
@@ -221,11 +222,31 @@ func (s SearchOrderCondition) GetConditions() (string, []interface{}) {
 		wheres = append(wheres, "order_source IN (?)")
 		values = append(values, s.OrderSourceList)
 	}
+
+	if s.Keywords != "" {
+		condition1 := "(intent_subjects LIKE ?)"
+
+		studentsTable := "students"
+		orderTable := "orders"
+		sql := fmt.Sprintf(`select id from %v where (%v.name like ? or %v.telephone like ?) and %v.id = %v.student_id and deleted_at IS NULL`,
+			studentsTable,
+			studentsTable,
+			studentsTable,
+			studentsTable,
+			orderTable)
+		condition2 := fmt.Sprintf("(exists (%v))", sql)
+
+		condition := "(" + condition1 + " or " + condition2 +")"
+		wheres = append(wheres, condition)
+
+		values = append(values, "%"+s.Keywords+"%")
+		values = append(values, s.Keywords+"%", s.Keywords+"%")
+	}
 	//search order by students info
 	if s.StudentKeywords != "" {
 		studentsTable := "students"
 		orderTable := "orders"
-		sql := fmt.Sprintf(`select id from %v where (%v.name like ? or %v.telephone like ?) and %v.id = %v.student_id and deleted_at = NULL`,
+		sql := fmt.Sprintf(`select id from %v where (%v.name like ? or %v.telephone like ?) and %v.id = %v.student_id and deleted_at IS NULL`,
 			studentsTable,
 			studentsTable,
 			studentsTable,

@@ -49,6 +49,7 @@ type SearchStudentRequest struct {
 	Name      string `json:"name"`
 	Telephone string `json:"telephone"`
 	Address   string `json:"address"`
+	Keywords string `json:"keywords"`
 
 	IntentSubject string `json:"intent_subject"`
 	AuthorIDList  []int  `json:"author_id_list"`

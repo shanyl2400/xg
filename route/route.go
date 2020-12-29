@@ -153,6 +153,7 @@ func Get() *gin.Engine {
 	{
 		statistics.GET("/summary", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.summary)
 		statistics.GET("/table", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.statisticsTable)
+		statistics.GET("/group", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}),s.statisticsGroup)
 		statistics.GET("/graph", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.graph)
 		statistics.GET("/graph/org", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.orgGraph)
 		statistics.GET("/graph/dispatch", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchOrder}), s.dispatchGraph)

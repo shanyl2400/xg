@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+	"time"
 	"xg/da"
 	"xg/entity"
 	"xg/service"
@@ -53,6 +54,44 @@ func (s *Server) statisticsTable(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, StatisticTableResponse{
+		Data: res,
+		ErrMsg:   "success",
+	})
+}
+
+// @Summary statisticsGroup
+// @Description get system data statisticsGroup
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param author query int false "get statistic with author_id"
+// @Param org_id query int false "get statistic with org_id"
+// @Param order_source query int false "get statistic with order_source"
+// @Param publisher_id query int  false "get statistic with publisher_id"
+// @Tags statistics
+// @Success 200 {object} entity.StatisticTimeTableResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/statistics/group [get]
+func (s *Server) statisticsGroup(c *gin.Context) {
+	req := buildOrderStatisticTimeRecordEntity(c)
+	var err error
+	res := make([]*entity.OrderStatisticGroupTableItem, 0)
+	if req.GroupBy == "org" {
+		res, err = service.GetOrderStatisticsService().StatisticsGroupByOrgs(c.Request.Context(), *req)
+		if err != nil {
+			s.responseErr(c, http.StatusInternalServerError, err)
+			return
+		}
+	}else{
+		res, err = service.GetOrderStatisticsService().StatisticsGroupByOrderSources(c.Request.Context(), *req)
+		if err != nil {
+			s.responseErr(c, http.StatusInternalServerError, err)
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, StatisticTimeTableResponse{
 		Data: res,
 		ErrMsg:   "success",
 	})
@@ -243,5 +282,31 @@ func buildOrderStatisticRecordEntity(c *gin.Context) *entity.OrderStatisticRecor
 		OrgId:       parseInt(c.Query("org_id")),
 		PublisherId: parseInt(c.Query("publisher_id")),
 		OrderSource: parseInt(c.Query("order_source")),
+	}
+}
+
+func buildOrderStatisticTimeRecordEntity(c *gin.Context) *entity.StatisticRecordCondition{
+	startAt := parseInt(c.Query("start_at"))
+	endAt := parseInt(c.Query("end_at"))
+	var startAtObj *time.Time
+	var endAtObj *time.Time
+	if startAt > 0 && endAt > 0 {
+		s := time.Unix(int64(startAt), 0)
+		e := time.Unix(int64(endAt), 0)
+		startAtObj = &s
+		endAtObj = &e
+	}
+
+	groupBy := c.Query("group_by")
+	return &entity.StatisticRecordCondition{
+		OrderStatisticRecordEntity: entity.OrderStatisticRecordEntity{
+			Author:      parseInt(c.Query("author")),
+			OrgId:       parseInt(c.Query("org_id")),
+			PublisherId: parseInt(c.Query("publisher_id")),
+			OrderSource: parseInt(c.Query("order_source")),
+		},
+		StartAt: startAtObj,
+		EndAt: endAtObj,
+		GroupBy: groupBy,
 	}
 }

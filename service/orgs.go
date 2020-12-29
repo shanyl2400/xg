@@ -24,6 +24,7 @@ type IOrgService interface {
 	ListOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error)
 	ListOrgsByStatus(ctx context.Context, status []int) (int, []*entity.Org, error)
 	SearchSubOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.SubOrgWithDistance, error)
+	SearchPendingOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.SubOrgWithDistance, error)
 
 	UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *entity.UpdateOrgWithSubOrgsRequest, operator *entity.JWTUser) error
 }
@@ -312,6 +313,40 @@ func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsC
 	condition.Status = []int{entity.OrgStatusCertified}
 	condition.IsSubOrg = true
 
+	return s.searchOrgs(ctx, condition)
+}
+
+func (s *OrgService) SearchPendingOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error) {
+	condition.Status = []int{entity.OrgStatusCreated}
+	condition.ParentIDs = []int{0}
+	count, orgs, err := da.GetOrgModel().SearchOrgs(ctx, condition)
+	if err != nil {
+		log.Warning.Printf("Search org failed, condition: %#v, err: %v\n", condition, err)
+		return 0, nil, err
+	}
+	res := make([]*entity.Org, len(orgs))
+
+	for i := range orgs {
+		var subjects []string
+		if len(orgs[i].Subjects) > 0 {
+			subjects = strings.Split(orgs[i].Subjects, ",")
+		}
+		res[i] = &entity.Org{
+			ID:            orgs[i].ID,
+			Name:          orgs[i].Name,
+			Subjects:      subjects,
+			Status:        orgs[i].Status,
+			Address:       orgs[i].Address,
+			AddressExt:    orgs[i].AddressExt,
+			ParentID:      orgs[i].ParentID,
+			Telephone:     orgs[i].Telephone,
+			SupportRoleID: entity.StringToIntArray(orgs[i].SupportRoleID),
+		}
+	}
+	return count, res, nil
+}
+
+func (s *OrgService) searchOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.SubOrgWithDistance, error) {
 	log.Info.Printf("SearchSubOrgs, condition: %#v\n", condition)
 	if condition.StudentID < 0 {
 		log.Warning.Printf("Student id invalid, condition: %#v\n", condition)
@@ -360,7 +395,6 @@ func (s *OrgService) SearchSubOrgs(ctx context.Context, condition da.SearchOrgsC
 	}
 	return count, res, nil
 }
-
 func (s *OrgService) UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *entity.UpdateOrgWithSubOrgsRequest, operator *entity.JWTUser) error {
 	updateEntity, err := s.prepareUpdateSubOrgs(ctx, orgId, req, operator)
 	if err != nil {

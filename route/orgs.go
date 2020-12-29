@@ -58,7 +58,8 @@ func (s *Server) listOrgs(c *gin.Context) {
 // @Failure 400 {object} Response
 // @Router /api/orgs/pending [get]
 func (s *Server) listPendingOrgs(c *gin.Context) {
-	count, orgs, err := service.GetOrgService().ListOrgsByStatus(c.Request.Context(), []int{entity.OrgStatusCreated})
+	condition := buildOrgsSearchCondition(c)
+	count, orgs, err := service.GetOrgService().SearchPendingOrgs(c.Request.Context(), condition)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return

@@ -151,6 +151,7 @@ func buildCondition(c *gin.Context) *entity.SearchStudentRequest {
 
 	orderBy := c.Query("order_by")
 	noDispatchOrder := c.Query("no_dispatch_order")
+	keywords := c.Query("keywords")
 
 	pageSizeStr := c.Query("page_size")
 	pageStr := c.Query("page")
@@ -190,6 +191,7 @@ func buildCondition(c *gin.Context) *entity.SearchStudentRequest {
 		Address:      address,
 		AuthorIDList: authorIdList,
 		IntentSubject: intentSubjects,
+		Keywords: keywords,
 		Status: 		status,
 		NoDispatchOrder: ndo,
 		OrderBy:      orderBy,

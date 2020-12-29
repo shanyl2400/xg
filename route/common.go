@@ -212,6 +212,11 @@ type StatisticTableResponse struct {
 	ErrMsg string                      `json:"err_msg"`
 }
 
+type StatisticTimeTableResponse struct {
+	Data   []*entity.OrderStatisticGroupTableItem `json:"data"`
+	ErrMsg string                      `json:"err_msg"`
+}
+
 func (r StatisticTableResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil

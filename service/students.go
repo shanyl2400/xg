@@ -292,6 +292,7 @@ func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchSt
 	condition := da.SearchStudentCondition{
 		Name:            ss.Name,
 		Telephone:       ss.Telephone,
+		Keywords:		ss.Keywords,
 		Address:         ss.Address,
 		AuthorIDList:    ss.AuthorIDList,
 		IntentString:    ss.IntentSubject,

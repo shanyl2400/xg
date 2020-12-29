@@ -36,6 +36,7 @@ type SearchOrderCondition struct {
 	PublisherID      []int  `json:"publisher_id"`
 	OrderSourceList  []int  `json:"order_source"`
 	StudentsKeywords string `json:"students_keywords"`
+	Keywords string `json:"keywords"`
 
 	CreateStartAt *time.Time `json:"create_start_at"`
 	CreateEndAt   *time.Time `json:"create_end_at"`
@@ -151,6 +152,7 @@ type OrderRemarkRecord struct {
 	Author  int    `json:"author"`
 	Mode    int    `json:"mode"`
 	Content string `json:"content"`
+	Status int `json:"status"`
 
 	UpdatedAt *time.Time `json:"updated_at"`
 	CreatedAt *time.Time `json:"created_at"`

@@ -590,6 +590,7 @@ func buildOrderCondition(c *gin.Context) *entity.SearchOrderCondition {
 	page := c.Query("page")
 	pageSize := c.Query("page_size")
 	studentsKeywords := c.Query("students_keywords")
+	keywords := c.Query("keywords")
 
 	condition := &entity.SearchOrderCondition{
 		StudentIDList:    parseInts(studentIds),
@@ -598,6 +599,7 @@ func buildOrderCondition(c *gin.Context) *entity.SearchOrderCondition {
 		IntentSubjects:   intentSubjects,
 		PublisherID:      parseInts(publisherID),
 		OrderSourceList:  parseInts(orderSources),
+		Keywords: keywords,
 
 		Status:  parseInts(status),
 		OrderBy: orderBy,
