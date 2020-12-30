@@ -108,7 +108,7 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 		//	return -1, err
 		//}
 
-		err = GetOrderStatisticsService().AddStudent(ctx, tx, operator.OrgId, student.OrderSourceID)
+		err = GetOrderStatisticsService().AddStudent(ctx, tx, operator.UserId, student.OrderSourceID)
 		if err != nil {
 			log.Warning.Printf("Add student new statistics failed, student: %#v, err: %v\n", student, err)
 			return -1, err
