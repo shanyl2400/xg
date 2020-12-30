@@ -116,7 +116,7 @@ func (s *OrgService) RevokeOrgById(ctx context.Context, id int, operator *entity
 		return ErrNotSuperOrg
 	}
 
-	subOrgs, err := da.GetOrgModel().GetOrgsByParentId(ctx, org.ID)
+	subOrgs, err := da.GetOrgModel().GetOrgsByParentIdWithStatus(ctx, org.ID, []int{entity.OrgStatusCreated, entity.OrgStatusCertified, entity.OrgStatusRejected})
 	if err != nil {
 		log.Warning.Printf("Get orgs by parent failed, org: %#v, err: %v\n", org, err)
 		return err
@@ -163,7 +163,7 @@ func (s *OrgService) CheckOrgById(ctx context.Context, id, status int, operator 
 		return ErrNotSuperOrg
 	}
 
-	subOrgs, err := da.GetOrgModel().GetOrgsByParentId(ctx, org.ID)
+	subOrgs, err := da.GetOrgModel().GetOrgsByParentIdWithStatus(ctx, org.ID, []int{entity.OrgStatusCreated, entity.OrgStatusCertified, entity.OrgStatusRejected})
 	if err != nil {
 		log.Warning.Printf("Get orgs by parent id failed, org: %#v, err: %v\n", org, err)
 		return err
@@ -541,7 +541,7 @@ func (o *OrgService) prepareUpdateSubOrgs(ctx context.Context, orgId int, req *e
 	if orgObj.ParentID != 0 {
 		return nil, ErrNotSuperOrg
 	}
-	subOrgs, err := da.GetOrgModel().GetOrgsByParentId(ctx, orgId)
+	subOrgs, err := da.GetOrgModel().GetOrgsByParentIdWithStatus(ctx, orgId, []int{entity.OrgStatusCreated, entity.OrgStatusCertified, entity.OrgStatusRejected})
 	if err != nil {
 		log.Warning.Printf("Get sub orgs failed, orgId: %#v, err: %v\n", orgId, err)
 		return nil, err
