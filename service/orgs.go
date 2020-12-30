@@ -416,6 +416,7 @@ func (s *OrgService) UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *e
 
 		err = s.updateOrgById(ctx, tx, &entity.UpdateOrgRequest{
 			ID:         orgId,
+			Name: 		req.OrgData.Name,
 			Address:    req.OrgData.Address,
 			AddressExt: req.OrgData.AddressExt,
 			Telephone:  req.OrgData.Telephone,
@@ -470,8 +471,11 @@ func (s *OrgService) UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *e
 					updateEntity.UpdateOrgsList[i].Longitude = cor.Longitude
 				}
 			}
+			namePairs := strings.Split(updateEntity.UpdateOrgsList[i].Name, "-")
+			realName := namePairs[len(namePairs) - 1]
+
 			err = da.GetOrgModel().UpdateOrg(ctx, tx, updateEntity.UpdateOrgsList[i].ID, da.Org{
-				Name:       updateEntity.UpdateOrgsList[i].Name,
+				Name:       updateEntity.OrgInfo.Name + "-" +  realName,
 				Subjects:   strings.Join(updateEntity.UpdateOrgsList[i].Subjects, ","),
 				Status:     updateEntity.OrgInfo.Status,
 				Address:    updateEntity.UpdateOrgsList[i].Address,
@@ -691,6 +695,7 @@ func (s *OrgService) updateOrgById(ctx context.Context, tx *gorm.DB, req *entity
 	log.Info.Printf("update org, req: %#v\n", req)
 	err := da.GetOrgModel().UpdateOrg(ctx, tx, req.ID, da.Org{
 		Subjects:   strings.Join(req.Subjects, ","),
+		Name: req.Name,
 		Address:    req.Address,
 		AddressExt: req.AddressExt,
 		Telephone:  req.Telephone,

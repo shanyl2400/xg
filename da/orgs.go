@@ -70,6 +70,7 @@ func (d *DBOrgModel) UpdateOrg(ctx context.Context, tx *gorm.DB, id int, org Org
 	err := db.Get().Model(Org{}).Where(&Org{ID: id}).Updates(Org{
 		Status:     org.Status,
 		Subjects:   org.Subjects,
+		Name: 		org.Name,
 		Address:    org.Address,
 		AddressExt: org.AddressExt,
 		Longitude:  org.Longitude,

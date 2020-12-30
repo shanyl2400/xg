@@ -90,6 +90,7 @@ type UpdateSubOrgsEntity struct {
 
 type UpdateOrgRequest struct {
 	ID         int      `json:"id"`
+	Name string `json:"name"`
 	Subjects   []string `json:"subjects"`
 	Address    string   `json:"address"`
 	AddressExt string   `json:"address_ext"`
