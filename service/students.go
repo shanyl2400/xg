@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	ChallengeDate = 60 * time.Hour * 24
+	ChallengeDate = 60 * time.Hour * 24 * 6
 )
 
 type IStudentService interface {
@@ -40,7 +40,7 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 	condition := da.SearchStudentCondition{
 		Telephone: c.Telephone,
 		OrderBy:   "created_at",
-		Status:    entity.StudentCreated,
+		Status:    []int{entity.StudentCreated},
 		PageSize:  1,
 		Page:      0,
 	}
@@ -96,6 +96,18 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 	s.Lock()
 	defer s.Unlock()
 	id, err := db.GetTransResult(ctx, func(ctx context.Context, tx *gorm.DB) (interface{}, error) {
+		//若挑战成功则将旧Student设为Exceed
+		if status == entity.StudentConflictSuccess {
+			for i := range students {
+				students[i].Status = entity.StudentExceed
+				err = da.GetStudentModel().UpdateStudent(ctx, tx, students[i].ID, *students[i])
+				if err != nil {
+					log.Warning.Printf("Update old student failed, student: %#v, err: %v\n", students[i], err)
+					return -1, err
+				}
+			}
+		}
+
 		//添加学生记录
 		id, err := da.GetStudentModel().CreateStudent(ctx, tx, student)
 		if err != nil {
@@ -270,6 +282,8 @@ func (s *StudentService) GetStudentById(ctx context.Context, id int, operator *e
 				IntentSubject: strings.Split(orders[i].IntentSubjects, ","),
 				PublisherID:   orders[i].PublisherID,
 				Status:        orders[i].Status,
+				CreatedAt: 		orders[i].CreatedAt,
+				UpdatedAt:  	orders[i].UpdatedAt,
 			},
 			StudentName:      student.Name,
 			StudentTelephone: student.Telephone,

@@ -55,7 +55,7 @@ func (s *StatisticsService) Summary(ctx context.Context) (*entity.SummaryInfo, e
 
 	orderCondition := da.SearchOrderCondition{
 		Status: []int{entity.OrderStatusSigned, entity.OrderStatusRevoked, entity.OrderStatusCreated},
-		Page:   1000000,
+		PageSize:   1000000,
 	}
 	total, orders, err := da.GetOrderModel().SearchOrder(ctx, orderCondition)
 	if err != nil {

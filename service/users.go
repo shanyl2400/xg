@@ -17,6 +17,7 @@ var (
 	ErrInvalidPublisherID   = errors.New("invalid publisher id")
 	ErrInvalidToOrgID       = errors.New("invalid to org id")
 	ErrInvalidStudentID     = errors.New("invalid student id")
+	ErrStudentIsConflict     = errors.New("student is conflict")
 	ErrNoAuthorizeToOperate = errors.New("no auth to operate")
 	ErrNoAuthToOperateOrder = errors.New("no auth to operate order")
 	ErrNoNeedToOperate      = errors.New("no need to operate")

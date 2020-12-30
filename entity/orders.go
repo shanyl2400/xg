@@ -20,7 +20,15 @@ const (
 	OrderRemarkModeClient = 2
 
 	OrderRemarkUnread = 1
-	OrderRemarkReaded = 2
+	OrderRemarkRead   = 2
+
+	OrderNotifyStatusUnread = 1
+	OrderNotifyStatusRead   = 2
+
+	OrderNotifyClassifySignup  = 1
+	OrderNotifyClassifyDeposit = 2
+	OrderNotifyClassifyRevoke  = 3
+	OrderNotifyClassifyInvalid = 4
 )
 
 type CreateOrderRequest struct {
@@ -30,13 +38,14 @@ type CreateOrderRequest struct {
 }
 
 type SearchOrderCondition struct {
+	IDs []int `json:"i_ds"`
 	StudentIDList    []int  `json:"student_id_list"`
 	ToOrgIDList      []int  `json:"to_org_id_list"`
 	IntentSubjects   string `json:"intent_subjects"`
 	PublisherID      []int  `json:"publisher_id"`
 	OrderSourceList  []int  `json:"order_source"`
 	StudentsKeywords string `json:"students_keywords"`
-	Keywords string `json:"keywords"`
+	Keywords         string `json:"keywords"`
 
 	CreateStartAt *time.Time `json:"create_start_at"`
 	CreateEndAt   *time.Time `json:"create_end_at"`
@@ -146,13 +155,27 @@ type OrderPayRecord struct {
 	CreatedAt *time.Time `json:"created_at"`
 }
 
+type OrderNotify struct {
+	ID        int       `json:"id"`
+	OrderID   int       `json:"order_id"`
+	Classify  int       `json:"classify"`
+	Content   string    `json:"content"`
+	Author    int       `json:"author"`
+	OrderInfo *OrderInfoDetails `json:"order_info"`
+
+	Status int `json:"status"`
+
+	UpdatedAt *time.Time `json:"updated_at"`
+	CreatedAt *time.Time `json:"created_at"`
+}
+
 type OrderRemarkRecord struct {
 	ID      int    `json:"id"`
 	OrderID int    `json:"order_id"`
 	Author  int    `json:"author"`
 	Mode    int    `json:"mode"`
 	Content string `json:"content"`
-	Status int `json:"status"`
+	Status  int    `json:"status"`
 
 	UpdatedAt *time.Time `json:"updated_at"`
 	CreatedAt *time.Time `json:"created_at"`

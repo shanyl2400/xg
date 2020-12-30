@@ -46,6 +46,8 @@ type Order struct {
 	IntentSubjects string `gorm:"type:varchar(255);NOT NULL;column:intent_subjects"`
 	PublisherID    int    `gorm:"type:int;NOT NULL;column:publisher_id;index"`
 
+	AuthorID int `gorm:"type:int;NOT NULL;DEFAULT 1;column:author_id;index"`
+
 	OrderSource int `gorm:"type:int;NOT NULL;column:order_source;index"`
 
 	Status int `gorm:"type:int;NOT NULL;column:status;index"`

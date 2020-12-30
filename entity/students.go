@@ -6,6 +6,7 @@ const (
 	StudentCreated = iota + 1
 	StudentConflictFailed
 	StudentConflictSuccess
+	StudentExceed
 
 	StudentApply
 	StudentApplyWithFee
@@ -53,7 +54,7 @@ type SearchStudentRequest struct {
 
 	IntentSubject string `json:"intent_subject"`
 	AuthorIDList  []int  `json:"author_id_list"`
-	Status        int    `json:"status"`
+	Status        []int    `json:"status"`
 
 	NoDispatchOrder bool `json:"no_dispatch_order"`
 

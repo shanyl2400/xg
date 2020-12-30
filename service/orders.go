@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"sync"
 	"xg/da"
@@ -60,12 +61,19 @@ func (o *OrderService) CreateOrder(ctx context.Context, req *entity.CreateOrderR
 		return -1, err
 	}
 
+	//若学员状态非法，不能创建
+	if student.Status != entity.StudentCreated && student.Status != entity.StudentConflictSuccess {
+		log.Warning.Printf("Student is conflict, req: %#v", req)
+		return -1, ErrStudentIsConflict
+	}
+
 	//TODO:检查重复订单？
 	data := da.Order{
 		StudentID:      req.StudentID,
 		ToOrgID:        req.ToOrgID,
 		IntentSubjects: strings.Join(req.IntentSubjects, ","),
 		PublisherID:    operator.UserId,
+		AuthorID: 		student.AuthorID,
 		OrderSource:    student.OrderSourceID,
 		Status:         entity.OrderStatusCreated,
 	}
@@ -170,6 +178,13 @@ func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequ
 			return err
 		}
 
+		//添加通知
+		content := fmt.Sprintf("订单已报名,缴费:%v元", req.Amount / 100)
+		err = GetOrderNotifyService().NotifyOrderSignup(ctx, tx, req.OrderID, content, operator)
+		if err != nil {
+			log.Warning.Printf("Add Notify, content: %#v, err: %v\n", content, err)
+			return err
+		}
 		return nil
 	})
 	if err != nil {
@@ -223,6 +238,14 @@ func (o *OrderService) DepositOrder(ctx context.Context, req *entity.OrderPayReq
 		_, err = da.GetOrderModel().AddOrderPayRecordTx(ctx, tx, payData)
 		if err != nil {
 			log.Warning.Printf("Add order pay failed, req: %#v, payData: %#v, err: %v\n", req, payData, err)
+			return err
+		}
+
+		//添加通知
+		content := fmt.Sprintf("订单交定金,金额:%v元", req.Amount / 100)
+		err = GetOrderNotifyService().NotifyOrderDeposit(ctx, tx, req.OrderID, content, operator)
+		if err != nil {
+			log.Warning.Printf("Add Notify, content: %#v, err: %v\n", content, err)
 			return err
 		}
 		return nil
@@ -279,6 +302,14 @@ func (o *OrderService) RevokeOrder(ctx context.Context, orderId int, operator *e
 		err = GetOrderStatisticsService().AddInvalidOrder(ctx, tx, record)
 		if err != nil {
 			log.Warning.Printf("Add statistics record failed, record: %#v, err: %v\n", record, err)
+			return err
+		}
+
+		//添加通知
+		content := fmt.Sprintf("订单已退学")
+		err = GetOrderNotifyService().NotifyOrderDeposit(ctx, tx, orderId, content, operator)
+		if err != nil {
+			log.Warning.Printf("Add Notify, content: %#v, err: %v\n", content, err)
 			return err
 		}
 		return nil
@@ -341,6 +372,14 @@ func (o *OrderService) InvalidOrder(ctx context.Context, orderId int, operator *
 		err = GetStudentService().UpdateStudentOrderCount(ctx, tx, orderObj.Order.StudentID, -1)
 		if err != nil {
 			log.Warning.Printf("Update student order count failed, orderObj: %#v, err: %v\n", orderObj, err)
+			return err
+		}
+
+		//添加通知
+		content := fmt.Sprintf("订单为无效订单")
+		err = GetOrderNotifyService().NotifyOrderDeposit(ctx, tx, orderId, content, operator)
+		if err != nil {
+			log.Warning.Printf("Add Notify, content: %#v, err: %v\n", content, err)
 			return err
 		}
 		return nil
@@ -422,7 +461,7 @@ func (o *OrderService) MarkOrderRemark(ctx context.Context, remarkIDs []int, sta
 	if len(remarkIDs) < 1 {
 		return nil
 	}
-	if status != entity.OrderRemarkReaded && status != entity.OrderRemarkUnread {
+	if status != entity.OrderRemarkRead && status != entity.OrderRemarkUnread {
 		log.Error.Printf("Invalid remark status, status: %#v, err: %v\n", status, ErrInvalidOrderRemarkStatus)
 		return ErrInvalidOrderRemarkStatus
 	}
@@ -499,7 +538,7 @@ func (o *OrderService) AddOrderRemark(ctx context.Context, orderId int, content 
 			}
 		}
 		if len(recordsIDs) > 0 {
-			err = da.GetOrderModel().UpdateOrderRemarkRecordTx(ctx, tx, recordsIDs, entity.OrderRemarkReaded)
+			err = da.GetOrderModel().UpdateOrderRemarkRecordTx(ctx, tx, recordsIDs, entity.OrderRemarkRead)
 			if err != nil {
 				log.Error.Printf("update remarks failed, recordsIDs: %v, err:%v", recordsIDs, err)
 				return err
@@ -589,6 +628,7 @@ func (o *OrderService) SearchOrders(ctx context.Context, condition *entity.Searc
 	}
 
 	total, orders, err := da.GetOrderModel().SearchOrder(ctx, da.SearchOrderCondition{
+		OrderIDList: condition.IDs,
 		StudentIDList:   condition.StudentIDList,
 		ToOrgIDList:     condition.ToOrgIDList,
 		IntentSubjects:  condition.IntentSubjects,

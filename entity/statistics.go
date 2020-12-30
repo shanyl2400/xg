@@ -142,5 +142,5 @@ func (o *OrderStatisticTableItem) CalculateSucceed() {
 		o.Succeed = 0
 		return
 	}
-	o.Succeed = (o.SignedOrder * 1000) / o.Orders
+	o.Succeed = (o.SignedOrder * 10000) / o.Orders
 }
