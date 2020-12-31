@@ -129,6 +129,12 @@ type OrderPaymentRecordListResponse struct {
 	ErrMsg string                    `json:"err_msg"`
 }
 
+type OrderNotifyResponse struct {
+	Data   []*entity.OrderNotify `json:"data"`
+	Total  int                   `json:"total"`
+	ErrMsg string                `json:"err_msg"`
+}
+
 func (r OrderPaymentRecordListResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil
@@ -214,7 +220,7 @@ type StatisticTableResponse struct {
 
 type StatisticTimeTableResponse struct {
 	Data   []*entity.OrderStatisticGroupTableItem `json:"data"`
-	ErrMsg string                      `json:"err_msg"`
+	ErrMsg string                                 `json:"err_msg"`
 }
 
 func (r StatisticTableResponse) Error() error {

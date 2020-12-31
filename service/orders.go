@@ -73,7 +73,7 @@ func (o *OrderService) CreateOrder(ctx context.Context, req *entity.CreateOrderR
 		ToOrgID:        req.ToOrgID,
 		IntentSubjects: strings.Join(req.IntentSubjects, ","),
 		PublisherID:    operator.UserId,
-		AuthorID: 		student.AuthorID,
+		AuthorID:       student.AuthorID,
 		OrderSource:    student.OrderSourceID,
 		Status:         entity.OrderStatusCreated,
 	}
@@ -179,7 +179,7 @@ func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequ
 		}
 
 		//添加通知
-		content := fmt.Sprintf("订单已报名,缴费:%v元", req.Amount / 100)
+		content := fmt.Sprintf("订单已报名,缴费:%v元", req.Amount)
 		err = GetOrderNotifyService().NotifyOrderSignup(ctx, tx, req.OrderID, content, operator)
 		if err != nil {
 			log.Warning.Printf("Add Notify, content: %#v, err: %v\n", content, err)
@@ -242,7 +242,7 @@ func (o *OrderService) DepositOrder(ctx context.Context, req *entity.OrderPayReq
 		}
 
 		//添加通知
-		content := fmt.Sprintf("订单交定金,金额:%v元", req.Amount / 100)
+		content := fmt.Sprintf("订单交定金,金额:%v元", req.Amount)
 		err = GetOrderNotifyService().NotifyOrderDeposit(ctx, tx, req.OrderID, content, operator)
 		if err != nil {
 			log.Warning.Printf("Add Notify, content: %#v, err: %v\n", content, err)
@@ -516,7 +516,7 @@ func (o *OrderService) AddOrderRemark(ctx context.Context, orderId int, content 
 		Author:  operator.UserId,
 		Mode:    mode,
 		Content: content,
-		Status: entity.OrderRemarkUnread,
+		Status:  entity.OrderRemarkUnread,
 	}
 	err = db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
 		_, err = da.GetOrderModel().AddRemarkRecordTx(ctx, tx, data)
@@ -628,7 +628,7 @@ func (o *OrderService) SearchOrders(ctx context.Context, condition *entity.Searc
 	}
 
 	total, orders, err := da.GetOrderModel().SearchOrder(ctx, da.SearchOrderCondition{
-		OrderIDList: condition.IDs,
+		OrderIDList:     condition.IDs,
 		StudentIDList:   condition.StudentIDList,
 		ToOrgIDList:     condition.ToOrgIDList,
 		IntentSubjects:  condition.IntentSubjects,
@@ -636,7 +636,7 @@ func (o *OrderService) SearchOrders(ctx context.Context, condition *entity.Searc
 		OrderSourceList: condition.OrderSourceList,
 		CreateStartAt:   condition.CreateStartAt,
 		StudentKeywords: condition.StudentsKeywords,
-		Keywords: 		condition.Keywords,
+		Keywords:        condition.Keywords,
 		CreateEndAt:     condition.CreateEndAt,
 		Status:          condition.Status,
 		OrderBy:         condition.OrderBy,
@@ -801,7 +801,7 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 			Content:   orderObj.RemarkInfo[i].Content,
 			UpdatedAt: orderObj.RemarkInfo[i].UpdatedAt,
 			CreatedAt: orderObj.RemarkInfo[i].CreatedAt,
-			Status: orderObj.RemarkInfo[i].Status,
+			Status:    orderObj.RemarkInfo[i].Status,
 		}
 	}
 	res.PaymentInfo = payRecords

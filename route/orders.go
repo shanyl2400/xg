@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 	"xg/da"
+	"xg/db"
 	"xg/entity"
 	"xg/service"
 
@@ -507,6 +508,94 @@ func (s *Server) addOrderMark(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
+// @Summary searchAuthorNotifies
+// @Description search author notifies
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param classify query string false "search order notify with classify"
+// @Param status query string  false "search order notify with status"
+// @Param order_by query string false "search order notify by column name"
+// @Param page_size query int true "order notify list page size"
+// @Param page query int true " order notify list page index"
+// @Tags order
+// @Success 200 {object} entity.OrderRemarkList
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/notifies/orders/author [get]
+func (s *Server) searchAuthorNotifies(c *gin.Context) {
+	req := buildOrderNotifyCondition(c)
+	user := s.getJWTUser(c)
+
+	total, records, err := service.GetOrderNotifyService().SearchAuthorNotifies(c.Request.Context(), *req, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, OrderNotifyResponse{
+		Total:  total,
+		Data:   records,
+		ErrMsg: "success",
+	})
+}
+
+// @Summary searchAuthorNotifies
+// @Description search author notifies
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param classify query string false "search order notify with classify"
+// @Param status query string  false "search order notify with status"
+// @Param order_by query string false "search order notify by column name"
+// @Param page_size query int true "order notify list page size"
+// @Param page query int true " order notify list page index"
+// @Tags order
+// @Success 200 {object} entity.OrderRemarkList
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/notifies/orders [get]
+func (s *Server) searchNotifies(c *gin.Context) {
+	req := buildOrderNotifyCondition(c)
+	user := s.getJWTUser(c)
+
+	total, records, err := service.GetOrderNotifyService().SearchNotifies(c.Request.Context(), *req, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, OrderNotifyResponse{
+		Total:  total,
+		Data:   records,
+		ErrMsg: "success",
+	})
+}
+
+// @Summary markNotify
+// @Description mark notify remarks
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param id path string true "order id"
+// @Tags order
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/notify/orders/{id} [put]
+func (s *Server) markOrderNotify(c *gin.Context) {
+	user := s.getJWTUser(c)
+	id, ok := s.getParamInt(c, "id")
+	if !ok {
+		return
+	}
+	err := service.GetOrderNotifyService().MarkNotifyRead(c.Request.Context(), db.Get(), id, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	s.responseSuccess(c)
+}
+
 // @Summary markOrderRemark
 // @Description mark order remarks
 // @Accept json
@@ -560,6 +649,16 @@ func buildSearchPayRecordCondition(c *gin.Context) *entity.SearchPayRecordCondit
 	}
 }
 
+func buildOrderNotifyCondition(c *gin.Context) *da.OrderNotifiesCondition {
+	classifies := c.Query("classify")
+	status := c.Query("status")
+	condition := &da.OrderNotifiesCondition{
+		Classifies: parseInts(classifies),
+		Status:     parseInts(status),
+	}
+	return condition
+}
+
 func buildOrderRemarkCondition(c *gin.Context) *da.SearchRemarkRecordCondition {
 	status := c.Query("status")
 	orderIds := c.Query("order_ids")
@@ -599,7 +698,7 @@ func buildOrderCondition(c *gin.Context) *entity.SearchOrderCondition {
 		IntentSubjects:   intentSubjects,
 		PublisherID:      parseInts(publisherID),
 		OrderSourceList:  parseInts(orderSources),
-		Keywords: keywords,
+		Keywords:         keywords,
 
 		Status:  parseInts(status),
 		OrderBy: orderBy,

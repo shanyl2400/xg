@@ -129,6 +129,17 @@ func Get() *gin.Engine {
 		orders.GET("/org", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.searchOrderWithOrgID)
 	}
 
+	notify := api.Group("/notify")
+	{
+		notify.PUT("/orders/:id", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder, entity.AuthEnterStudent}), s.markOrderNotify)
+	}
+
+	notifies := api.Group("/notifies")
+	{
+		notifies.GET("/orders/author", s.mustLogin, s.hasPermission([]int{entity.AuthEnterStudent}), s.searchAuthorNotifies)
+		notifies.GET("/orders", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.searchNotifies)
+	}
+
 	payment := api.Group("/payment")
 	{
 		payment.POST("/:id/pay", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.payOrder)
@@ -153,7 +164,7 @@ func Get() *gin.Engine {
 	{
 		statistics.GET("/summary", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.summary)
 		statistics.GET("/table", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.statisticsTable)
-		statistics.GET("/group", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}),s.statisticsGroup)
+		statistics.GET("/group", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.statisticsGroup)
 		statistics.GET("/graph", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.graph)
 		statistics.GET("/graph/org", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.orgGraph)
 		statistics.GET("/graph/dispatch", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchOrder}), s.dispatchGraph)
