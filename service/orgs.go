@@ -416,7 +416,7 @@ func (s *OrgService) UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *e
 
 		err = s.updateOrgById(ctx, tx, &entity.UpdateOrgRequest{
 			ID:         orgId,
-			Name: 		req.OrgData.Name,
+			Name:       req.OrgData.Name,
 			Address:    req.OrgData.Address,
 			AddressExt: req.OrgData.AddressExt,
 			Telephone:  req.OrgData.Telephone,
@@ -472,10 +472,10 @@ func (s *OrgService) UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *e
 				}
 			}
 			namePairs := strings.Split(updateEntity.UpdateOrgsList[i].Name, "-")
-			realName := namePairs[len(namePairs) - 1]
+			realName := namePairs[len(namePairs)-1]
 
 			err = da.GetOrgModel().UpdateOrg(ctx, tx, updateEntity.UpdateOrgsList[i].ID, da.Org{
-				Name:       updateEntity.OrgInfo.Name + "-" +  realName,
+				Name:       updateEntity.OrgInfo.Name + "-" + realName,
 				Subjects:   strings.Join(updateEntity.UpdateOrgsList[i].Subjects, ","),
 				Status:     updateEntity.OrgInfo.Status,
 				Address:    updateEntity.UpdateOrgsList[i].Address,
@@ -524,6 +524,7 @@ func (o *OrgService) filterTargetSubjects(subjects []string, targetSubjects []st
 		for j := range targetSubjects {
 			if o.compareSubject(subjects[i], targetSubjects[j]) {
 				ret = append(ret, subjects[i])
+				break
 			}
 		}
 	}
@@ -695,7 +696,7 @@ func (s *OrgService) updateOrgById(ctx context.Context, tx *gorm.DB, req *entity
 	log.Info.Printf("update org, req: %#v\n", req)
 	err := da.GetOrgModel().UpdateOrg(ctx, tx, req.ID, da.Org{
 		Subjects:   strings.Join(req.Subjects, ","),
-		Name: req.Name,
+		Name:       req.Name,
 		Address:    req.Address,
 		AddressExt: req.AddressExt,
 		Telephone:  req.Telephone,
