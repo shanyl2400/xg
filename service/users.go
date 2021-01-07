@@ -17,7 +17,7 @@ var (
 	ErrInvalidPublisherID   = errors.New("invalid publisher id")
 	ErrInvalidToOrgID       = errors.New("invalid to org id")
 	ErrInvalidStudentID     = errors.New("invalid student id")
-	ErrStudentIsConflict     = errors.New("student is conflict")
+	ErrStudentIsConflict    = errors.New("student is conflict")
 	ErrNoAuthorizeToOperate = errors.New("no auth to operate")
 	ErrNoAuthToOperateOrder = errors.New("no auth to operate order")
 	ErrNoNeedToOperate      = errors.New("no need to operate")
@@ -25,8 +25,9 @@ var (
 	ErrInvalidOrgStatus = errors.New("invalid org status")
 	ErrNotSuperOrg      = errors.New("not super org")
 
-	ErrDuplicateUserName = errors.New("duplicate user name")
-	ErrOperateOnRootOrg  = errors.New("can't operate on root org")
+	ErrDuplicateUserName    = errors.New("duplicate user name")
+	ErrDuplicateSubjectName = errors.New("duplicate subject name")
+	ErrOperateOnRootOrg     = errors.New("can't operate on root org")
 
 	ErrInvalidUserRoleOrg  = errors.New("invalid user role & org")
 	ErrCreateSuperUser     = errors.New("can't create super user")

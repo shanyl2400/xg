@@ -21,6 +21,7 @@ type ISubjectService interface {
 }
 
 type SubjectService struct {
+	sync.RWMutex
 }
 
 func (s *SubjectService) ListSubjects(ctx context.Context, parentID int) ([]*entity.Subject, error) {
@@ -136,10 +137,20 @@ func (s *SubjectService) CreateSubject(ctx context.Context, req entity.CreateSub
 	level := 1
 	log.Info.Printf("CreateSubject, req: %#v\n", req)
 
+	s.Lock()
+	defer s.Unlock()
+
 	if strings.TrimSpace(req.Name) == "" {
 		log.Warning.Printf("CreateSubject invalid name, req: %#v\n", req)
 		return -1, ErrInvalidSubjctName
 	}
+
+	err := s.checkSubjectsUnique(ctx, req.ParentId, []string{req.Name})
+	if err != nil {
+		log.Warning.Printf("Check duplicate name failed, req: %#v\n", req)
+		return -1, err
+	}
+
 	if req.ParentId > 0 {
 		parentSubject, err := da.GetSubjectModel().GetSubjectById(ctx, req.ParentId)
 		if err != nil {
@@ -166,16 +177,34 @@ func (s *SubjectService) CreateSubject(ctx context.Context, req entity.CreateSub
 }
 
 func (s *SubjectService) BatchCreateSubject(ctx context.Context, reqs []*entity.CreateSubjectRequest) error {
+	s.Lock()
+	defer s.Unlock()
+
+	//check unique name
+	nameList := make([]string, len(reqs))
+	parentID := 0
+	for i := range reqs {
+		//check name
+		if strings.TrimSpace(reqs[i].Name) == "" {
+			log.Warning.Printf("CreateSubject invalid name, req: %#v\n", reqs[i])
+			return ErrInvalidSubjctName
+		}
+		nameList[i] = reqs[i].Name
+		parentID = reqs[i].ParentId
+	}
+	if len(nameList) > 0 {
+		err := s.checkSubjectsUnique(ctx, parentID, nameList)
+		if err != nil {
+			log.Warning.Printf("Check duplicate name failed, req: %#v\n", reqs)
+			return err
+		}
+	}
 	err := db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
 		for i := range reqs {
 			req := reqs[i]
 			level := 1
 			log.Info.Printf("CreateSubject, req: %#v\n", req)
 
-			if strings.TrimSpace(req.Name) == "" {
-				log.Warning.Printf("CreateSubject invalid name, req: %#v\n", req)
-				return ErrInvalidSubjctName
-			}
 			if req.ParentId > 0 {
 				parentSubject, err := da.GetSubjectModel().GetSubjectById(ctx, req.ParentId)
 				if err != nil {
@@ -184,6 +213,7 @@ func (s *SubjectService) BatchCreateSubject(ctx context.Context, reqs []*entity.
 				}
 				level = parentSubject.Level + 1
 			}
+
 			now := time.Now()
 			data := da.Subject{
 				Level:    level,
@@ -225,6 +255,27 @@ func convertSubject(subject *da.Subject) *entity.Subject {
 		Name:     subject.Name,
 	}
 	return res
+}
+
+func (s *SubjectService) checkSubjectsUnique(ctx context.Context, parentID int, name []string) error {
+	condition := da.SearchSubjectCondition{
+		Names: name,
+	}
+	if parentID == 0 {
+		condition.RootSubject = true
+	} else {
+		condition.ParentId = parentID
+	}
+	subjects, err := da.GetSubjectModel().SearchSubject(ctx, condition)
+	if err != nil {
+		log.Error.Printf("Can't get subjects, condition: %#v, err: %#v", condition, err)
+		return err
+	}
+	if len(subjects) > 0 {
+		log.Warning.Printf("Duplicate subject name, subjects: %#v, err: %#v", subjects, err)
+		return ErrDuplicateSubjectName
+	}
+	return nil
 }
 
 var (

@@ -30,9 +30,11 @@ type Subject struct {
 }
 
 type SearchSubjectCondition struct {
-	IDList   []int
-	Level    int
-	ParentId int
+	IDList      []int
+	Level       int
+	ParentId    int
+	RootSubject bool
+	Names       []string
 }
 
 func (s SearchSubjectCondition) GetConditions() (string, []interface{}) {
@@ -49,6 +51,13 @@ func (s SearchSubjectCondition) GetConditions() (string, []interface{}) {
 	if s.ParentId > 0 {
 		wheres = append(wheres, "parent_id = ?")
 		values = append(values, s.ParentId)
+	}
+	if s.RootSubject {
+		wheres = append(wheres, "parent_id = 0")
+	}
+	if len(s.Names) > 0 {
+		wheres = append(wheres, "name in (?)")
+		values = append(values, s.Names)
 	}
 	wheres = append(wheres, "deleted_at IS NULL")
 	where := strings.Join(wheres, " and ")
