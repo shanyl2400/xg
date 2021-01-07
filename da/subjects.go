@@ -22,7 +22,7 @@ type Subject struct {
 	ID       int    `gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
 	Level    int    `gorm:"type:int;NOT NULL;column:level"`
 	ParentId int    `gorm:"type:int;NOT NULL;column:parent_id;index"`
-	Name     string `gorm:"type:varchar(128);NOT NULL;column:name"`
+	Name     string `gorm:"type:varchar(128);NOT NULL;column:name;unique"`
 
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`
 	CreatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:created_at"`
