@@ -222,7 +222,7 @@ func (s *OrderStatisticsService) Summary(ctx context.Context) (*entity.SummaryIn
 		log.Warning.Printf("Search pay records failed, condition: %#v, err: %v\n", payCondition, err)
 		return nil, err
 	}
-	performanceTotal := 0
+	performanceTotal := float64(0)
 	for i := range payRecords {
 		if payRecords[i].Mode == entity.OrderPayModePay {
 			performanceTotal = performanceTotal + payRecords[i].Amount
@@ -310,7 +310,7 @@ func (s *OrderStatisticsService) SearchRecordsMonth(ctx context.Context, conditi
 	for i := 1; i <= 12; i++ {
 		_, ok := monthRecord[i]
 		if ok {
-			value := 0
+			value := float64(0)
 			count := 0
 			for j := range monthRecord[i] {
 				value = value + monthRecord[i][j].Value
@@ -357,7 +357,7 @@ func (s *OrderStatisticsService) AddInvalidOrder(ctx context.Context, tx *gorm.D
 	return s.addOrder(ctx, tx, osr, entity.OrderStatisticKeyInvalidOrder, 1)
 }
 
-func (s *OrderStatisticsService) AddPerformance(ctx context.Context, tx *gorm.DB, osr entity.OrderStatisticRecordEntity, performance int) error {
+func (s *OrderStatisticsService) AddPerformance(ctx context.Context, tx *gorm.DB, osr entity.OrderStatisticRecordEntity, performance float64) error {
 	log.Info.Printf("AddPerformance, value: %#v, performance: %#v\n", osr, performance)
 	addCount := false
 	//大于0表示成交，计算成交量
@@ -414,7 +414,7 @@ func (s *OrderStatisticsService) fetchStatisticsRecords(ctx context.Context,
 	}
 	return records, nil
 }
-func (s *OrderStatisticsService) addValue(ctx context.Context, tx *gorm.DB, id entity.OrderStatisticRecordId, value int, addCount bool) error {
+func (s *OrderStatisticsService) addValue(ctx context.Context, tx *gorm.DB, id entity.OrderStatisticRecordId, value float64, addCount bool) error {
 	condition := s.idToCondition(id)
 
 	records, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, tx, condition)
@@ -469,7 +469,7 @@ func (s *OrderStatisticsService) addOrder(ctx context.Context, tx *gorm.DB, osr 
 		OrgId:       osr.OrgId,
 		PublisherId: osr.PublisherId,
 		OrderSource: osr.OrderSource,
-	}, count, true)
+	}, float64(count), true)
 }
 
 func (s *OrderStatisticsService) searchLast3MonthRecords(ctx context.Context, et entity.OrderStatisticRecordEntity) ([]*da.OrderStatisticsRecord, error) {
@@ -529,15 +529,15 @@ func (s *OrderStatisticsService) searchLast3MonthRecords(ctx context.Context, et
 func (s *OrderStatisticsService) handleRecord(ctx context.Context, item entity.OrderStatisticTableMonth, record *da.OrderStatisticsRecord) entity.OrderStatisticTableMonth {
 	switch record.Key {
 	case entity.OrderStatisticKeyStudent:
-		item.Students = item.Students + record.Value
+		item.Students = item.Students + int(record.Value)
 	case entity.OrderStatisticKeyOrder:
 		item.Performance = item.Performance + record.Value
 	case entity.OrderStatisticKeyNewOrder:
-		item.Orders = item.Orders + record.Value
+		item.Orders = item.Orders + int(record.Value)
 	case entity.OrderStatisticKeySignupOrder:
-		item.SignedOrder = item.SignedOrder + record.Value
+		item.SignedOrder = item.SignedOrder + int(record.Value)
 	case entity.OrderStatisticKeyInvalidOrder:
-		item.InvalidOrders = item.InvalidOrders + record.Value
+		item.InvalidOrders = item.InvalidOrders + int(record.Value)
 	}
 	return item
 }

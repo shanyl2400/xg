@@ -11,7 +11,7 @@ import (
 
 type IStatisticsModel interface {
 	CreateStatisticsRecord(ctx context.Context, tx *gorm.DB, c *StatisticsRecord) (int, error)
-	UpdateStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value, count int) error
+	UpdateStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value float64, count int) error
 
 	SearchStatisticsRecord(ctx context.Context, tx *gorm.DB, c SearchStatisticsRecordCondition) ([]*StatisticsRecord, error)
 }
@@ -20,7 +20,7 @@ type StatisticsRecord struct {
 	ID int `gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
 
 	Key   string `gorm:"type:varchar(128);NOT NULL;column:key;index"`
-	Value int    `gorm:"type:int;NOT NULL;column:value"`
+	Value float64    `gorm:"type:DECIMAL(9,5);NOT NULL;column:value"`
 	Count int    `gorm:"type:int;NOT NULL;column:count"`
 
 	Year  int `gorm:"type:int;NOT NULL;column:year;index"`
@@ -79,7 +79,7 @@ func (s *DBStatisticsModel) CreateStatisticsRecord(ctx context.Context, tx *gorm
 	}
 	return c.ID, nil
 }
-func (s *DBStatisticsModel) UpdateStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value, count int) error {
+func (s *DBStatisticsModel) UpdateStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value float64, count int) error {
 	record := new(StatisticsRecord)
 	now := time.Now()
 	record.UpdatedAt = &now

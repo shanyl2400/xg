@@ -48,12 +48,12 @@ type StatisticRecordCondition struct {
 type SummaryInfo struct {
 	OrgsTotal        int `json:"orgs_total"`
 	StudentsTotal    int `json:"students_total"`
-	PerformanceTotal int `json:"performance_total"`
+	PerformanceTotal float64 `json:"performance_total"`
 	SuccessRate      int `json:"success_rate"`
 }
 type StatisticRecord struct {
 	Key   string `json:"key"`
-	Value int    `json:"value"`
+	Value float64    `json:"value"`
 	Count int    `json:"count"`
 
 	Year  int `json:"year"`
@@ -62,7 +62,7 @@ type StatisticRecord struct {
 
 type TotalStatisticRecord struct {
 	Key   string `json:"key"`
-	Value int    `json:"value"`
+	Value float64    `json:"value"`
 	Count int    `json:"count"`
 }
 
@@ -123,7 +123,7 @@ type OrderStatisticTableMonth struct {
 	Orders        int `json:"orders"`
 	InvalidOrders int `json:"invalid_orders"`
 	SignedOrder   int `json:"signed_order"`
-	Performance   int `json:"performance"`
+	Performance   float64 `json:"performance"`
 }
 
 type OrderStatisticTableItem struct {

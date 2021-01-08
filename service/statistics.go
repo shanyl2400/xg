@@ -44,7 +44,7 @@ func (s *StatisticsService) Summary(ctx context.Context) (*entity.SummaryInfo, e
 		log.Warning.Printf("Search pay records failed, condition: %#v, err: %v\n", payCondition, err)
 		return nil, err
 	}
-	performanceTotal := 0
+	performanceTotal := float64(0)
 	for i := range payRecords {
 		if payRecords[i].Mode == entity.OrderPayModePay {
 			performanceTotal = performanceTotal + payRecords[i].Amount
@@ -126,13 +126,13 @@ func (s *StatisticsService) SearchYearRecords(ctx context.Context, key string) (
 
 func (s *StatisticsService) AddStudent(ctx context.Context, tx *gorm.DB, authorId, count int) error {
 	log.Info.Printf("AddStudent, count: %#v\n", count)
-	err := s.addValue(ctx, tx, StatisticKeyId(entity.StudentAuthorStatisticsKey, authorId), count, true)
+	err := s.addValue(ctx, tx, StatisticKeyId(entity.StudentAuthorStatisticsKey, authorId), float64(count), true)
 	if err != nil{
 		return err
 	}
-	return s.addValue(ctx, tx, entity.StudentStatisticsKey, count, true)
+	return s.addValue(ctx, tx, entity.StudentStatisticsKey, float64(count), true)
 }
-func (s *StatisticsService) AddPerformance(ctx context.Context, tx *gorm.DB, info entity.OrderPerformanceInfo, performance int) error {
+func (s *StatisticsService) AddPerformance(ctx context.Context, tx *gorm.DB, info entity.OrderPerformanceInfo, performance float64) error {
 	log.Info.Printf("AddPerformance, value: %#v\n", info)
 	addCount := false
 	//大于0表示成交，计算成交量
@@ -165,7 +165,7 @@ func (s *StatisticsService) AddPerformance(ctx context.Context, tx *gorm.DB, inf
 	return nil
 }
 
-func (s *StatisticsService) addValue(ctx context.Context, tx *gorm.DB, key string, value int, addCount bool) error {
+func (s *StatisticsService) addValue(ctx context.Context, tx *gorm.DB, key string, value float64, addCount bool) error {
 	now := time.Now()
 	condition := da.SearchStatisticsRecordCondition{
 		Key:    key,

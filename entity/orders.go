@@ -90,7 +90,7 @@ type PayRecordInfo struct {
 	OrderID int    `json:"order_id"`
 	Mode    int    `json:"mode"`
 	Title   string `json:"title"`
-	Amount  int    `json:"amount"`
+	Amount  float64    `json:"amount"`
 
 	StudentID     int      `json:"student_id"`
 	ToOrgID       int      `json:"to_org_id"`
@@ -146,7 +146,7 @@ type OrderPayRecord struct {
 	ID      int    `json:"id"`
 	OrderID int    `json:"order_id"`
 	Mode    int    `json:"mode"`
-	Amount  int    `json:"amount"`
+	Amount  float64    `json:"amount"`
 	Title   string `json:"title"`
 
 	Status int `json:"status"`
@@ -183,7 +183,7 @@ type OrderRemarkRecord struct {
 
 type OrderPayRequest struct {
 	OrderID int    `json:"order_id"`
-	Amount  int    `json:"amount"`
+	Amount  float64    `json:"amount"`
 	Title   string `json:"title"`
 }
 

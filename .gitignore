@@ -12,3 +12,6 @@ deploy/mysql/db
 deploy/mysql/log
 deploy/redis/data
 deploy/redis/log
+
+xg
+xg.exe

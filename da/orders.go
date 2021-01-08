@@ -62,7 +62,7 @@ type OrderPayRecord struct {
 	OrderID int    `gorm:"type:int;NOT NULL;column:order_id"`
 	Mode    int    `gorm:"type:int;NOT NULL;column:mode"`
 	Title   string `gorm:"type:varchar(128);NOT NULL;column:title"`
-	Amount  int    `gorm:"type:int;NOT NULL;column:amount"`
+	Amount  float64    `gorm:"type:DECIMAL(9,2);NOT NULL;column:amount"`
 
 	Status int `gorm:"type:int;NOT NULL;column:status"`
 

@@ -10,7 +10,7 @@ import (
 
 type IOrderStatisticsModel interface {
 	CreateOrderStatisticsRecord(ctx context.Context, tx *gorm.DB, c *OrderStatisticsRecord) (int, error)
-	UpdateOrderStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value, count int) error
+	UpdateOrderStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value float64, count int) error
 
 	SearchOrderStatisticsRecord(ctx context.Context, tx *gorm.DB, c SearchOrderStatisticsRecordCondition) ([]*OrderStatisticsRecord, error)
 }
@@ -29,7 +29,7 @@ type OrderStatisticsRecord struct {
 	OrgId int `gorm:"type:int;NOT NULL;column:org_id;index"`
 	OrderSource int `gorm:"type:int;NOT NULL;column:order_source;index"`
 
-	Value int    `gorm:"type:int;NOT NULL;column:value"`
+	Value float64    `gorm:"type:DECIMAL(9,5);NOT NULL;column:value"`
 	Count int    `gorm:"type:int;NOT NULL;column:count"`
 
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`
@@ -104,7 +104,7 @@ func (s *DBOrderStatisticsModel) CreateOrderStatisticsRecord(ctx context.Context
 	}
 	return c.ID, nil
 }
-func (s *DBOrderStatisticsModel) UpdateOrderStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value, count int) error {
+func (s *DBOrderStatisticsModel) UpdateOrderStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value float64, count int) error {
 	record := new(OrderStatisticsRecord)
 	now := time.Now()
 	record.UpdatedAt = &now
