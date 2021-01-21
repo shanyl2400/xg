@@ -6,6 +6,7 @@ import (
 	"strings"
 	"xg/conf"
 	"xg/log"
+	"xg/service"
 
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2/bson"
@@ -43,6 +44,7 @@ func FileName(fileName string) string {
 	ext := parts[len(parts)-1]
 	return id.Hex() + "." + ext
 }
+
 // @Summary uploadFile
 // @Description upload a file
 // @Accept json
@@ -61,6 +63,7 @@ func (s *Server) uploadFile(c *gin.Context) {
 		s.responseErr(c, http.StatusBadRequest, err)
 		return
 	}
+	user := s.getJWTUser(c)
 
 	f, err := c.FormFile("file")
 	if err != nil {
@@ -75,8 +78,18 @@ func (s *Server) uploadFile(c *gin.Context) {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
+	//上传头像，更新用户信息
+	if partition == "avatar" {
+		err = service.GetUserService().UpdateUserAvatar(c.Request.Context(), name, user)
+		if err != nil {
+			log.Error.Println(err)
+			s.responseErr(c, http.StatusInternalServerError, err)
+			return
+		}
+	}
+
 	c.JSON(http.StatusOK, FileNameResponse{
-		Name: name,
-		ErrMsg:  "success",
+		Name:   name,
+		ErrMsg: "success",
 	})
 }

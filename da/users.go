@@ -23,6 +23,7 @@ type User struct {
 	Password string `gorm:"type:varchar(128);NOT NULL;column:password"`
 	OrgId    int    `gorm:"type:int;NOT NULL;column:org_id"`
 	RoleId   int    `gorm:"type:int;NOT NULL;column:role_id"`
+	Avatar   string `gorm:"type:varchar(128);NOT NULL; DEFAULT ''; column: avatar"`
 
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`
 	CreatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:created_at"`

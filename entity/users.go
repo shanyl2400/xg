@@ -17,6 +17,7 @@ type UserDetailsInfo struct {
 	RoleName string  `json:"role_name"`
 	OrgName  string  `json:"org_name"`
 	Auths    []*Auth `json:"auths"`
+	Avatar   string  `json:"avatar"`
 }
 
 type UserInfo struct {

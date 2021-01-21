@@ -48,6 +48,7 @@ type IUserService interface {
 	ListUserAuthority(ctx context.Context, operator *entity.JWTUser) ([]*entity.Auth, error)
 	ListUsers(ctx context.Context, condition da.SearchUserCondition) (int, []*entity.UserInfo, error)
 	CreateUser(ctx context.Context, req *entity.CreateUserRequest) (int, error)
+	UpdateUserAvatar(ctx context.Context, avatar string, operator *entity.JWTUser) error
 }
 
 type UserService struct {
@@ -91,6 +92,7 @@ func (u *UserService) Login(ctx context.Context, name, password string) (*entity
 			RoleName: userInfo.RoleName,
 			OrgName:  userInfo.OrgName,
 			Auths:    userInfo.Auths,
+			Avatar:   userInfo.Avatar,
 		},
 		Token: token,
 	}, nil
@@ -215,6 +217,21 @@ func (u *UserService) CreateUser(ctx context.Context, req *entity.CreateUserRequ
 	return id, nil
 }
 
+func (u *UserService) UpdateUserAvatar(ctx context.Context, avatar string, operator *entity.JWTUser) error {
+	userInfo, err := da.GetUsersModel().GetUserById(ctx, operator.UserId)
+	if err != nil {
+		log.Warning.Printf("Get user failed, user: %#v, err: %v\n", operator, err)
+		return err
+	}
+	userInfo.Avatar = avatar
+	err = da.GetUsersModel().UpdateUser(ctx, *userInfo)
+	if err != nil {
+		log.Warning.Printf("Update user avatar failed, user: %#v, err: %v\n", userInfo, err)
+		return err
+	}
+	return err
+}
+
 func (u *UserService) fillUserInfo(ctx context.Context, user *da.User) (*entity.UserDetailsInfo, error) {
 	//获取角色和权限
 	roleInfo, err := da.GetRoleModel().GetRoleById(ctx, user.RoleId)
@@ -240,6 +257,7 @@ func (u *UserService) fillUserInfo(ctx context.Context, user *da.User) (*entity.
 		RoleName: roleInfo.Name,
 		OrgName:  orgInfo.Name,
 		Auths:    auth.Auth,
+		Avatar:   user.Avatar,
 	}, nil
 }
 

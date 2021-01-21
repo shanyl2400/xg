@@ -28,7 +28,7 @@ func Get() *gin.Engine {
 	route.Use(cors.New(cors.Config{
 		AllowOrigins:     allowOriginParts,
 		AllowMethods:     []string{"PUT", "GET", "POST", "DELETE"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization", "Cookie"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "X-Requested-With", "Accept", "Authorization", "Cookie"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		AllowOriginFunc: func(origin string) bool {
@@ -174,7 +174,7 @@ func Get() *gin.Engine {
 
 	uploader := api.Group("/upload")
 	{
-		uploader.POST("/:partition", s.uploadFile)
+		uploader.POST("/:partition", s.mustLogin, s.uploadFile)
 	}
 
 	//访问上传文件
