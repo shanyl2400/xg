@@ -1094,14 +1094,14 @@ func (o *OrderService) getOrderInfoRecords(ctx context.Context, orders []*da.Ord
 	for i := range remarkRecords {
 		remarks := remarkInfoMaps[remarkRecords[i].OrderID]
 		remarks = append(remarks, &entity.OrderRemarkRecord{
-			ID:        remarks[i].ID,
-			OrderID:   remarks[i].OrderID,
-			Author:    remarks[i].Author,
-			Mode:      remarks[i].Mode,
-			Content:   remarks[i].Content,
-			UpdatedAt: remarks[i].UpdatedAt,
-			CreatedAt: remarks[i].CreatedAt,
-			Status:    remarks[i].Status,
+			ID:        remarkRecords[i].ID,
+			OrderID:   remarkRecords[i].OrderID,
+			Author:    remarkRecords[i].Author,
+			Mode:      remarkRecords[i].Mode,
+			Content:   remarkRecords[i].Content,
+			UpdatedAt: remarkRecords[i].UpdatedAt,
+			CreatedAt: remarkRecords[i].CreatedAt,
+			Status:    remarkRecords[i].Status,
 		})
 		remarkInfoMaps[remarkRecords[i].OrderID] = remarks
 	}
