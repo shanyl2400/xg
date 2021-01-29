@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -615,6 +616,54 @@ func (o *OrderService) SearchOrderRemarks(ctx context.Context, condition *da.Sea
 	return res, nil
 }
 
+func (o *OrderService) ExportOrders(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) ([]byte, error) {
+	//查询订单
+	log.Info.Printf("Search order, condition: %#v\n", condition)
+	if len(condition.ToOrgIDList) > 0 {
+		allIds, err := o.getOrgSubOrgs(ctx, condition.ToOrgIDList)
+		if err != nil {
+			log.Warning.Printf("Search org failed, condition: %#v, err: %v\n", condition, err)
+			return nil, err
+		}
+		condition.ToOrgIDList = allIds
+	}
+
+	_, orders, err := da.GetOrderModel().SearchOrder(ctx, da.SearchOrderCondition{
+		OrderIDList:     condition.IDs,
+		StudentIDList:   condition.StudentIDList,
+		ToOrgIDList:     condition.ToOrgIDList,
+		IntentSubjects:  condition.IntentSubjects,
+		PublisherID:     condition.PublisherID,
+		OrderSourceList: condition.OrderSourceList,
+		CreateStartAt:   condition.CreateStartAt,
+		StudentKeywords: condition.StudentsKeywords,
+		Keywords:        condition.Keywords,
+		CreateEndAt:     condition.CreateEndAt,
+		Status:          condition.Status,
+		OrderBy:         condition.OrderBy,
+		Page:            condition.Page,
+		PageSize:        condition.PageSize,
+	})
+	if err != nil {
+		log.Warning.Printf("Search order failed, condition: %#v, err: %v\n", condition, err)
+		return nil, err
+	}
+	//添加具体信息
+	orderInfos, err := o.getOrderInfoRecords(ctx, orders)
+	if err != nil {
+		log.Warning.Printf("Get order detailed failed, condition: %#v, orders: %#v, err: %v\n", condition, orders, err)
+		return nil, err
+	}
+	file, err := OrdersToXlsx(ctx, orderInfos)
+	if err != nil {
+		log.Warning.Printf("Build xlsx file failed, condition: %#v, orderInfos: %#v, err: %v\n", condition, orderInfos, err)
+		return nil, err
+	}
+	buf := &bytes.Buffer{}
+	file.Write(buf)
+	return buf.Bytes(), nil
+}
+
 func (o *OrderService) SearchOrders(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) (*entity.OrderInfoList, error) {
 	//查询订单
 	log.Info.Printf("Search order, condition: %#v\n", condition)
@@ -967,6 +1016,149 @@ func (o *OrderService) getOrderInfoDetails(ctx context.Context, orders []*da.Ord
 			OrgName:          orgMaps[orders[i].ToOrgID].Name,
 			PublisherName:    userMaps[orders[i].PublisherID].Name,
 			OrderSourceName:  orderSourceName,
+		}
+	}
+	return orderInfos, nil
+}
+
+func (o *OrderService) getOrderInfoRecords(ctx context.Context, orders []*da.Order) ([]*entity.OrderInfoWithRecords, error) {
+	studentIds := make([]int, len(orders))
+	userIds := make([]int, len(orders))
+	orderIds := make([]int, len(orders))
+	for i := range orders {
+		studentIds[i] = orders[i].StudentID
+		userIds[i] = orders[i].PublisherID
+		orderIds[i] = orders[i].ID
+	}
+
+	_, students, err := da.GetStudentModel().SearchStudents(ctx, da.SearchStudentCondition{
+		StudentIDList: studentIds,
+	})
+	if err != nil {
+		log.Warning.Printf("Search students failed, students: %#v, orders: %#v, err: %v\n", studentIds, orders, err)
+		return nil, err
+	}
+	orgs, err := da.GetOrgModel().ListOrgs(ctx)
+	if err != nil {
+		log.Warning.Printf("Search students failed, orders: %#v, err: %v\n", orders, err)
+		return nil, err
+	}
+
+	_, users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
+		IDList: userIds,
+	})
+	if err != nil {
+		log.Warning.Printf("Search students failed, userIds: %#v, orders: %#v, err: %v\n", userIds, orders, err)
+		return nil, err
+	}
+
+	orderSources, err := da.GetOrderSourceModel().ListOrderSources(ctx)
+	if err != nil {
+		log.Warning.Printf("Search order source failed, userIds: %#v, orders: %#v, err: %v\n", userIds, orders, err)
+		return nil, err
+	}
+
+	//collect payment data
+	paymentInfoMaps := make(map[int][]*entity.OrderPayRecord)
+	_, payRecords, err := da.GetOrderModel().SearchPayRecord(ctx, da.SearchPayRecordCondition{
+		OrderIDList: orderIds,
+	})
+	if err != nil {
+		log.Warning.Printf("Search pay records failed, userIds: %#v, orders: %#v, err: %v\n", userIds, orders, err)
+		return nil, err
+	}
+	for i := range payRecords {
+		payments := paymentInfoMaps[payRecords[i].OrderID]
+		payments = append(payments, &entity.OrderPayRecord{
+			ID:        payRecords[i].ID,
+			OrderID:   payRecords[i].OrderID,
+			Mode:      payRecords[i].Mode,
+			Amount:    payRecords[i].Amount,
+			Status:    payRecords[i].Status,
+			UpdatedAt: payRecords[i].UpdatedAt,
+			CreatedAt: payRecords[i].CreatedAt,
+			Title:     payRecords[i].Title,
+		})
+		paymentInfoMaps[payRecords[i].OrderID] = payments
+	}
+
+	//collect remark data
+	remarkInfoMaps := make(map[int][]*entity.OrderRemarkRecord)
+	_, remarkRecords, err := da.GetOrderModel().SearchRemarkRecord(ctx, da.SearchRemarkRecordCondition{
+		OrderIDList: orderIds,
+	})
+	if err != nil {
+		log.Warning.Printf("Search remark records failed, userIds: %#v, orders: %#v, err: %v\n", userIds, orders, err)
+		return nil, err
+	}
+	for i := range remarkRecords {
+		remarks := remarkInfoMaps[remarkRecords[i].OrderID]
+		remarks = append(remarks, &entity.OrderRemarkRecord{
+			ID:        remarks[i].ID,
+			OrderID:   remarks[i].OrderID,
+			Author:    remarks[i].Author,
+			Mode:      remarks[i].Mode,
+			Content:   remarks[i].Content,
+			UpdatedAt: remarks[i].UpdatedAt,
+			CreatedAt: remarks[i].CreatedAt,
+			Status:    remarks[i].Status,
+		})
+		remarkInfoMaps[remarkRecords[i].OrderID] = remarks
+	}
+
+	studentMaps := make(map[int]*da.Student)
+	orgMaps := make(map[int]*da.Org)
+	userMaps := make(map[int]*da.User)
+	orderSourceMaps := make(map[int]*da.OrderSource)
+
+	for i := range students {
+		studentMaps[students[i].ID] = students[i]
+	}
+	for i := range orgs {
+		orgMaps[orgs[i].ID] = orgs[i]
+	}
+	for i := range users {
+		userMaps[users[i].ID] = users[i]
+	}
+	for i := range orderSources {
+		orderSourceMaps[orderSources[i].ID] = orderSources[i]
+	}
+
+	orderInfos := make([]*entity.OrderInfoWithRecords, len(orders))
+	for i := range orders {
+		orderSourceName := ""
+		if orderSourceMaps[orders[i].OrderSource] != nil {
+			orderSourceName = orderSourceMaps[orders[i].OrderSource].Name
+		}
+		orderInfos[i] = &entity.OrderInfoWithRecords{
+			OrderInfo: entity.OrderInfo{
+				ID:            orders[i].ID,
+				StudentID:     orders[i].StudentID,
+				ToOrgID:       orders[i].ToOrgID,
+				IntentSubject: strings.Split(orders[i].IntentSubjects, ","),
+				PublisherID:   orders[i].PublisherID,
+				Status:        orders[i].Status,
+				OrderSource:   orders[i].OrderSource,
+				CreatedAt:     orders[i].CreatedAt,
+				UpdatedAt:     orders[i].UpdatedAt,
+			},
+			StudentSummary: &entity.StudentSummaryInfo{
+				ID:         studentMaps[orders[i].StudentID].ID,
+				Name:       studentMaps[orders[i].StudentID].Name,
+				Gender:     studentMaps[orders[i].StudentID].Gender,
+				Telephone:  studentMaps[orders[i].StudentID].Telephone,
+				Address:    studentMaps[orders[i].StudentID].Address,
+				AddressExt: studentMaps[orders[i].StudentID].AddressExt,
+				Note:       studentMaps[orders[i].StudentID].Note,
+				AuthorId:   studentMaps[orders[i].StudentID].AuthorID,
+				CreatedAt:  studentMaps[orders[i].StudentID].CreatedAt,
+				UpdatedAt:  studentMaps[orders[i].StudentID].UpdatedAt,
+			},
+			RemarkInfo:      remarkInfoMaps[orders[i].ID],
+			PaymentInfo:     paymentInfoMaps[orders[i].ID],
+			OrgName:         orgMaps[orders[i].ToOrgID].Name,
+			PublisherName:   userMaps[orders[i].PublisherID].Name,
+			OrderSourceName: orderSourceName,
 		}
 	}
 	return orderInfos, nil

@@ -1,6 +1,7 @@
 package route
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -74,6 +75,41 @@ func (s *Server) searchOrder(c *gin.Context) {
 		Data:   orders,
 		ErrMsg: "success",
 	})
+}
+
+// @Summary exportOrder
+// @Description export order with condition
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param student_ids query string false "search order with student_ids"
+// @Param to_org_ids query string false "search order with to_org_ids"
+// @Param students_keywords query string false "search order by students info"
+// @Param intent_subjects query string false "search order with intent_subjects"
+// @Param publisher_id query int  false "search order with publisher_id"
+// @Param status query string  false "search order with status"
+// @Param order_by query string false "search order order by column name"
+// @Param page_size query int true "order list page size"
+// @Param page query int false "order list page index"
+// @Tags order
+// @Success 200 {string} ""
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/orders [get]
+func (s *Server) exportOrder(c *gin.Context) {
+	req := buildOrderCondition(c)
+	user := s.getJWTUser(c)
+
+	data, err := service.GetOrderService().ExportOrders(c.Request.Context(), req, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	c.Writer.WriteHeader(http.StatusOK)
+	c.Header("Content-Disposition", "attachment; filename=order.xlsx")
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Header("Accept-Length", fmt.Sprintf("%d", len(data)))
+	c.Writer.Write(data)
 }
 
 // @Summary searchOrderWithAuthor

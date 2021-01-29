@@ -125,6 +125,7 @@ func Get() *gin.Engine {
 		orders.GET("/remarks", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchSelfOrder, entity.AuthDispatchOrder, entity.AuthListAllOrder, entity.AuthListOrgOrder}), s.searchOrderRemarks)
 		orders.PUT("/marks", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchSelfOrder, entity.AuthDispatchOrder, entity.AuthListAllOrder, entity.AuthListOrgOrder}), s.markOrderRemarks)
 		orders.GET("/", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.searchOrder)
+		orders.GET("/export", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.exportOrder)
 		orders.GET("/author", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchOrder, entity.AuthDispatchSelfOrder}), s.searchOrderWithAuthor)
 		orders.GET("/org", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.searchOrderWithOrgID)
 	}
