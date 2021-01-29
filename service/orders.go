@@ -1156,7 +1156,7 @@ func (o *OrderService) getOrderInfoRecords(ctx context.Context, orders []*da.Ord
 			},
 			RemarkInfo:      remarkInfoMaps[orders[i].ID],
 			PaymentInfo:     paymentInfoMaps[orders[i].ID],
-			AuthorName:      userMaps[orders[i].AuthorID].Name,
+			AuthorName:      userMaps[studentMaps[orders[i].StudentID].AuthorID].Name,
 			OrgName:         orgMaps[orders[i].ToOrgID].Name,
 			PublisherName:   userMaps[orders[i].PublisherID].Name,
 			OrderSourceName: orderSourceName,
