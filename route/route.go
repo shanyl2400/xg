@@ -52,7 +52,7 @@ func Get() *gin.Engine {
 	}
 	users := api.Group("/users")
 	{
-		users.GET("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageUser}), s.listUsers)
+		users.GET("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageUser, entity.AuthListAllOrder}), s.listUsers)
 	}
 
 	role := api.Group("/role")
