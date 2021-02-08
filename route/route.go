@@ -173,6 +173,11 @@ func Get() *gin.Engine {
 		statistics.GET("/graph/order_source/:id", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.orderSourceGraph)
 	}
 
+	socks := api.Group("/socks")
+	{
+		socks.GET("/register", s.mustLogin, s.registerSocks)
+	}
+
 	uploader := api.Group("/upload")
 	{
 		uploader.POST("/:partition", s.mustLogin, s.uploadFile)

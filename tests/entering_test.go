@@ -4,13 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"strconv"
 	"testing"
 	"time"
 	"xg/conf"
 	"xg/da"
+	"xg/db"
 	"xg/entity"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func Test_001(t *testing.T) {
@@ -63,7 +65,7 @@ func Test_001(t *testing.T) {
 	t.Log("Done")
 }
 
-func tryCreateEnterUser(t *testing.T){
+func tryCreateEnterUser(t *testing.T) {
 	client := new(APIClient)
 	ctx := context.Background()
 	//1.使用错误密码1登录录入员
@@ -80,7 +82,7 @@ func tryCreateEnterUser(t *testing.T){
 	}, superToken)
 }
 
-func tryCreateCheckUser(t *testing.T){
+func tryCreateCheckUser(t *testing.T) {
 	client := new(APIClient)
 	ctx := context.Background()
 	//1.使用错误密码1登录录入员
@@ -100,8 +102,7 @@ func tryCreateCheckUser(t *testing.T){
 	}
 }
 
-
-func tryCreateDispatchUser(t *testing.T){
+func tryCreateDispatchUser(t *testing.T) {
 	client := new(APIClient)
 	ctx := context.Background()
 	//1.使用错误密码1登录录入员
@@ -118,8 +119,7 @@ func tryCreateDispatchUser(t *testing.T){
 	}, superToken)
 }
 
-
-func tryCreateUserManagerUser(t *testing.T){
+func tryCreateUserManagerUser(t *testing.T) {
 	client := new(APIClient)
 	ctx := context.Background()
 	//1.使用错误密码1登录录入员
@@ -136,8 +136,7 @@ func tryCreateUserManagerUser(t *testing.T){
 	}, superToken)
 }
 
-
-func tryCreateOrgManagerUser(t *testing.T){
+func tryCreateOrgManagerUser(t *testing.T) {
 	client := new(APIClient)
 	ctx := context.Background()
 	//1.使用错误密码1登录录入员
@@ -154,7 +153,7 @@ func tryCreateOrgManagerUser(t *testing.T){
 	}, superToken)
 }
 
-func tryCreateEnterUser2(t *testing.T){
+func tryCreateEnterUser2(t *testing.T) {
 	client := new(APIClient)
 	ctx := context.Background()
 	//1.使用错误密码1登录录入员
@@ -177,8 +176,7 @@ func tryCreateEnterUser2(t *testing.T){
 	}, superToken)
 }
 
-
-func tryCreateUserAndOrg(t *testing.T){
+func tryCreateUserAndOrg(t *testing.T) {
 	client := new(APIClient)
 	ctx := context.Background()
 	//1.使用错误密码1登录录入员
@@ -249,7 +247,6 @@ func Test_002(t *testing.T) {
 	assert.Equal(t, students[0].Name, stu1.Name)
 	assert.Equal(t, students[0].Telephone, stu1.Telephone)
 
-
 	//检查学生2
 	studentRes2, err := client.GetStudentById(ctx, res2.Result.ID, token)
 	if !assert.NoError(t, err) {
@@ -275,7 +272,7 @@ func Test_002(t *testing.T) {
 	//4.根据姓名查询学生
 	t.Log("checking search students by name")
 	result0, err := client.SearchPrivateStudents(ctx, &entity.SearchStudentRequest{
-		Name:       students[0].Name,
+		Name: students[0].Name,
 	}, token)
 	if !assert.NoError(t, err) {
 		return
@@ -288,7 +285,7 @@ func Test_002(t *testing.T) {
 	//5.根据地址和兴趣查询学生
 	t.Log("checking search students by address & subjects")
 	result1, err := client.SearchPrivateStudents(ctx, &entity.SearchStudentRequest{
-		Address:       addresses[0],
+		Address: addresses[0],
 	}, token)
 	if !assert.NoError(t, err) {
 		return
@@ -299,7 +296,7 @@ func Test_002(t *testing.T) {
 	}
 
 	result2, err := client.SearchPrivateStudents(ctx, &entity.SearchStudentRequest{
-		IntentSubject:       subjects[0],
+		IntentSubject: subjects[0],
 	}, token)
 	if !assert.NoError(t, err) {
 		return
@@ -325,25 +322,25 @@ func Test_003(t *testing.T) {
 
 	//2.录入3个学生
 	sids := make([]int, 3)
-	for i := 0; i < 3; i ++ {
+	for i := 0; i < 3; i++ {
 		res, err := client.CreateStudent(ctx, students[i], token)
 		if !assert.NoError(t, err) {
 			return
 		}
 		t.Logf("Student: %#v", students[i])
-		sids[i]= res.Result.ID
+		sids[i] = res.Result.ID
 	}
 
 	//3.为3个学生派单（每个学生分配4个机构）
 	subOrgRes, err := client.SearchSubOrgs(ctx, da.SearchOrgsCondition{
-		IsSubOrg:  true,
+		IsSubOrg: true,
 	}, token)
 	if !assert.NoError(t, err) {
 		return
 	}
 	assert.GreaterOrEqual(t, subOrgRes.Data.Total, 1)
 	assert.GreaterOrEqual(t, len(subOrgRes.Data.Orgs), 1)
-	for i := range sids{
+	for i := range sids {
 		_, err := client.CreateOrder(ctx, &entity.CreateOrderRequest{
 			StudentID:      sids[i],
 			ToOrgID:        subOrgRes.Data.Orgs[i].ID,
@@ -373,7 +370,7 @@ func Test_003(t *testing.T) {
 	}
 	superToken := res0.Data.Token
 
-	if !assert.NotEqual(t, 0, subOrgRes.Data.Orgs[0].ParentID){
+	if !assert.NotEqual(t, 0, subOrgRes.Data.Orgs[0].ParentID) {
 		return
 	}
 	client.CreateUser(ctx, &entity.CreateUserRequest{
@@ -383,7 +380,7 @@ func Test_003(t *testing.T) {
 	}, superToken)
 
 	//登录机构账号
-	logRes, err := client.Login(ctx,  "org0", "123456")
+	logRes, err := client.Login(ctx, "org0", "123456")
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -395,8 +392,8 @@ func Test_003(t *testing.T) {
 		return
 	}
 	flag := false
-	for _, order := range ordersRes.Data.Orders{
-		if sids[0] == order.StudentID{
+	for _, order := range ordersRes.Data.Orders {
+		if sids[0] == order.StudentID {
 			flag = true
 			t.Logf("Find student, orderId: %v, studentId: %v", order.ID, order.StudentID)
 			break
@@ -451,7 +448,6 @@ func Test_004(t *testing.T) {
 	}
 	assert.Equal(t, cres.Result.Status, entity.StudentCreated)
 
-
 	cres, err = client.CreateStudent(ctx, students[1], token1)
 	if !assert.NoError(t, err) {
 		return
@@ -461,7 +457,7 @@ func Test_004(t *testing.T) {
 	//5.修改学生1添加时间为30天前
 	conf.Set(&conf.Config{DBConnectionString: "root:Badanamu123456@tcp(localhost:3306)/xg?parseTime=true&charset=utf8mb4"})
 	createdAt := time.Now().Add(-time.Hour * 24 * 64)
-	err = da.GetStudentModel().UpdateStudent(ctx, cres1.Result.ID, da.Student{CreatedAt: &createdAt})
+	err = da.GetStudentModel().UpdateStudent(ctx, db.Get(), cres1.Result.ID, da.Student{CreatedAt: &createdAt})
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -487,7 +483,7 @@ func Test_SearchOrders(t *testing.T) {
 		return
 	}
 	token := res.Data.Token
-	ordersResp, err := client.SearchOrderWithAuthor(ctx, &entity.SearchOrderCondition{PageSize:10}, token)
+	ordersResp, err := client.SearchOrderWithAuthor(ctx, &entity.SearchOrderCondition{PageSize: 10}, token)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -530,14 +526,14 @@ func Test_SearchSubOrgs(t *testing.T) {
 	//检查包含Address和Subjects的情况
 	t.Logf("Checking search with address & subjects")
 	orgsRes, err := client.SearchSubOrgs(ctx, da.SearchOrgsCondition{
-		Subjects:  []string{subjects[0], subjects[1]},
-		Address:   addresses[8],
+		Subjects: []string{subjects[0], subjects[1]},
+		Address:  addresses[8],
 	}, token)
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	err = containsOrgs([]int{orgInfoRes.Org.SubOrgs[0].ID},orgsRes.Data.Orgs)
+	err = containsOrgs([]int{orgInfoRes.Org.SubOrgs[0].ID}, orgsRes.Data.Orgs)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -545,13 +541,13 @@ func Test_SearchSubOrgs(t *testing.T) {
 	//检查只包含Address的情况
 	t.Logf("Checking search with address")
 	orgsRes, err = client.SearchSubOrgs(ctx, da.SearchOrgsCondition{
-		Address:   addresses[8],
+		Address: addresses[8],
 	}, token)
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	err = containsOrgs([]int{orgInfoRes.Org.SubOrgs[0].ID},orgsRes.Data.Orgs)
+	err = containsOrgs([]int{orgInfoRes.Org.SubOrgs[0].ID}, orgsRes.Data.Orgs)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -559,13 +555,13 @@ func Test_SearchSubOrgs(t *testing.T) {
 	//检查只包含部分subjects的情况
 	t.Logf("Checking search with parts of subjects")
 	orgsRes, err = client.SearchSubOrgs(ctx, da.SearchOrgsCondition{
-		Subjects:  []string{subjects[1]},
+		Subjects: []string{subjects[1]},
 	}, token)
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	err = containsOrgs([]int{orgInfoRes.Org.SubOrgs[0].ID},orgsRes.Data.Orgs)
+	err = containsOrgs([]int{orgInfoRes.Org.SubOrgs[0].ID}, orgsRes.Data.Orgs)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -573,14 +569,14 @@ func Test_SearchSubOrgs(t *testing.T) {
 	//检查包含错误address的情况
 	t.Logf("Checking search with wrong address")
 	orgsRes, err = client.SearchSubOrgs(ctx, da.SearchOrgsCondition{
-		Subjects:  []string{subjects[1]},
-		Address: addresses[0],
+		Subjects: []string{subjects[1]},
+		Address:  addresses[0],
 	}, token)
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	err = containsOrgs([]int{orgInfoRes.Org.SubOrgs[0].ID},orgsRes.Data.Orgs)
+	err = containsOrgs([]int{orgInfoRes.Org.SubOrgs[0].ID}, orgsRes.Data.Orgs)
 	if !assert.Error(t, err) {
 		return
 	}
@@ -588,26 +584,25 @@ func Test_SearchSubOrgs(t *testing.T) {
 	//检查包含部分subjects的情况
 	t.Logf("Checking search with parts subjects")
 	orgsRes, err = client.SearchSubOrgs(ctx, da.SearchOrgsCondition{
-		Subjects:  []string{subjects[1], subjects[6]},
+		Subjects: []string{subjects[1], subjects[6]},
 	}, token)
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	err = containsOrgs([]int{orgInfoRes.Org.SubOrgs[0].ID},orgsRes.Data.Orgs)
+	err = containsOrgs([]int{orgInfoRes.Org.SubOrgs[0].ID}, orgsRes.Data.Orgs)
 	if !assert.NoError(t, err) {
 		return
 	}
 
 	//检查全查询
 	t.Logf("Checking search with all")
-	orgsRes, err = client.SearchSubOrgs(ctx, da.SearchOrgsCondition{
-	}, token)
+	orgsRes, err = client.SearchSubOrgs(ctx, da.SearchOrgsCondition{}, token)
 	if !assert.NoError(t, err) {
 		return
 	}
 
-	err = containsOrgs([]int{orgInfoRes.Org.SubOrgs[0].ID},orgsRes.Data.Orgs)
+	err = containsOrgs([]int{orgInfoRes.Org.SubOrgs[0].ID}, orgsRes.Data.Orgs)
 	if !assert.NoError(t, err) {
 		return
 	}
@@ -633,7 +628,7 @@ func containsStudents(ids []int, students []*entity.StudentInfo) error {
 	return nil
 }
 
-func getSuperToken(t *testing.T) string{
+func getSuperToken(t *testing.T) string {
 	client := new(APIClient)
 	ctx := context.Background()
 	res, err := client.Login(ctx, "Admin", "123456")
@@ -662,7 +657,6 @@ func containsOrgs(ids []int, orgs []*entity.SubOrgWithDistance) error {
 	}
 	return nil
 }
-
 
 func containsOrgs2(ids []int, orgs []*entity.Org) error {
 	flags := make([]bool, len(ids))
