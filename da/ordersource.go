@@ -7,15 +7,16 @@ import (
 	"xg/db"
 )
 
-type IOrderSourceModel interface{
-	CreateOrderSources(ctx context.Context, name string)(int, error)
+type IOrderSourceModel interface {
+	CreateOrderSources(ctx context.Context, name string) (int, error)
+	CreateOrderSourcesWithID(ctx context.Context, id int, name string) error
 	ListOrderSources(ctx context.Context) ([]*OrderSource, error)
 	GetOrderSourceById(ctx context.Context, orderSourceId int) (*OrderSource, error)
 }
 
 type OrderSource struct {
-	ID int	`gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
-	Name string	 `gorm:"type:varchar(255);NOT NULL;column:org_id"`
+	ID   int    `gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
+	Name string `gorm:"type:varchar(255);NOT NULL;column:org_id"`
 
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`
 	CreatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:created_at"`
@@ -25,26 +26,37 @@ type OrderSource struct {
 type DBOrderSourceModel struct {
 }
 
-func (d *DBOrderSourceModel) CreateOrderSources(ctx context.Context, name string) (int, error){
+func (d *DBOrderSourceModel) CreateOrderSourcesWithID(ctx context.Context, id int, name string) error {
+	os := OrderSource{
+		ID:   id,
+		Name: name,
+	}
+	err := db.Get().Create(&os).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (d *DBOrderSourceModel) CreateOrderSources(ctx context.Context, name string) (int, error) {
 	os := OrderSource{
 		Name: name,
 	}
 	err := db.Get().Create(&os).Error
-	if err != nil{
+	if err != nil {
 		return -1, err
 	}
 	return os.ID, nil
 }
-func (d *DBOrderSourceModel) ListOrderSources(ctx context.Context) ([]*OrderSource, error){
+func (d *DBOrderSourceModel) ListOrderSources(ctx context.Context) ([]*OrderSource, error) {
 	result := make([]*OrderSource, 0)
 	err := db.Get().Find(&result).Error
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	return result, nil
 }
 
-func (d *DBOrderSourceModel) GetOrderSourceById(ctx context.Context, orderSourceId int) (*OrderSource, error){
+func (d *DBOrderSourceModel) GetOrderSourceById(ctx context.Context, orderSourceId int) (*OrderSource, error) {
 	orderSource := new(OrderSource)
 	err := db.Get().Where(&OrderSource{ID: orderSourceId}).First(&orderSource).Error
 	if err != nil {
@@ -53,12 +65,12 @@ func (d *DBOrderSourceModel) GetOrderSourceById(ctx context.Context, orderSource
 	return orderSource, nil
 }
 
-var(
-	_orderSourceModel IOrderSourceModel
+var (
+	_orderSourceModel     IOrderSourceModel
 	_orderSourceModelOnce sync.Once
 )
 
-func GetOrderSourceModel() IOrderSourceModel{
+func GetOrderSourceModel() IOrderSourceModel {
 	_orderSourceModelOnce.Do(func() {
 		_orderSourceModel = new(DBOrderSourceModel)
 	})

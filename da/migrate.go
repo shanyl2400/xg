@@ -71,6 +71,10 @@ func InitData(flag bool) {
 	if err != nil {
 		panic(err)
 	}
+	err = GetOrderSourceModel().CreateOrderSourcesWithID(context.Background(), entity.OtherOrderSource, "其他")
+	if err != nil {
+		panic(err)
+	}
 
 	initSubject()
 }
