@@ -22,6 +22,7 @@ type SubjectTreeNode struct {
 	Level    int                `json:"level"`
 	Name     string             `json:"name"`
 	Title    string             `json:"title"`
+	Label    string             `json:"label"`
 	Value    string             `json:"value"`
 	Key      int                `json:"key"`
 	Children []*SubjectTreeNode `json:"children"`

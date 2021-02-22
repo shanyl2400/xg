@@ -76,6 +76,7 @@ func (s *SubjectService) ListSubjectsTree(ctx context.Context) ([]*entity.Subjec
 			ID:    subjects[i].ID,
 			Level: subjects[i].Level,
 			Name:  subjects[i].Name,
+			Label: subjects[i].Name,
 			Title: subjects[i].Name,
 			Value: subjects[i].Name,
 			Key:   subjects[i].ID,
