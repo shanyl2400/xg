@@ -307,6 +307,11 @@ type StudentListResponse struct {
 	ErrMsg string                  `json:"err_msg"`
 }
 
+type StudentConflictListResponse struct {
+	Result *entity.StudentConflictsInfoList `json:"result"`
+	ErrMsg string                           `json:"err_msg"`
+}
+
 func (r StudentListResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil

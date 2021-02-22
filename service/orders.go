@@ -25,6 +25,8 @@ type IOrderService interface {
 	DepositOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error
 	RevokeOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error
 	InvalidOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error
+	ConsiderOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error
+
 	PayOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error
 	PaybackOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error
 	ConfirmOrderPay(ctx context.Context, orderPayId int, status int, operator *entity.JWTUser) error
@@ -308,6 +310,70 @@ func (o *OrderService) RevokeOrder(ctx context.Context, orderId int, operator *e
 
 		//添加通知
 		content := fmt.Sprintf("订单已退学")
+		err = GetOrderNotifyService().NotifyOrderDeposit(ctx, tx, orderId, content, operator)
+		if err != nil {
+			log.Warning.Printf("Add Notify, content: %#v, err: %v\n", content, err)
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (o *OrderService) ConsiderOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error {
+	if orderId < 1 {
+		log.Warning.Printf("Consider orderId, orderId: %#v\n", orderId)
+		return ErrInvalidOrderId
+	}
+	orderObj, err := da.GetOrderModel().GetOrderById(ctx, orderId)
+	if err != nil {
+		log.Warning.Printf("Consider order failed, orderId: %#v, err: %v\n", orderId, err)
+		return err
+	}
+
+	log.Info.Printf("Consider order, order: %#v\n", orderObj)
+	//检查是否为本机构的订单
+	err = o.checkOrderOrg(ctx, operator.OrgId, orderObj.Order.ToOrgID)
+	if err != nil {
+		log.Warning.Printf("Check order org failed, order: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
+		return err
+	}
+	if orderObj.Order.Status != entity.OrderStatusCreated {
+		log.Warning.Printf("Check order status failed, order: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
+		return nil
+	}
+
+	err = db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
+		//更新订单状态
+		err = da.GetOrderModel().UpdateOrderStatusTx(ctx, db.Get(), orderId, entity.OrderStatusConsider)
+		if err != nil {
+			log.Warning.Printf("Update order status failed, order: %#v, orderId: %#v, err: %v\n", orderObj, orderId, err)
+			return err
+		}
+
+		student, err := GetStudentService().GetStudentById(ctx, orderObj.Order.StudentID, operator)
+		if err != nil {
+			log.Warning.Printf("Get student failed, StudentID: %#v, err: %v\n", orderObj.Order.StudentID, err)
+			return err
+		}
+		record := entity.OrderStatisticRecordEntity{
+			Author:      student.AuthorID,
+			OrgId:       orderObj.Order.ToOrgID,
+			PublisherId: orderObj.Order.PublisherID,
+			OrderSource: student.OrderSourceID,
+		}
+		err = GetOrderStatisticsService().AddConsiderOrder(ctx, tx, record)
+		if err != nil {
+			log.Warning.Printf("Add statistics record failed, record: %#v, err: %v\n", record, err)
+			return err
+		}
+
+		//添加通知
+		content := fmt.Sprintf("订单考虑中")
 		err = GetOrderNotifyService().NotifyOrderDeposit(ctx, tx, orderId, content, operator)
 		if err != nil {
 			log.Warning.Printf("Add Notify, content: %#v, err: %v\n", content, err)

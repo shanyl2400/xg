@@ -30,6 +30,8 @@ func NewPartition(p string) (Partition, error) {
 	switch p {
 	case "avatar":
 		return "avatar", nil
+	case "org_attach":
+		return "org_attach", nil
 	default:
 		return "", ErrInvalidPartition
 	}

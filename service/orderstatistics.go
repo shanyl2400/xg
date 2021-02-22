@@ -2,13 +2,14 @@ package service
 
 import (
 	"context"
-	"github.com/jinzhu/gorm"
 	"sync"
 	"time"
 	"xg/da"
 	"xg/db"
 	"xg/entity"
 	"xg/log"
+
+	"github.com/jinzhu/gorm"
 )
 
 const (
@@ -21,7 +22,7 @@ type OrderStatisticsService struct {
 func (s *OrderStatisticsService) StatisticsGroupByOrgs(ctx context.Context,
 	et entity.StatisticRecordCondition) ([]*entity.OrderStatisticGroupTableItem, error) {
 	records, err := s.fetchStatisticsRecords(ctx, &et)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -47,7 +48,7 @@ func (s *OrderStatisticsService) StatisticsGroupByOrgs(ctx context.Context,
 	_, orgInfo, err := GetOrgService().ListOrgs(ctx, da.SearchOrgsCondition{
 		IsSubOrg: false,
 	})
-	if err != nil{
+	if err != nil {
 		log.Error.Printf("ListOrderService failed, err: %v\n", err)
 		return nil, err
 	}
@@ -57,7 +58,7 @@ func (s *OrderStatisticsService) StatisticsGroupByOrgs(ctx context.Context,
 	}
 
 	ret := make([]*entity.OrderStatisticGroupTableItem, 0)
-	for orgID, orgName := range orgMap{
+	for orgID, orgName := range orgMap {
 		item, ok := orgsRecordsMap[orgID]
 		if !ok {
 			item = entity.OrderStatisticTableMonth{
@@ -83,11 +84,10 @@ func (s *OrderStatisticsService) StatisticsGroupByOrgs(ctx context.Context,
 	return ret, nil
 }
 
-
 func (s *OrderStatisticsService) StatisticsGroupByOrderSources(ctx context.Context,
 	et entity.StatisticRecordCondition) ([]*entity.OrderStatisticGroupTableItem, error) {
 	records, err := s.fetchStatisticsRecords(ctx, &et)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -111,7 +111,7 @@ func (s *OrderStatisticsService) StatisticsGroupByOrderSources(ctx context.Conte
 	}
 
 	orderSources, err := GetOrderSourceService().ListOrderService(ctx)
-	if err != nil{
+	if err != nil {
 		log.Error.Printf("ListOrderService failed, err: %v\n", err)
 		return nil, err
 	}
@@ -357,6 +357,10 @@ func (s *OrderStatisticsService) AddInvalidOrder(ctx context.Context, tx *gorm.D
 	return s.addOrder(ctx, tx, osr, entity.OrderStatisticKeyInvalidOrder, 1)
 }
 
+func (s *OrderStatisticsService) AddConsiderOrder(ctx context.Context, tx *gorm.DB, osr entity.OrderStatisticRecordEntity) error {
+	return s.addOrder(ctx, tx, osr, entity.OrderStatisticKeyConsiderOrder, 1)
+}
+
 func (s *OrderStatisticsService) AddPerformance(ctx context.Context, tx *gorm.DB, osr entity.OrderStatisticRecordEntity, performance float64) error {
 	log.Info.Printf("AddPerformance, value: %#v, performance: %#v\n", osr, performance)
 	addCount := false
@@ -378,9 +382,8 @@ func (s *OrderStatisticsService) AddPerformance(ctx context.Context, tx *gorm.DB
 	return nil
 }
 
-
 func (s *OrderStatisticsService) fetchStatisticsRecords(ctx context.Context,
-	et *entity.StatisticRecordCondition) ([]*da.OrderStatisticsRecord, error){
+	et *entity.StatisticRecordCondition) ([]*da.OrderStatisticsRecord, error) {
 	//检查时间参数是否有误，若没有设置，则返回当年的数据
 	if et.StartAt == nil || et.EndAt == nil {
 		curYear := time.Now().Year()
@@ -399,7 +402,7 @@ func (s *OrderStatisticsService) fetchStatisticsRecords(ctx context.Context,
 	startYear := et.StartAt.Year()
 	yearArr := make([]int, 0)
 	//查询不同年份的数据再筛除
-	for i := startYear; i <= endYear; i ++ {
+	for i := startYear; i <= endYear; i++ {
 		yearArr = append(yearArr, i)
 	}
 	//yearArr = utils.SliceDeduplicationInt(yearArr)
@@ -408,7 +411,7 @@ func (s *OrderStatisticsService) fetchStatisticsRecords(ctx context.Context,
 	condition := s.entityToCondition(ctx, et.OrderStatisticRecordEntity)
 	condition.Year = yearArr
 	records, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
-	if err != nil{
+	if err != nil {
 		log.Error.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
 		return nil, err
 	}

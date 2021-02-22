@@ -12,6 +12,7 @@ import (
 func AutoMigrate() {
 	db.Get().AutoMigrate(OrderNotifies{})
 	db.Get().AutoMigrate(Auth{})
+	db.Get().AutoMigrate(StudentConflict{})
 	db.Get().AutoMigrate(Order{})
 	db.Get().AutoMigrate(OrderPayRecord{})
 	db.Get().AutoMigrate(OrderRemarkRecord{})

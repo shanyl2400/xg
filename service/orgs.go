@@ -262,15 +262,20 @@ func (s *OrgService) ListOrgs(ctx context.Context, condition da.SearchOrgsCondit
 			subjects = strings.Split(orgs[i].Subjects, ",")
 		}
 		res[i] = &entity.Org{
-			ID:            orgs[i].ID,
-			Name:          orgs[i].Name,
-			Subjects:      subjects,
-			Status:        orgs[i].Status,
-			Address:       orgs[i].Address,
-			AddressExt:    orgs[i].AddressExt,
-			ParentID:      orgs[i].ParentID,
-			Telephone:     orgs[i].Telephone,
-			SupportRoleID: entity.StringToIntArray(orgs[i].SupportRoleID),
+			ID:         orgs[i].ID,
+			Name:       orgs[i].Name,
+			Subjects:   subjects,
+			Status:     orgs[i].Status,
+			Address:    orgs[i].Address,
+			AddressExt: orgs[i].AddressExt,
+			ParentID:   orgs[i].ParentID,
+			Telephone:  orgs[i].Telephone,
+
+			BusinessLicense:   orgs[i].BusinessLicense,
+			CorporateIdentity: orgs[i].CorporateIdentity,
+			SchoolPermission:  orgs[i].SchoolPermission,
+			Extra:             orgs[i].Extra,
+			SupportRoleID:     entity.StringToIntArray(orgs[i].SupportRoleID),
 		}
 	}
 	return count, res, nil
@@ -295,15 +300,19 @@ func (s *OrgService) ListOrgsByStatus(ctx context.Context, status []int) (int, [
 			subjects = strings.Split(orgs[i].Subjects, ",")
 		}
 		res[i] = &entity.Org{
-			ID:            orgs[i].ID,
-			Name:          orgs[i].Name,
-			Subjects:      subjects,
-			Status:        orgs[i].Status,
-			Address:       orgs[i].Address,
-			AddressExt:    orgs[i].AddressExt,
-			ParentID:      orgs[i].ParentID,
-			Telephone:     orgs[i].Telephone,
-			SupportRoleID: entity.StringToIntArray(orgs[i].SupportRoleID),
+			ID:                orgs[i].ID,
+			Name:              orgs[i].Name,
+			Subjects:          subjects,
+			Status:            orgs[i].Status,
+			Address:           orgs[i].Address,
+			AddressExt:        orgs[i].AddressExt,
+			ParentID:          orgs[i].ParentID,
+			Telephone:         orgs[i].Telephone,
+			BusinessLicense:   orgs[i].BusinessLicense,
+			CorporateIdentity: orgs[i].CorporateIdentity,
+			SchoolPermission:  orgs[i].SchoolPermission,
+			Extra:             orgs[i].Extra,
+			SupportRoleID:     entity.StringToIntArray(orgs[i].SupportRoleID),
 		}
 	}
 	return count, res, nil
@@ -332,15 +341,19 @@ func (s *OrgService) SearchPendingOrgs(ctx context.Context, condition da.SearchO
 			subjects = strings.Split(orgs[i].Subjects, ",")
 		}
 		res[i] = &entity.Org{
-			ID:            orgs[i].ID,
-			Name:          orgs[i].Name,
-			Subjects:      subjects,
-			Status:        orgs[i].Status,
-			Address:       orgs[i].Address,
-			AddressExt:    orgs[i].AddressExt,
-			ParentID:      orgs[i].ParentID,
-			Telephone:     orgs[i].Telephone,
-			SupportRoleID: entity.StringToIntArray(orgs[i].SupportRoleID),
+			ID:                orgs[i].ID,
+			Name:              orgs[i].Name,
+			Subjects:          subjects,
+			Status:            orgs[i].Status,
+			Address:           orgs[i].Address,
+			AddressExt:        orgs[i].AddressExt,
+			ParentID:          orgs[i].ParentID,
+			Telephone:         orgs[i].Telephone,
+			BusinessLicense:   orgs[i].BusinessLicense,
+			CorporateIdentity: orgs[i].CorporateIdentity,
+			SchoolPermission:  orgs[i].SchoolPermission,
+			Extra:             orgs[i].Extra,
+			SupportRoleID:     entity.StringToIntArray(orgs[i].SupportRoleID),
 		}
 	}
 	return count, res, nil
@@ -381,14 +394,19 @@ func (s *OrgService) searchOrgs(ctx context.Context, condition da.SearchOrgsCond
 			continue
 		}
 		res = append(res, &entity.SubOrgWithDistance{
-			ID:            orgs[i].ID,
-			Name:          orgs[i].Name,
-			Subjects:      subjects,
-			Status:        orgs[i].Status,
-			Address:       orgs[i].Address,
-			AddressExt:    orgs[i].AddressExt,
-			ParentID:      orgs[i].ParentID,
-			Telephone:     orgs[i].Telephone,
+			ID:                orgs[i].ID,
+			Name:              orgs[i].Name,
+			Subjects:          subjects,
+			Status:            orgs[i].Status,
+			Address:           orgs[i].Address,
+			AddressExt:        orgs[i].AddressExt,
+			ParentID:          orgs[i].ParentID,
+			Telephone:         orgs[i].Telephone,
+			BusinessLicense:   orgs[i].BusinessLicense,
+			CorporateIdentity: orgs[i].CorporateIdentity,
+			SchoolPermission:  orgs[i].SchoolPermission,
+			Extra:             orgs[i].Extra,
+
 			SupportRoleID: entity.StringToIntArray(orgs[i].SupportRoleID),
 			Distance:      orgs[i].Distance,
 		})
@@ -415,13 +433,17 @@ func (s *OrgService) UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *e
 		}
 
 		err = s.updateOrgById(ctx, tx, &entity.UpdateOrgRequest{
-			ID:         orgId,
-			Name:       req.OrgData.Name,
-			Address:    req.OrgData.Address,
-			AddressExt: req.OrgData.AddressExt,
-			Telephone:  req.OrgData.Telephone,
-			Latitude:   req.OrgData.Latitude,
-			Longitude:  req.OrgData.Longitude,
+			ID:                orgId,
+			Name:              req.OrgData.Name,
+			Address:           req.OrgData.Address,
+			AddressExt:        req.OrgData.AddressExt,
+			Telephone:         req.OrgData.Telephone,
+			Latitude:          req.OrgData.Latitude,
+			Longitude:         req.OrgData.Longitude,
+			BusinessLicense:   req.OrgData.BusinessLicense,
+			CorporateIdentity: req.OrgData.CorporateIdentity,
+			SchoolPermission:  req.OrgData.SchoolPermission,
+			Extra:             req.OrgData.Extra,
 		}, operator)
 		if err != nil {
 			log.Warning.Printf("Update org failed, orgId: %#v, req: %#v, err: %v\n", orgId, req, err)
@@ -683,6 +705,11 @@ func (s *OrgService) createOrg(ctx context.Context, tx *gorm.DB, req *entity.Cre
 		SupportRoleID: entity.IntArrayToString(req.SupportRoleID),
 		Latitude:      req.Latitude,
 		Longitude:     req.Longitude,
+
+		BusinessLicense:   req.BusinessLicense,
+		CorporateIdentity: req.CorporateIdentity,
+		SchoolPermission:  req.SchoolPermission,
+		Extra:             req.Extra,
 	}
 	id, err := da.GetOrgModel().CreateOrg(ctx, tx, data)
 	if err != nil {
@@ -703,6 +730,10 @@ func (s *OrgService) updateOrgById(ctx context.Context, tx *gorm.DB, req *entity
 		Latitude:   req.Latitude,
 		Longitude:  req.Longitude,
 		//Status:   req.Status,
+		BusinessLicense:   req.BusinessLicense,
+		CorporateIdentity: req.CorporateIdentity,
+		SchoolPermission:  req.SchoolPermission,
+		Extra:             req.Extra,
 	})
 	if err != nil {
 		log.Warning.Printf("Update org failed, req: %#v, err: %v\n", req, err)
@@ -717,15 +748,19 @@ func ToOrgEntity(org *da.Org) *entity.Org {
 		subjects = strings.Split(org.Subjects, ",")
 	}
 	return &entity.Org{
-		ID:            org.ID,
-		Name:          org.Name,
-		Subjects:      subjects,
-		Status:        org.Status,
-		Address:       org.Address,
-		AddressExt:    org.AddressExt,
-		ParentID:      org.ParentID,
-		Telephone:     org.Telephone,
-		SupportRoleID: entity.StringToIntArray(org.SupportRoleID),
+		ID:                org.ID,
+		Name:              org.Name,
+		Subjects:          subjects,
+		Status:            org.Status,
+		Address:           org.Address,
+		AddressExt:        org.AddressExt,
+		ParentID:          org.ParentID,
+		Telephone:         org.Telephone,
+		SupportRoleID:     entity.StringToIntArray(org.SupportRoleID),
+		BusinessLicense:   org.BusinessLicense,
+		CorporateIdentity: org.CorporateIdentity,
+		SchoolPermission:  org.SchoolPermission,
+		Extra:             org.Extra,
 	}
 }
 

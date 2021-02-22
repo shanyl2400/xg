@@ -129,9 +129,9 @@ type SearchStudentCondition struct {
 	Telephone       string `json:"telephone"`
 	Address         string `json:"address"`
 	IntentString    string `json:"intent_string"`
-	Status          []int    `json:"status"`
+	Status          []int  `json:"status"`
 	NoDispatchOrder bool   `json:"no_dispatch_order"`
-	Keywords string `json:"keywords"`
+	Keywords        string `json:"keywords"`
 
 	AuthorIDList []int `json:"author_id_list"`
 
@@ -154,8 +154,8 @@ func (s SearchStudentCondition) GetConditions() (string, []interface{}) {
 	}
 	if s.Keywords != "" {
 		wheres = append(wheres, "(name LIKE ? OR telephone LIKE ?)")
-		values = append(values, s.Keywords + "%")
-		values = append(values, s.Keywords + "%")
+		values = append(values, s.Keywords+"%")
+		values = append(values, s.Keywords+"%")
 	}
 	if s.Telephone != "" {
 		wheres = append(wheres, "telephone LIKE ?")

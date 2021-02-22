@@ -28,6 +28,11 @@ type Org struct {
 	Status int `json:"status"`
 
 	SubOrgs []*Org `json:"sub_orgs"`
+
+	BusinessLicense   string `json:"business_license"`
+	CorporateIdentity string `json:"corporate_identity"`
+	SchoolPermission  string `json:"school_permission"`
+	Extra             string `json:"extra"`
 }
 
 type SubOrgWithDistance struct {
@@ -42,6 +47,11 @@ type SubOrgWithDistance struct {
 
 	Status   int     `json:"status"`
 	Distance float64 `json:"distance"`
+
+	BusinessLicense   string `json:"business_license"`
+	CorporateIdentity string `json:"corporate_identity"`
+	SchoolPermission  string `json:"school_permission"`
+	Extra             string `json:"extra"`
 }
 
 type CreateOrgRequest struct {
@@ -56,6 +66,11 @@ type CreateOrgRequest struct {
 
 	Status   int `json:"status"`
 	ParentID int `json:"parent_id"`
+
+	BusinessLicense   string `json:"business_license"`
+	CorporateIdentity string `json:"corporate_identity"`
+	SchoolPermission  string `json:"school_permission"`
+	Extra             string `json:"extra"`
 }
 
 type CreateOrgWithSubOrgsRequest struct {
@@ -78,6 +93,11 @@ type CreateOrUpdateOrgRequest struct {
 
 	Longitude float64 `json:"longitude"`
 	Latitude  float64 `json:"latitude"`
+
+	BusinessLicense   string `json:"business_license"`
+	CorporateIdentity string `json:"corporate_identity"`
+	SchoolPermission  string `json:"school_permission"`
+	Extra             string `json:"extra"`
 }
 
 type UpdateSubOrgsEntity struct {
@@ -89,14 +109,18 @@ type UpdateSubOrgsEntity struct {
 }
 
 type UpdateOrgRequest struct {
-	ID         int      `json:"id"`
-	Name string `json:"name"`
-	Subjects   []string `json:"subjects"`
-	Address    string   `json:"address"`
-	AddressExt string   `json:"address_ext"`
-	Telephone  string   `json:"telephone"`
-	Longitude  float64  `json:"longitude"`
-	Latitude   float64  `json:"latitude"`
+	ID                int      `json:"id"`
+	Name              string   `json:"name"`
+	Subjects          []string `json:"subjects"`
+	Address           string   `json:"address"`
+	AddressExt        string   `json:"address_ext"`
+	Telephone         string   `json:"telephone"`
+	Longitude         float64  `json:"longitude"`
+	Latitude          float64  `json:"latitude"`
+	BusinessLicense   string   `json:"business_license"`
+	CorporateIdentity string   `json:"corporate_identity"`
+	SchoolPermission  string   `json:"school_permission"`
+	Extra             string   `json:"extra"`
 
 	Status int `json:"status"`
 }

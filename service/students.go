@@ -44,27 +44,14 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 		PageSize:  1,
 		Page:      0,
 	}
-	total, students, err := da.GetStudentModel().SearchStudents(ctx, condition)
+	total, _, err := da.GetStudentModel().SearchStudents(ctx, condition)
 	if err != nil {
 		log.Warning.Printf("SearchStudents failed, condition: %#v, err: %v\n", condition, err)
 		return -1, -1, err
 	}
 	//找到对应的学生
-	//TODO:自己挑战自己的情况？
 	if total > 0 {
-		now := time.Now()
-		latestAdd := students[0].CreatedAt
-		timeDiff := now.Sub(*latestAdd)
-		log.Info.Printf("check challenge student, students: %#v, req: %#v, latestAdd: %#v, now: %#v, timeDiff: %v\n", students[0], c, latestAdd, now, timeDiff)
-		if timeDiff > ChallengeDate {
-			//挑战成功
-			log.Info.Printf("challenge success\n")
-			status = entity.StudentConflictSuccess
-		} else {
-			//挑战失败
-			log.Info.Printf("challenge failed\n")
-			status = entity.StudentConflictFailed
-		}
+		status = entity.StudentConflictFailed
 	}
 	//获取经纬度信息
 	if c.Longitude == 0 && c.Latitude == 0 {
@@ -96,15 +83,17 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 	s.Lock()
 	defer s.Unlock()
 	id, err := db.GetTransResult(ctx, func(ctx context.Context, tx *gorm.DB) (interface{}, error) {
-		//若挑战成功则将旧Student设为Exceed
-		if status == entity.StudentConflictSuccess {
-			for i := range students {
-				students[i].Status = entity.StudentExceed
-				err = da.GetStudentModel().UpdateStudent(ctx, tx, students[i].ID, *students[i])
-				if err != nil {
-					log.Warning.Printf("Update old student failed, student: %#v, err: %v\n", students[i], err)
-					return -1, err
-				}
+		//若存在冲突，创建冲突记录
+		if status == entity.StudentConflictFailed {
+			req := entity.CreateStudentConflictRequest{
+				Telephone: c.Telephone,
+				AuthorID:  operator.UserId,
+				Total:     total + 1,
+			}
+			err = GetStudentConflictService().CreateOrUpdateStudentConflict(ctx, tx, req)
+			if err != nil {
+				log.Warning.Printf("Create student conflict failed, student: %#v, err: %v\n", req, err)
+				return -1, err
 			}
 		}
 
@@ -282,8 +271,8 @@ func (s *StudentService) GetStudentById(ctx context.Context, id int, operator *e
 				IntentSubject: strings.Split(orders[i].IntentSubjects, ","),
 				PublisherID:   orders[i].PublisherID,
 				Status:        orders[i].Status,
-				CreatedAt: 		orders[i].CreatedAt,
-				UpdatedAt:  	orders[i].UpdatedAt,
+				CreatedAt:     orders[i].CreatedAt,
+				UpdatedAt:     orders[i].UpdatedAt,
 			},
 			StudentName:      student.Name,
 			StudentTelephone: student.Telephone,
@@ -306,7 +295,7 @@ func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchSt
 	condition := da.SearchStudentCondition{
 		Name:            ss.Name,
 		Telephone:       ss.Telephone,
-		Keywords:		ss.Keywords,
+		Keywords:        ss.Keywords,
 		Address:         ss.Address,
 		AuthorIDList:    ss.AuthorIDList,
 		IntentString:    ss.IntentSubject,

@@ -15,11 +15,12 @@ const (
 )
 
 const (
-	OrderStatisticKeyStudent      = "student"
-	OrderStatisticKeyOrder        = "order"
-	OrderStatisticKeyInvalidOrder = "invalid_order"
-	OrderStatisticKeyNewOrder     = "new_order"
-	OrderStatisticKeySignupOrder  = "signup_order"
+	OrderStatisticKeyStudent       = "student"
+	OrderStatisticKeyOrder         = "order"
+	OrderStatisticKeyInvalidOrder  = "invalid_order"
+	OrderStatisticKeyConsiderOrder = "consider_order"
+	OrderStatisticKeyNewOrder      = "new_order"
+	OrderStatisticKeySignupOrder   = "signup_order"
 )
 
 type OrderStatisticRecordId struct {
@@ -39,31 +40,31 @@ type OrderStatisticRecordEntity struct {
 
 type StatisticRecordCondition struct {
 	OrderStatisticRecordEntity
-	StartAt     *time.Time `json:"start_at"`
-	EndAt       *time.Time `json:"end_at"`
-	
+	StartAt *time.Time `json:"start_at"`
+	EndAt   *time.Time `json:"end_at"`
+
 	GroupBy string `json:"group_by"`
 }
 
 type SummaryInfo struct {
-	OrgsTotal        int `json:"orgs_total"`
-	StudentsTotal    int `json:"students_total"`
+	OrgsTotal        int     `json:"orgs_total"`
+	StudentsTotal    int     `json:"students_total"`
 	PerformanceTotal float64 `json:"performance_total"`
-	SuccessRate      int `json:"success_rate"`
+	SuccessRate      int     `json:"success_rate"`
 }
 type StatisticRecord struct {
-	Key   string `json:"key"`
-	Value float64    `json:"value"`
-	Count int    `json:"count"`
+	Key   string  `json:"key"`
+	Value float64 `json:"value"`
+	Count int     `json:"count"`
 
 	Year  int `json:"year"`
 	Month int `json:"month"`
 }
 
 type TotalStatisticRecord struct {
-	Key   string `json:"key"`
-	Value float64    `json:"value"`
-	Count int    `json:"count"`
+	Key   string  `json:"key"`
+	Value float64 `json:"value"`
+	Count int     `json:"count"`
 }
 
 type StatisticGraph struct {
@@ -119,10 +120,10 @@ func NewOrderStatisticTable() *OrderStatisticTable {
 }
 
 type OrderStatisticTableMonth struct {
-	Students      int `json:"students"`
-	Orders        int `json:"orders"`
-	InvalidOrders int `json:"invalid_orders"`
-	SignedOrder   int `json:"signed_order"`
+	Students      int     `json:"students"`
+	Orders        int     `json:"orders"`
+	InvalidOrders int     `json:"invalid_orders"`
+	SignedOrder   int     `json:"signed_order"`
 	Performance   float64 `json:"performance"`
 }
 

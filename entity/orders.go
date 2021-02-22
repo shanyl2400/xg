@@ -3,11 +3,12 @@ package entity
 import "time"
 
 const (
-	OrderStatusCreated = 1
-	OrderStatusSigned  = 2
-	OrderStatusRevoked = 3
-	OrderStatusInvalid = 4
-	OrderStatusDeposit = 5
+	OrderStatusCreated  = 1
+	OrderStatusSigned   = 2
+	OrderStatusRevoked  = 3
+	OrderStatusInvalid  = 4
+	OrderStatusDeposit  = 5
+	OrderStatusConsider = 6
 
 	OrderPayStatusPending  = 1
 	OrderPayStatusChecked  = 2
@@ -38,7 +39,7 @@ type CreateOrderRequest struct {
 }
 
 type SearchOrderCondition struct {
-	IDs []int `json:"i_ds"`
+	IDs              []int  `json:"i_ds"`
 	StudentIDList    []int  `json:"student_id_list"`
 	ToOrgIDList      []int  `json:"to_org_id_list"`
 	IntentSubjects   string `json:"intent_subjects"`
@@ -86,11 +87,11 @@ type PayRecordInfoList struct {
 }
 
 type PayRecordInfo struct {
-	ID      int    `json:"id"`
-	OrderID int    `json:"order_id"`
-	Mode    int    `json:"mode"`
-	Title   string `json:"title"`
-	Amount  float64    `json:"amount"`
+	ID      int     `json:"id"`
+	OrderID int     `json:"order_id"`
+	Mode    int     `json:"mode"`
+	Title   string  `json:"title"`
+	Amount  float64 `json:"amount"`
 
 	StudentID     int      `json:"student_id"`
 	ToOrgID       int      `json:"to_org_id"`
@@ -143,11 +144,11 @@ type OrderInfoWithRecords struct {
 }
 
 type OrderPayRecord struct {
-	ID      int    `json:"id"`
-	OrderID int    `json:"order_id"`
-	Mode    int    `json:"mode"`
-	Amount  float64    `json:"amount"`
-	Title   string `json:"title"`
+	ID      int     `json:"id"`
+	OrderID int     `json:"order_id"`
+	Mode    int     `json:"mode"`
+	Amount  float64 `json:"amount"`
+	Title   string  `json:"title"`
 
 	Status int `json:"status"`
 
@@ -156,11 +157,11 @@ type OrderPayRecord struct {
 }
 
 type OrderNotify struct {
-	ID        int       `json:"id"`
-	OrderID   int       `json:"order_id"`
-	Classify  int       `json:"classify"`
-	Content   string    `json:"content"`
-	Author    int       `json:"author"`
+	ID        int               `json:"id"`
+	OrderID   int               `json:"order_id"`
+	Classify  int               `json:"classify"`
+	Content   string            `json:"content"`
+	Author    int               `json:"author"`
 	OrderInfo *OrderInfoDetails `json:"order_info"`
 
 	Status int `json:"status"`
@@ -182,9 +183,9 @@ type OrderRemarkRecord struct {
 }
 
 type OrderPayRequest struct {
-	OrderID int    `json:"order_id"`
-	Amount  float64    `json:"amount"`
-	Title   string `json:"title"`
+	OrderID int     `json:"order_id"`
+	Amount  float64 `json:"amount"`
+	Title   string  `json:"title"`
 }
 
 type OrderMarkRequest struct {

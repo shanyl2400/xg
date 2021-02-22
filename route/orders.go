@@ -364,6 +364,34 @@ func (s *Server) revokeOrder(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
+//
+// @Summary considerOrder
+// @Description consider order by id
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param id path string true "order id"
+// @Tags order
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/order/{id}/invalid [put]
+func (s *Server) considerOrder(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	user := s.getJWTUser(c)
+	err = service.GetOrderService().ConsiderOrder(c.Request.Context(), id, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
 // @Summary invalidOrder
 // @Description invalid order by id
 // @Accept json

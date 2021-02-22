@@ -80,6 +80,12 @@ func Get() *gin.Engine {
 		students.GET("/private", s.mustLogin, s.hasPermission([]int{entity.AuthEnterStudent}), s.searchPrivateStudents)
 	}
 
+	studentConflicts := api.Group("/student_conflicts")
+	{
+		studentConflicts.GET("/", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.searchStudentConflicts)
+		studentConflicts.PUT("/", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.handleStudentConflict)
+	}
+
 	subject := api.Group("/subject")
 	{
 		subject.POST("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageSubject}), s.createSubject)
@@ -118,6 +124,7 @@ func Get() *gin.Engine {
 		order.PUT("/:id/deposit", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.depositOrder)
 		order.PUT("/:id/revoke", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.revokeOrder)
 		order.PUT("/:id/invalid", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.invalidOrder)
+		order.PUT("/:id/consider", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.considerOrder)
 		order.POST("/:id/mark", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchSelfOrder, entity.AuthDispatchOrder, entity.AuthListAllOrder, entity.AuthListOrgOrder}), s.addOrderMark)
 	}
 	orders := api.Group("/orders")
