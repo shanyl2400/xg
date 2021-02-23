@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"sync"
 	"time"
@@ -11,6 +12,10 @@ import (
 	"xg/log"
 
 	"github.com/jinzhu/gorm"
+)
+
+var (
+	ErrLevelToHigh = errors.New("level can't be more than 3")
 )
 
 type ISubjectService interface {
@@ -160,6 +165,11 @@ func (s *SubjectService) CreateSubject(ctx context.Context, req entity.CreateSub
 		}
 		level = parentSubject.Level + 1
 	}
+	if level > 3 {
+		log.Warning.Printf("Level is more than 3, req: %#v, level: %v\n", req, level)
+		return 0, ErrLevelToHigh
+	}
+
 	now := time.Now()
 	data := da.Subject{
 		Level:    level,
@@ -213,6 +223,10 @@ func (s *SubjectService) BatchCreateSubject(ctx context.Context, reqs []*entity.
 					return err
 				}
 				level = parentSubject.Level + 1
+			}
+			if level > 3 {
+				log.Warning.Printf("Level is more than 3, req: %#v, level: %v\n", req, level)
+				return ErrLevelToHigh
 			}
 
 			now := time.Now()

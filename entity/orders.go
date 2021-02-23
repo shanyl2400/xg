@@ -128,6 +128,9 @@ type OrderInfoDetails struct {
 	OrgName          string `json:"org_name"`
 	PublisherName    string `json:"publisher_name"`
 
+	AuthorID   int    `json:"author_id"`
+	AuthorName string `json:"author_name"`
+
 	OrderSourceName string `json:"order_source_name"`
 }
 

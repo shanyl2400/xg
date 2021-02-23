@@ -39,9 +39,10 @@ type Org struct {
 	Longitude  float64 `gorm:"type:double(9,6);NOT NULL; column:longitude; default:0"`
 	Latitude   float64 `gorm:"type:double(9,6);NOT NULL; column:latitude; default:0"`
 
-	BusinessLicense   string `gorm:"type:text;NOT NULL;column:business_license;"`
-	CorporateIdentity string `gorm:"type:text;NOT NULL;column:corporate_identity;"`
-	SchoolPermission  string `gorm:"type:text;NOT NULL;column:school_permission;"`
+	BusinessLicense       string `gorm:"type:text;NOT NULL;column:business_license;"`
+	CorporateIdentity     string `gorm:"type:text;NOT NULL;column:corporate_identity;"`
+	SchoolPermission      string `gorm:"type:text;NOT NULL;column:school_permission;"`
+	SettlementInstruction string `gorm:"type:text;NOT NULL;column:settlement_instruction;"`
 
 	Extra string `gorm:"type:text;NOT NULL;column:extra;"`
 
@@ -74,19 +75,20 @@ func (d *DBOrgModel) CreateOrg(ctx context.Context, tx *gorm.DB, org Org) (int, 
 func (d *DBOrgModel) UpdateOrg(ctx context.Context, tx *gorm.DB, id int, org Org) error {
 	now := time.Now()
 	err := db.Get().Model(Org{}).Where(&Org{ID: id}).Updates(Org{
-		Status:            org.Status,
-		Subjects:          org.Subjects,
-		Name:              org.Name,
-		Address:           org.Address,
-		AddressExt:        org.AddressExt,
-		Longitude:         org.Longitude,
-		BusinessLicense:   org.BusinessLicense,
-		CorporateIdentity: org.CorporateIdentity,
-		SchoolPermission:  org.SchoolPermission,
-		Extra:             org.Extra,
-		Latitude:          org.Latitude,
-		Telephone:         org.Telephone,
-		UpdatedAt:         &now}).Error
+		Status:                org.Status,
+		Subjects:              org.Subjects,
+		Name:                  org.Name,
+		Address:               org.Address,
+		AddressExt:            org.AddressExt,
+		Longitude:             org.Longitude,
+		BusinessLicense:       org.BusinessLicense,
+		CorporateIdentity:     org.CorporateIdentity,
+		SchoolPermission:      org.SchoolPermission,
+		SettlementInstruction: org.SettlementInstruction,
+		Extra:                 org.Extra,
+		Latitude:              org.Latitude,
+		Telephone:             org.Telephone,
+		UpdatedAt:             &now}).Error
 	if err != nil {
 		return err
 	}

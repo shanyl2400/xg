@@ -1027,6 +1027,10 @@ func (o *OrderService) getOrderInfoDetails(ctx context.Context, orders []*da.Ord
 		return nil, err
 	}
 
+	for i := range students {
+		userIds = append(userIds, students[i].AuthorID)
+	}
+
 	_, users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
 		IDList: userIds,
 	})
@@ -1082,6 +1086,8 @@ func (o *OrderService) getOrderInfoDetails(ctx context.Context, orders []*da.Ord
 			OrgName:          orgMaps[orders[i].ToOrgID].Name,
 			PublisherName:    userMaps[orders[i].PublisherID].Name,
 			OrderSourceName:  orderSourceName,
+			AuthorID:         studentMaps[orders[i].StudentID].AuthorID,
+			AuthorName:       userMaps[studentMaps[orders[i].StudentID].AuthorID].Name,
 		}
 	}
 	return orderInfos, nil
