@@ -11,6 +11,7 @@ import (
 type IOrderSourceService interface{
 	ListOrderService(ctx context.Context)([]*entity.OrderSource, error)
 	CreateOrderService(ctx context.Context, name string)(int, error)
+	DeleteOrderService(ctx context.Context, id int) error
 }
 
 type OrderSourceService struct {
@@ -36,6 +37,15 @@ func (o *OrderSourceService) ListOrderService(ctx context.Context)([]*entity.Ord
 func (o *OrderSourceService) CreateOrderService(ctx context.Context, name string)(int, error){
 	log.Info.Printf("CreateOrderService, req: %#v\n", name)
 	return da.GetOrderSourceModel().CreateOrderSources(ctx, name)
+}
+
+func (o *OrderSourceService)DeleteOrderService(ctx context.Context, id int) error {
+	//删除订单来源
+	//将学员名单订单来源更新为其他
+	//将订单的订单来源更新为其他
+	//将统计该订单来源的数据更新为其他
+
+	return nil
 }
 
 var(

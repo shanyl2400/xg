@@ -2,6 +2,7 @@ package da
 
 import (
 	"context"
+	"github.com/jinzhu/gorm"
 	"sync"
 	"time"
 	"xg/db"
@@ -12,6 +13,8 @@ type IOrderSourceModel interface {
 	CreateOrderSourcesWithID(ctx context.Context, id int, name string) error
 	ListOrderSources(ctx context.Context) ([]*OrderSource, error)
 	GetOrderSourceById(ctx context.Context, orderSourceId int) (*OrderSource, error)
+
+	DeleteOrderSourceByID(ctx context.Context, tx *gorm.DB, id int) error
 }
 
 type OrderSource struct {
@@ -46,6 +49,21 @@ func (d *DBOrderSourceModel) CreateOrderSources(ctx context.Context, name string
 		return -1, err
 	}
 	return os.ID, nil
+}
+
+func (d *DBOrderSourceModel)DeleteOrderSourceByID(ctx context.Context, tx *gorm.DB, id int) error{
+	os, err := d.GetOrderSourceById(ctx, id)
+	if err != nil {
+		return err
+	}
+	now := time.Now()
+	os.DeletedAt = &now
+
+	err = tx.Model(OrderSource{}).Where(&OrderSource{ID: id}).Updates(os).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 func (d *DBOrderSourceModel) ListOrderSources(ctx context.Context) ([]*OrderSource, error) {
 	result := make([]*OrderSource, 0)
