@@ -709,6 +709,7 @@ func (o *OrderService) ExportOrders(ctx context.Context, condition *entity.Searc
 		OrderSourceList: condition.OrderSourceList,
 		CreateStartAt:   condition.CreateStartAt,
 		StudentKeywords: condition.StudentsKeywords,
+		AuthorIDList: 	condition.AuthorID,
 		Keywords:        condition.Keywords,
 		CreateEndAt:     condition.CreateEndAt,
 		UpdateStartAt:   condition.UpdateStartAt,

@@ -48,6 +48,7 @@ type SearchOrderCondition struct {
 	StudentsKeywords string `json:"students_keywords"`
 	Keywords         string `json:"keywords"`
 	Address string `json:"address"`
+	AuthorID []int `json:"author_id"`
 
 	CreateStartAt *time.Time `json:"create_start_at"`
 	CreateEndAt   *time.Time `json:"create_end_at"`

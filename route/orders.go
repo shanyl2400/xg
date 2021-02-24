@@ -755,6 +755,7 @@ func buildOrderCondition(c *gin.Context) *entity.SearchOrderCondition {
 	studentsKeywords := c.Query("students_keywords")
 	keywords := c.Query("keywords")
 	address := c.Query("address")
+	authorID := c.Query("author_id")
 
 	createdStartAt := parseInt(c.Query("created_start_at"))
 	createdEndAt := parseInt(c.Query("created_end_at"))
@@ -785,12 +786,13 @@ func buildOrderCondition(c *gin.Context) *entity.SearchOrderCondition {
 		IntentSubjects:   intentSubjects,
 		PublisherID:      parseInts(publisherID),
 		OrderSourceList:  parseInts(orderSources),
+		AuthorID:         parseInts(authorID),
 		Keywords:         keywords,
-		Address: address,
-		CreateStartAt: createdStartAtObj,
-		CreateEndAt: createdEndAtObj,
-		UpdateStartAt: updatedStartAtObj,
-		UpdateEndAt: updatedEndAtObj,
+		Address:          address,
+		CreateStartAt:    createdStartAtObj,
+		CreateEndAt:      createdEndAtObj,
+		UpdateStartAt:    updatedStartAtObj,
+		UpdateEndAt:      updatedEndAtObj,
 
 		Status:  parseInts(status),
 		OrderBy: orderBy,
