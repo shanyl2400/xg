@@ -20,7 +20,7 @@ type StatisticsRecord struct {
 	ID int `gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
 
 	Key   string `gorm:"type:varchar(128);NOT NULL;column:key;index"`
-	Value float64    `gorm:"type:DECIMAL(9,5);NOT NULL;column:value"`
+	Value float64    `gorm:"type:DECIMAL(11,2);NOT NULL;column:value"`
 	Count int    `gorm:"type:int;NOT NULL;column:count"`
 
 	Year  int `gorm:"type:int;NOT NULL;column:year;index"`

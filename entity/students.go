@@ -57,6 +57,10 @@ type SearchStudentRequest struct {
 
 	NoDispatchOrder bool `json:"no_dispatch_order"`
 
+	OrderSourceIDs []int `json:"order_source_ids"`
+	CreatedStartAt *time.Time `json:"created_start_at"`
+	CreatedEndAt *time.Time `json:"created_end_at"`
+
 	OrderBy  string `json:"order_by"`
 	PageSize int    `json:"page_size"`
 	Page     int    `json:"page"`

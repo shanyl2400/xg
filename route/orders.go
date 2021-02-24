@@ -754,6 +754,29 @@ func buildOrderCondition(c *gin.Context) *entity.SearchOrderCondition {
 	pageSize := c.Query("page_size")
 	studentsKeywords := c.Query("students_keywords")
 	keywords := c.Query("keywords")
+	address := c.Query("address")
+
+	createdStartAt := parseInt(c.Query("created_start_at"))
+	createdEndAt := parseInt(c.Query("created_end_at"))
+	var createdStartAtObj *time.Time
+	var createdEndAtObj *time.Time
+	if createdStartAt > 0 && createdEndAt > 0 {
+		s := time.Unix(int64(createdStartAt), 0)
+		e := time.Unix(int64(createdEndAt), 0)
+		createdStartAtObj = &s
+		createdEndAtObj = &e
+	}
+
+	updatedStartAt := parseInt(c.Query("updated_start_at"))
+	updatedEndAt := parseInt(c.Query("updated_end_at"))
+	var updatedStartAtObj *time.Time
+	var updatedEndAtObj *time.Time
+	if updatedStartAt > 0 && updatedEndAt > 0 {
+		s := time.Unix(int64(updatedStartAt), 0)
+		e := time.Unix(int64(updatedEndAt), 0)
+		updatedStartAtObj = &s
+		updatedEndAtObj = &e
+	}
 
 	condition := &entity.SearchOrderCondition{
 		StudentIDList:    parseInts(studentIds),
@@ -763,6 +786,11 @@ func buildOrderCondition(c *gin.Context) *entity.SearchOrderCondition {
 		PublisherID:      parseInts(publisherID),
 		OrderSourceList:  parseInts(orderSources),
 		Keywords:         keywords,
+		Address: address,
+		CreateStartAt: createdStartAtObj,
+		CreateEndAt: createdEndAtObj,
+		UpdateStartAt: updatedStartAtObj,
+		UpdateEndAt: updatedEndAtObj,
 
 		Status:  parseInts(status),
 		OrderBy: orderBy,

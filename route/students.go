@@ -3,6 +3,7 @@ package route
 import (
 	"net/http"
 	"strconv"
+	"time"
 	"xg/entity"
 	"xg/service"
 
@@ -158,6 +159,8 @@ func buildCondition(c *gin.Context) *entity.SearchStudentRequest {
 
 	status := parseInts(c.Query("status"))
 
+	orderSourceIDs := parseInts(c.Query("order_source_ids"))
+
 	pageSize := 0
 	page := 0
 	authorId := 0
@@ -185,6 +188,20 @@ func buildCondition(c *gin.Context) *entity.SearchStudentRequest {
 		ndo = true
 	}
 
+	//开始截至时间筛选
+	createdStartAt := parseInt(c.Query("created_start_at"))
+	createdEndAt := parseInt(c.Query("created_end_at"))
+	var createdStartAtObj *time.Time
+	var createdEndAtObj *time.Time
+	if createdStartAt > 0  {
+		s := time.Unix(int64(createdStartAt), 0)
+		createdStartAtObj = &s
+	}
+	if createdEndAt > 0 {
+		e := time.Unix(int64(createdEndAt), 0)
+		createdEndAtObj = &e
+	}
+
 	return &entity.SearchStudentRequest{
 		Name:         name,
 		Telephone:    telephone,
@@ -192,8 +209,11 @@ func buildCondition(c *gin.Context) *entity.SearchStudentRequest {
 		AuthorIDList: authorIdList,
 		IntentSubject: intentSubjects,
 		Keywords: keywords,
+		OrderSourceIDs: orderSourceIDs,
 		Status: 		status,
 		NoDispatchOrder: ndo,
+		CreatedStartAt: createdStartAtObj,
+		CreatedEndAt: createdEndAtObj,
 		OrderBy:      orderBy,
 		PageSize:     pageSize,
 		Page:         page,

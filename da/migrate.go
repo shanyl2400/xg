@@ -9,6 +9,7 @@ import (
 	"xg/log"
 )
 
+//update orders as o set address = (select address from orgs where id = o.org_id);
 func AutoMigrate() {
 	db.Get().AutoMigrate(OrderNotifies{})
 	db.Get().AutoMigrate(Auth{})

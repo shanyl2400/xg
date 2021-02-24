@@ -47,9 +47,12 @@ type SearchOrderCondition struct {
 	OrderSourceList  []int  `json:"order_source"`
 	StudentsKeywords string `json:"students_keywords"`
 	Keywords         string `json:"keywords"`
+	Address string `json:"address"`
 
 	CreateStartAt *time.Time `json:"create_start_at"`
 	CreateEndAt   *time.Time `json:"create_end_at"`
+	UpdateStartAt *time.Time `json:"update_start_at"`
+	UpdateEndAt *time.Time `json:"update_end_at"`
 
 	Status  []int  `json:"status"`
 	OrderBy string `json:"order_by"`

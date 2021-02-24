@@ -50,7 +50,12 @@ type orderEntity struct {
 
 func (o *OrderService) CreateOrder(ctx context.Context, req *entity.CreateOrderRequest, operator *entity.JWTUser) (int, error) {
 	//Check entity
-	err := o.checkEntity(ctx, orderEntity{
+	org, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), req.ToOrgID)
+	if err != nil {
+		log.Warning.Println("Can't find org when check entity, orderEntity:", req)
+		return -1, err
+	}
+	err = o.checkEntity(ctx, org, orderEntity{
 		StudentID: req.StudentID,
 		ToOrgID:   req.ToOrgID,
 	})
@@ -74,6 +79,7 @@ func (o *OrderService) CreateOrder(ctx context.Context, req *entity.CreateOrderR
 	data := da.Order{
 		StudentID:      req.StudentID,
 		ToOrgID:        req.ToOrgID,
+		Address:        org.Address,
 		IntentSubjects: strings.Join(req.IntentSubjects, ","),
 		PublisherID:    operator.UserId,
 		AuthorID:       student.AuthorID,
@@ -497,7 +503,7 @@ func (o *OrderService) ConfirmOrderPay(ctx context.Context, orderPayId int, stat
 			//err = GetStatisticsService().AddPerformance(ctx, tx, entity.OrderPerformanceInfo{
 			//	OrgId:       orderInfo.ToOrgID,
 			//	AuthorId:    orderInfo.StudentSummary.AuthorId,
-			//	PublisherId: orderInfo.PublisherID,
+			//	PublisherId: orderInfo.PublisherIDList,
 			//	OrderSourceId: orderInfo.OrderSource,
 			//}, performance)
 			//if err != nil {
@@ -699,12 +705,15 @@ func (o *OrderService) ExportOrders(ctx context.Context, condition *entity.Searc
 		StudentIDList:   condition.StudentIDList,
 		ToOrgIDList:     condition.ToOrgIDList,
 		IntentSubjects:  condition.IntentSubjects,
-		PublisherID:     condition.PublisherID,
+		PublisherIDList: condition.PublisherID,
 		OrderSourceList: condition.OrderSourceList,
 		CreateStartAt:   condition.CreateStartAt,
 		StudentKeywords: condition.StudentsKeywords,
 		Keywords:        condition.Keywords,
 		CreateEndAt:     condition.CreateEndAt,
+		UpdateStartAt:   condition.UpdateStartAt,
+		UpdateEndAt:     condition.UpdateEndAt,
+		Address:         condition.Address,
 		Status:          condition.Status,
 		OrderBy:         condition.OrderBy,
 		Page:            condition.Page,
@@ -747,11 +756,14 @@ func (o *OrderService) SearchOrders(ctx context.Context, condition *entity.Searc
 		StudentIDList:   condition.StudentIDList,
 		ToOrgIDList:     condition.ToOrgIDList,
 		IntentSubjects:  condition.IntentSubjects,
-		PublisherID:     condition.PublisherID,
+		PublisherIDList: condition.PublisherID,
 		OrderSourceList: condition.OrderSourceList,
 		CreateStartAt:   condition.CreateStartAt,
 		StudentKeywords: condition.StudentsKeywords,
 		Keywords:        condition.Keywords,
+		UpdateStartAt:   condition.UpdateStartAt,
+		UpdateEndAt:     condition.UpdateEndAt,
+		Address:         condition.Address,
 		CreateEndAt:     condition.CreateEndAt,
 		Status:          condition.Status,
 		OrderBy:         condition.OrderBy,
@@ -1237,18 +1249,13 @@ func (o *OrderService) getOrderInfoRecords(ctx context.Context, orders []*da.Ord
 	return orderInfos, nil
 }
 
-func (o *OrderService) checkEntity(ctx context.Context, orderEntity orderEntity) error {
+func (o *OrderService) checkEntity(ctx context.Context, org *da.Org, orderEntity orderEntity) error {
 	_, err := da.GetStudentModel().GetStudentById(ctx, orderEntity.StudentID)
 	if err != nil {
 		log.Warning.Println("Can't find student when check entity, orderEntity:", orderEntity)
 		return err
 	}
 
-	org, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), orderEntity.ToOrgID)
-	if err != nil {
-		log.Warning.Println("Can't find org when check entity, orderEntity:", orderEntity)
-		return err
-	}
 	if org.Status != entity.OrgStatusCertified {
 		return ErrInvalidOrgStatus
 	}

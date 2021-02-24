@@ -46,6 +46,7 @@ type Order struct {
 	IntentSubjects string `gorm:"type:varchar(255);NOT NULL;column:intent_subjects"`
 	PublisherID    int    `gorm:"type:int;NOT NULL;column:publisher_id;index"`
 
+	Address string `gorm:"type:varchar(255);NULL;column:address"`
 	AuthorID int `gorm:"type:int;NOT NULL;DEFAULT 1;column:author_id;index"`
 
 	OrderSource int `gorm:"type:int;NOT NULL;column:order_source;index"`
@@ -62,7 +63,7 @@ type OrderPayRecord struct {
 	OrderID int    `gorm:"type:int;NOT NULL;column:order_id"`
 	Mode    int    `gorm:"type:int;NOT NULL;column:mode"`
 	Title   string `gorm:"type:varchar(128);NOT NULL;column:title"`
-	Amount  float64    `gorm:"type:DECIMAL(9,2);NOT NULL;column:amount"`
+	Amount  float64    `gorm:"type:DECIMAL(11,2);NOT NULL;column:amount"`
 
 	Status int `gorm:"type:int;NOT NULL;column:status"`
 
@@ -176,13 +177,18 @@ type SearchOrderCondition struct {
 	ToOrgIDList     []int
 	OrderSourceList []int
 	IntentSubjects  string
-	PublisherID     []int
+	PublisherIDList []int
+	AuthorIDList    []int
 
 	StudentKeywords string
+
 	Keywords string
+	Address string
 
 	CreateStartAt *time.Time
 	CreateEndAt   *time.Time
+	UpdateStartAt *time.Time
+	UpdateEndAt   *time.Time
 
 	Status []int
 
@@ -212,9 +218,17 @@ func (s SearchOrderCondition) GetConditions() (string, []interface{}) {
 		wheres = append(wheres, "intent_subjects LIKE ?")
 		values = append(values, "%"+s.IntentSubjects+"%")
 	}
-	if len(s.PublisherID) > 0 {
+	if len(s.PublisherIDList) > 0 {
 		wheres = append(wheres, "publisher_id IN (?)")
-		values = append(values, s.PublisherID)
+		values = append(values, s.PublisherIDList)
+	}
+	if len(s.AuthorIDList) > 0 {
+		wheres = append(wheres, "author_id IN (?)")
+		values = append(values, s.AuthorIDList)
+	}
+	if s.Address != "" {
+		wheres = append(wheres, "address LIKE ?")
+		values = append(values, s.Address + "%")
 	}
 	if len(s.Status) > 0 {
 		wheres = append(wheres, "status IN (?)")
@@ -262,6 +276,11 @@ func (s SearchOrderCondition) GetConditions() (string, []interface{}) {
 	if s.CreateStartAt != nil && s.CreateEndAt != nil {
 		wheres = append(wheres, "created_at BETWEEN ? AND ?")
 		values = append(values, s.CreateStartAt, s.CreateEndAt)
+	}
+
+	if s.UpdateStartAt != nil && s.UpdateEndAt != nil {
+		wheres = append(wheres, "updated BETWEEN ? AND ?")
+		values = append(values, s.UpdateStartAt, s.UpdateEndAt)
 	}
 
 	where := strings.Join(wheres, " AND ")

@@ -135,6 +135,10 @@ type SearchStudentCondition struct {
 
 	AuthorIDList []int `json:"author_id_list"`
 
+	OrderSourceIDs []int `json:"order_source_ids"`
+	CreatedStartAt *time.Time `json:"created_start_at"`
+	CreatedEndAt *time.Time `json:"created_end_at"`
+
 	OrderBy  string `json:"order_by"`
 	PageSize int    `json:"page_size"`
 	Page     int    `json:"page"`
@@ -163,7 +167,12 @@ func (s SearchStudentCondition) GetConditions() (string, []interface{}) {
 	}
 	if s.Address != "" {
 		wheres = append(wheres, "address LIKE ?")
-		values = append(values, "%"+s.Address+"%")
+		//values = append(values, "%"+s.Address+"%")
+		values = append(values, s.Address+"%")
+	}
+	if len(s.OrderSourceIDs) > 0 {
+		wheres = append(wheres, "order_source_id IN (?)")
+		values = append(values, s.OrderSourceIDs)
 	}
 
 	if s.IntentString != "" {
@@ -181,6 +190,14 @@ func (s SearchStudentCondition) GetConditions() (string, []interface{}) {
 	if len(s.AuthorIDList) > 0 {
 		wheres = append(wheres, "author_id IN (?)")
 		values = append(values, s.AuthorIDList)
+	}
+	if s.CreatedStartAt != nil {
+		wheres = append(wheres, "created_at >= ?")
+		values = append(values, s.CreatedStartAt)
+	}
+	if s.CreatedEndAt != nil {
+		wheres = append(wheres, "created_at <= ?")
+		values = append(values, s.CreatedEndAt)
 	}
 
 	where := strings.Join(wheres, " and ")

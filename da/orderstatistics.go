@@ -29,7 +29,7 @@ type OrderStatisticsRecord struct {
 	OrgId int `gorm:"type:int;NOT NULL;column:org_id;index"`
 	OrderSource int `gorm:"type:int;NOT NULL;column:order_source;index"`
 
-	Value float64    `gorm:"type:DECIMAL(9,5);NOT NULL;column:value"`
+	Value float64    `gorm:"type:DECIMAL(11,2);NOT NULL;column:value"`
 	Count int    `gorm:"type:int;NOT NULL;column:count"`
 
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`
