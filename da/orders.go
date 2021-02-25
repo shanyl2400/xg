@@ -22,6 +22,8 @@ type IOrderModel interface {
 	UpdateOrderPayRecordTx(ctx context.Context, tx *gorm.DB, id, status int) error
 	UpdateOrderRemarkRecordTx(ctx context.Context, tx *gorm.DB, ids []int, status int) error
 
+	ReplaceOrderSource(ctx context.Context, tx *gorm.DB, oldOrderSource, newOrderSource int) error
+
 	GetOrderById(ctx context.Context, id int) (*OrderInfo, error)
 	SearchOrder(ctx context.Context, s SearchOrderCondition) (int, []*Order, error)
 	CountOrder(ctx context.Context, s SearchOrderCondition) (int, error)
@@ -324,6 +326,13 @@ func (d *DBOrderModel) AddOrderPayRecordTx(ctx context.Context, tx *gorm.DB, o *
 	return o.ID, nil
 }
 
+func (d *DBOrderModel) ReplaceOrderSource(ctx context.Context, tx *gorm.DB, oldOrderSource, newOrderSource int) error {
+	err := tx.Model(&Order{}).Where(" order_source = ?", oldOrderSource).Updates(Order{OrderSource: newOrderSource}).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (d *DBOrderModel) AddRemarkRecord(ctx context.Context, o *OrderRemarkRecord) (int, error) {
 	now := time.Now()
 	o.CreatedAt = &now

@@ -2,6 +2,7 @@ package route
 
 import (
 	"net/http"
+	"strconv"
 	"xg/entity"
 	"xg/service"
 
@@ -59,4 +60,33 @@ func (s *Server) createOrderSource(c *gin.Context) {
 		ID:     id,
 		ErrMsg: "success",
 	})
+}
+
+
+// @Summary deleteOrderSource
+// @Description delete an order source
+// @Accept json
+// @Produce json
+// @Tags orderSource
+// @Param Authorization header string true "With the bearer"
+// @Param id path string true "order source id"
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/order_source [delete]
+func (s *Server) deleteOrderSource(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+
+	err = service.GetOrderSourceService().DeleteOrderService(c.Request.Context(),id)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	s.responseSuccess(c)
 }

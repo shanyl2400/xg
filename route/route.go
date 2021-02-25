@@ -162,6 +162,7 @@ func Get() *gin.Engine {
 	orderSource := api.Group("/order_source")
 	{
 		orderSource.POST("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageOrderSource}), s.createOrderSource)
+		orderSource.DELETE("/:id", s.mustLogin, s.hasPermission([]int{entity.AuthManageOrderSource}), s.deleteOrderSource)
 	}
 	orderSources := api.Group("/order_sources")
 	{

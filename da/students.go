@@ -2,12 +2,11 @@ package da
 
 import (
 	"context"
+	"github.com/jinzhu/gorm"
 	"strings"
 	"sync"
 	"time"
 	"xg/db"
-
-	"github.com/jinzhu/gorm"
 )
 
 type IStudentsModel interface {
@@ -16,6 +15,8 @@ type IStudentsModel interface {
 	GetStudentById(ctx context.Context, id int) (*Student, error)
 	SearchStudents(ctx context.Context, s SearchStudentCondition) (int, []*Student, error)
 	CountStudents(ctx context.Context) (int, error)
+
+	ReplaceStudentOrderSource(ctx context.Context, tx *gorm.DB, oldOrderSource, newOrderSource int) error
 }
 
 type Student struct {
@@ -69,6 +70,14 @@ func (d *DBStudentsModel) UpdateStudent(ctx context.Context, tx *gorm.DB, id int
 	student.UpdatedAt = &now
 	//student.ID = id
 	err := tx.Model(Student{ID: id}).Updates(&student).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *DBStudentsModel) ReplaceStudentOrderSource(ctx context.Context, tx *gorm.DB, oldOrderSource, newOrderSource int) error {
+	err := tx.Model(&Student{}).Where(" order_source_id = ?", oldOrderSource).Updates(Student{OrderSourceID: newOrderSource}).Error
 	if err != nil {
 		return err
 	}

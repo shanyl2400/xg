@@ -17,6 +17,7 @@ const (
 )
 
 type OrderStatisticsService struct {
+	locker sync.Mutex
 }
 
 func (s *OrderStatisticsService) StatisticsGroupByOrgs(ctx context.Context,
@@ -336,6 +337,39 @@ func (s *OrderStatisticsService) SearchRecordsMonth(ctx context.Context, conditi
 	return ret, nil
 }
 
+func (s *OrderStatisticsService) RemoveStatisticsByOrderSource(ctx context.Context, tx *gorm.DB, orderSourceID int) error {
+	records, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, tx, da.SearchOrderStatisticsRecordCondition{
+		OrderSource: []int{orderSourceID},
+	})
+	if err != nil{
+		log.Error.Printf("Search records failed, orderSourceId: %#v\n", orderSourceID)
+		return err
+	}
+	for i := range records {
+		//将记录信息加入到其他
+		err = s.addValueToOthersOrderSource(ctx, tx, entity.OrderStatisticRecordId{
+			Key:         records[i].Key,
+			Author:      records[i].Author,
+			OrgId:       records[i].OrgId,
+			PublisherId: records[i].PublisherId,
+			OrderSource: entity.OtherOrderSource,
+		}, records[i].Value, records[i].Count)
+		if err != nil{
+			log.Error.Printf("Move records value failed, record: %#v\n", records[i])
+			return err
+		}
+
+		//删除记录
+		err = da.GetOrderStatisticsRecordModel().DeleteOrderStatisticsRecord(ctx, tx, records[i].ID)
+		if err != nil{
+			log.Error.Printf("Delete records failed, record: %#v\n", records[i])
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (s *OrderStatisticsService) AddStudent(ctx context.Context, tx *gorm.DB, authorId, orderSourceId int) error {
 	log.Info.Printf("AddStudent, authorId: %#v, orderSourceId: %#v\n", authorId, orderSourceId)
 	return s.addValue(ctx, tx, entity.OrderStatisticRecordId{
@@ -352,7 +386,6 @@ func (s *OrderStatisticsService) AddNewOrder(ctx context.Context, tx *gorm.DB, o
 func (s *OrderStatisticsService) AddSignupOrder(ctx context.Context, tx *gorm.DB, osr entity.OrderStatisticRecordEntity) error {
 	return s.addOrder(ctx, tx, osr, entity.OrderStatisticKeySignupOrder, 1)
 }
-
 func (s *OrderStatisticsService) AddInvalidOrder(ctx context.Context, tx *gorm.DB, osr entity.OrderStatisticRecordEntity) error {
 	return s.addOrder(ctx, tx, osr, entity.OrderStatisticKeyInvalidOrder, 1)
 }
@@ -418,6 +451,9 @@ func (s *OrderStatisticsService) fetchStatisticsRecords(ctx context.Context,
 	return records, nil
 }
 func (s *OrderStatisticsService) addValue(ctx context.Context, tx *gorm.DB, id entity.OrderStatisticRecordId, value float64, addCount bool) error {
+	s.locker.Lock()
+	defer s.locker.Unlock()
+
 	condition := s.idToCondition(id)
 
 	records, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, tx, condition)
@@ -443,6 +479,51 @@ func (s *OrderStatisticsService) addValue(ctx context.Context, tx *gorm.DB, id e
 	if addCount {
 		count = 1
 	}
+	now := time.Now()
+	record := &da.OrderStatisticsRecord{
+		Key:         id.Key,
+		Value:       value,
+		Year:        now.Year(),
+		Month:       int(now.Month()),
+		Date:        now.Day(),
+		Count:       count,
+		Author:      id.Author,
+		OrgId:       id.OrgId,
+		OrderSource: id.OrderSource,
+		PublisherId: id.PublisherId,
+	}
+	_, err = da.GetOrderStatisticsRecordModel().CreateOrderStatisticsRecord(ctx, tx, record)
+	if err != nil {
+		log.Warning.Printf("CreateStatisticsRecord failed, record: %#v, err: %v\n", record, err)
+		return err
+	}
+	return nil
+}
+
+
+func (s *OrderStatisticsService) addValueToOthersOrderSource(ctx context.Context, tx *gorm.DB, id entity.OrderStatisticRecordId, value float64, count int) error {
+	s.locker.Lock()
+	defer s.locker.Unlock()
+
+	condition := s.idToCondition(id)
+
+	records, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, tx, condition)
+	if err != nil {
+		log.Warning.Printf("add graph value failed, condition: %#v, err: %v\n", condition, err)
+		return err
+	}
+	if len(records) > 0 {
+		record := records[0]
+		record.Value = record.Value + value
+		record.Count = record.Count + count
+		err = da.GetOrderStatisticsRecordModel().UpdateOrderStatisticsRecord(ctx, tx, record.ID, record.Value, record.Count)
+		if err != nil {
+			log.Warning.Printf("UpdateStatisticsRecord failed, record: %#v, err: %v\n", record, err)
+			return err
+		}
+		return nil
+	}
+
 	now := time.Now()
 	record := &da.OrderStatisticsRecord{
 		Key:         id.Key,

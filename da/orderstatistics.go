@@ -11,6 +11,7 @@ import (
 type IOrderStatisticsModel interface {
 	CreateOrderStatisticsRecord(ctx context.Context, tx *gorm.DB, c *OrderStatisticsRecord) (int, error)
 	UpdateOrderStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int, value float64, count int) error
+	DeleteOrderStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int) error
 
 	SearchOrderStatisticsRecord(ctx context.Context, tx *gorm.DB, c SearchOrderStatisticsRecordCondition) ([]*OrderStatisticsRecord, error)
 }
@@ -116,7 +117,18 @@ func (s *DBOrderStatisticsModel) UpdateOrderStatisticsRecord(ctx context.Context
 		return err
 	}
 	return nil
+}
 
+func (s *DBOrderStatisticsModel) DeleteOrderStatisticsRecord(ctx context.Context, tx *gorm.DB, rid int) error {
+	record := new(OrderStatisticsRecord)
+	now := time.Now()
+	record.DeletedAt = &now
+	whereRecord := &OrderStatisticsRecord{ID: rid}
+	err := tx.Model(OrderStatisticsRecord{}).Where(whereRecord).Updates(&record).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *DBOrderStatisticsModel) SearchOrderStatisticsRecord(ctx context.Context, tx *gorm.DB, c SearchOrderStatisticsRecordCondition) ([]*OrderStatisticsRecord, error) {

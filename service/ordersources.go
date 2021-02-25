@@ -2,10 +2,17 @@ package service
 
 import (
 	"context"
+	"github.com/jinzhu/gorm"
 	"sync"
 	"xg/da"
+	"xg/db"
 	"xg/entity"
 	"xg/log"
+	"errors"
+)
+
+var(
+	ErrNoSuchOrderService = errors.New("no such order service")
 )
 
 type IOrderSourceService interface{
@@ -41,9 +48,46 @@ func (o *OrderSourceService) CreateOrderService(ctx context.Context, name string
 
 func (o *OrderSourceService)DeleteOrderService(ctx context.Context, id int) error {
 	//删除订单来源
-	//将学员名单订单来源更新为其他
-	//将订单的订单来源更新为其他
-	//将统计该订单来源的数据更新为其他
+	os, err := da.GetOrderSourceModel().GetOrderSourceById(ctx, id)
+	if err != nil{
+		log.Error.Printf("Get Order service failed, id: %#v\n, err: %#v\n", id, err)
+		return err
+	}
+	if os == nil{
+		log.Error.Printf("No such order service, id: %#v\n", id)
+		return ErrNoSuchOrderService
+	}
+	err = db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
+		err := da.GetOrderSourceModel().DeleteOrderSourceByID(ctx, tx, id)
+		if err != nil{
+			log.Error.Printf("Delete Order failed, id: %#v\n, err: %#v\n", id, err)
+			return err
+		}
+		//将学员名单订单来源更新为其他
+		err = da.GetStudentModel().ReplaceStudentOrderSource(ctx, tx, id, entity.OtherOrderSource)
+		if err != nil{
+			log.Error.Printf("Replace Student Order source failed, id: %#v\n, err: %#v\n", id, err)
+			return err
+		}
+		//将订单的订单来源更新为其他
+		err = da.GetOrderModel().ReplaceOrderSource(ctx, tx, id, entity.OtherOrderSource)
+		if err != nil{
+			log.Error.Printf("Replace Order Order source failed, id: %#v\n, err: %#v\n", id, err)
+			return err
+		}
+
+		//将统计该订单来源的数据更新为其他
+		err = GetOrderStatisticsService().RemoveStatisticsByOrderSource(ctx, tx, id)
+		if err != nil{
+			log.Error.Printf("Update order statistics records failed, id: %#v\n, err: %#v\n", id, err)
+			return err
+		}
+		return nil
+	})
+	if err != nil{
+		log.Warning.Printf("Delete Order service failed, id: %#v, err: %#v\n", id, err)
+		return err
+	}
 
 	return nil
 }
