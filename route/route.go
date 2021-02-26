@@ -52,7 +52,7 @@ func Get() *gin.Engine {
 	}
 	users := api.Group("/users")
 	{
-		users.GET("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageUser, entity.AuthListAllOrder}), s.listUsers)
+		users.GET("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageUser, entity.AuthListAllOrder, entity.AuthListOrgOrder, entity.AuthDispatchSelfOrder, entity.AuthDispatchOrder}), s.listUsers)
 	}
 
 	role := api.Group("/role")
@@ -125,6 +125,13 @@ func Get() *gin.Engine {
 		order.PUT("/:id/revoke", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.revokeOrder)
 		order.PUT("/:id/invalid", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.invalidOrder)
 		order.PUT("/:id/consider", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.considerOrder)
+
+		order.PUT("/", s.mustLogin, s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.updateOrder)
+
+		order.PUT("/:id/revoke/content", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.revokeOrderWithContent)
+		order.PUT("/:id/invalid/content", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.invalidOrderWithContent)
+		order.PUT("/:id/consider/content", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.considerOrderWithContent)
+
 		order.POST("/:id/mark", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchSelfOrder, entity.AuthDispatchOrder, entity.AuthListAllOrder, entity.AuthListOrgOrder}), s.addOrderMark)
 	}
 	orders := api.Group("/orders")

@@ -43,6 +43,35 @@ func (s *Server) createOrder(c *gin.Context) {
 	})
 }
 
+
+// @Summary updateOrder
+// @Description update an order
+// @Accept json
+// @Produce json
+// @Param request body entity.OrderUpdateStatusRequest true "create request"
+// @Param Authorization header string true "With the bearer"
+// @Tags order
+// @Success 200 {object} IdResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/order [put]
+func (s *Server) updateOrder(c *gin.Context) {
+	req := new(entity.OrderUpdateStatusRequest)
+	err := c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	user := s.getJWTUser(c)
+	err = service.GetOrderService().UpdateOrderStatus(c.Request.Context(), req, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
+
 // @Summary searchOrder
 // @Description search order with condition
 // @Accept json
@@ -356,7 +385,7 @@ func (s *Server) revokeOrder(c *gin.Context) {
 		return
 	}
 	user := s.getJWTUser(c)
-	err = service.GetOrderService().RevokeOrder(c.Request.Context(), id, user)
+	err = service.GetOrderService().RevokeOrder(c.Request.Context(), id, "", user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
@@ -384,7 +413,7 @@ func (s *Server) considerOrder(c *gin.Context) {
 		return
 	}
 	user := s.getJWTUser(c)
-	err = service.GetOrderService().ConsiderOrder(c.Request.Context(), id, user)
+	err = service.GetOrderService().ConsiderOrder(c.Request.Context(), id, "",user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
@@ -411,13 +440,121 @@ func (s *Server) invalidOrder(c *gin.Context) {
 		return
 	}
 	user := s.getJWTUser(c)
-	err = service.GetOrderService().InvalidOrder(c.Request.Context(), id, user)
+	err = service.GetOrderService().InvalidOrder(c.Request.Context(), id, "",user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
 	s.responseSuccess(c)
 }
+
+
+// @Summary revokeOrderWithContent
+// @Description revoke order by id
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param id path string true "order id"
+// @Param request body entity.OrderMarkRequest true "create remark request"
+// @Tags order
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/order/{id}/revoke/content [put]
+func (s *Server) revokeOrderWithContent(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	req := new(entity.OrderMarkRequest)
+	err = c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+
+	user := s.getJWTUser(c)
+	err = service.GetOrderService().RevokeOrder(c.Request.Context(), id, req.Content, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
+//
+// @Summary considerOrderWithContent
+// @Description consider order by id
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param id path string true "order id"
+// @Param request body entity.OrderMarkRequest true "create remark request"
+// @Tags order
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/order/{id}/consider/content [put]
+func (s *Server) considerOrderWithContent(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	req := new(entity.OrderMarkRequest)
+	err = c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+
+	user := s.getJWTUser(c)
+	err = service.GetOrderService().ConsiderOrder(c.Request.Context(), id, req.Content,user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
+// @Summary invalidOrderWithContent
+// @Description invalid order by id
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param id path string true "order id"
+// @Param request body entity.OrderMarkRequest true "create remark request"
+// @Tags order
+// @Success 200 {object} Response
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/order/{id}/invalid/content [put]
+func (s *Server) invalidOrderWithContent(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	req := new(entity.OrderMarkRequest)
+	err = c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+
+	user := s.getJWTUser(c)
+	err = service.GetOrderService().InvalidOrder(c.Request.Context(), id, req.Content,user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
 
 // @Summary payOrder
 // @Description pay order by id

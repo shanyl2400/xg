@@ -21,14 +21,18 @@ var (
 
 type IOrderService interface {
 	CreateOrder(ctx context.Context, req *entity.CreateOrderRequest, operator *entity.JWTUser) (int, error)
+
 	SignUpOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error
 	DepositOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error
-	RevokeOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error
-	InvalidOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error
-	ConsiderOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error
+	RevokeOrder(ctx context.Context, orderId int, content string, operator *entity.JWTUser) error
+	InvalidOrder(ctx context.Context, orderId int, content string, operator *entity.JWTUser) error
+	ConsiderOrder(ctx context.Context, orderId int, content string, operator *entity.JWTUser) error
+
+	UpdateOrderStatus(ctx context.Context, req *entity.OrderUpdateStatusRequest, operator *entity.JWTUser) error
 
 	PayOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error
 	PaybackOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error
+
 	ConfirmOrderPay(ctx context.Context, orderPayId int, status int, operator *entity.JWTUser) error
 	AddOrderRemark(ctx context.Context, orderId int, content string, operator *entity.JWTUser) error
 	MarkOrderRemark(ctx context.Context, remarkIDs []int, status int, operator *entity.JWTUser) error
@@ -38,6 +42,8 @@ type IOrderService interface {
 	SearchOrderWithOrgId(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) (*entity.OrderInfoList, error)
 	SearchOrderRemarks(ctx context.Context, condition *da.SearchRemarkRecordCondition, operator *entity.JWTUser) (*entity.OrderRemarkList, error)
 	GetOrderById(ctx context.Context, orderId int, operator *entity.JWTUser) (*entity.OrderInfoWithRecords, error)
+
+	ExportOrders(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) ([]byte, error)
 }
 
 type OrderService struct {
@@ -122,6 +128,36 @@ func (o *OrderService) CreateOrder(ctx context.Context, req *entity.CreateOrderR
 	return id.(int), nil
 }
 
+func (o *OrderService) UpdateOrderStatus(ctx context.Context, req *entity.OrderUpdateStatusRequest, operator *entity.JWTUser) error{
+	switch req.Status {
+	case entity.OrderStatusCreated:
+		log.Warning.Printf("Invalid status, req: %#v\n", req)
+		return ErrInvalidOrderStatus
+	case entity.OrderStatusSigned :
+		return o.SignUpOrder(ctx, &entity.OrderPayRequest{
+			OrderID: req.OrderID,
+			Amount:  req.Amount,
+			Title:   req.Title,
+			Content: req.Content,
+		}, operator)
+	case entity.OrderStatusRevoked:
+		return o.RevokeOrder(ctx, req.OrderID, req.Content, operator)
+	case entity.OrderStatusInvalid :
+		return o.InvalidOrder(ctx, req.OrderID, req.Content, operator)
+	case entity.OrderStatusDeposit :
+		return o.DepositOrder(ctx, &entity.OrderPayRequest{
+			OrderID: req.OrderID,
+			Amount:  req.Amount,
+			Title:   req.Title,
+			Content: req.Content,
+		}, operator)
+	case entity.OrderStatusConsider:
+		return o.ConsiderOrder(ctx, req.OrderID, req.Content, operator)
+	}
+	log.Warning.Printf("Invalid status, req: %#v\n", req)
+	return ErrInvalidOrderStatus
+}
+
 //报名
 func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error {
 	if req.OrderID < 1 {
@@ -143,7 +179,8 @@ func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequ
 	}
 
 	if orderObj.Order.Status != entity.OrderStatusCreated &&
-		orderObj.Order.Status != entity.OrderStatusDeposit {
+		orderObj.Order.Status != entity.OrderStatusDeposit &&
+		orderObj.Order.Status != entity.OrderStatusConsider{
 		log.Warning.Printf("Check order status failed, req: %#v, order: %#v, err: %v\n", req, orderObj, err)
 		return ErrNoAuthToOperateOrder
 	}
@@ -156,6 +193,9 @@ func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequ
 			log.Warning.Printf("Update order status failed, req: %#v, operator: %#v, err: %v\n", req, operator, err)
 			return err
 		}
+		if req.Title == "" {
+			req.Title = "报名费用"
+		}
 		//增加orderPay
 		payData := &da.OrderPayRecord{
 			OrderID: req.OrderID,
@@ -167,6 +207,19 @@ func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequ
 		_, err = da.GetOrderModel().AddOrderPayRecordTx(ctx, tx, payData)
 		if err != nil {
 			log.Warning.Printf("Add order pay failed, req: %#v, payData: %#v, err: %v\n", req, payData, err)
+			return err
+		}
+
+		//添加remarks
+		content := fmt.Sprintf("订单已报名,缴费:%v元", req.Amount)
+		err = o.addOrderRemark(ctx, tx, entity.OrderRemarkRequest{
+			OrderID:  req.OrderID,
+			InfoType: entity.OrderRemarkInfoTypeSignup,
+			Info:     content,
+			Content:  req.Content,
+		}, operator)
+		if err != nil {
+			log.Warning.Printf("AddOrderRemark failed, req: %#v, content: %#v, err: %v\n", req, content, err)
 			return err
 		}
 
@@ -188,7 +241,6 @@ func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequ
 		}
 
 		//添加通知
-		content := fmt.Sprintf("订单已报名,缴费:%v元", req.Amount)
 		err = GetOrderNotifyService().NotifyOrderSignup(ctx, tx, req.OrderID, content, operator)
 		if err != nil {
 			log.Warning.Printf("Add Notify, content: %#v, err: %v\n", content, err)
@@ -223,7 +275,7 @@ func (o *OrderService) DepositOrder(ctx context.Context, req *entity.OrderPayReq
 		return err
 	}
 
-	if orderObj.Order.Status != entity.OrderStatusCreated {
+	if orderObj.Order.Status != entity.OrderStatusCreated && orderObj.Order.Status != entity.OrderStatusConsider{
 		log.Warning.Printf("Check order status failed, req: %#v, order: %#v, err: %v\n", req, orderObj, err)
 		return ErrNoAuthToOperateOrder
 	}
@@ -235,6 +287,9 @@ func (o *OrderService) DepositOrder(ctx context.Context, req *entity.OrderPayReq
 		if err != nil {
 			log.Warning.Printf("Update order status failed, req: %#v, operator: %#v, err: %v\n", req, operator, err)
 			return err
+		}
+		if req.Title == "" {
+			req.Title = "报名定金"
 		}
 		//增加orderPay
 		payData := &da.OrderPayRecord{
@@ -250,8 +305,19 @@ func (o *OrderService) DepositOrder(ctx context.Context, req *entity.OrderPayReq
 			return err
 		}
 
-		//添加通知
 		content := fmt.Sprintf("订单交定金,金额:%v元", req.Amount)
+		err = o.addOrderRemark(ctx, tx, entity.OrderRemarkRequest{
+			OrderID:  req.OrderID,
+			InfoType: entity.OrderRemarkInfoTypeDeposit,
+			Info:     content,
+			Content:  req.Content,
+		}, operator)
+		if err != nil {
+			log.Warning.Printf("AddOrderRemark failed, req: %#v, content: %#v, err: %v\n", req, content, err)
+			return err
+		}
+
+		//添加通知
 		err = GetOrderNotifyService().NotifyOrderDeposit(ctx, tx, req.OrderID, content, operator)
 		if err != nil {
 			log.Warning.Printf("Add Notify, content: %#v, err: %v\n", content, err)
@@ -266,7 +332,7 @@ func (o *OrderService) DepositOrder(ctx context.Context, req *entity.OrderPayReq
 }
 
 //退费订单
-func (o *OrderService) RevokeOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error {
+func (o *OrderService) RevokeOrder(ctx context.Context, orderId int, content string, operator *entity.JWTUser) error {
 	if orderId < 1 {
 		log.Warning.Printf("Invalid orderId, orderId: %#v\n", orderId)
 		return ErrInvalidOrderId
@@ -297,6 +363,18 @@ func (o *OrderService) RevokeOrder(ctx context.Context, orderId int, operator *e
 			return err
 		}
 
+		info := fmt.Sprintf("订单已退学")
+		err = o.addOrderRemark(ctx, tx, entity.OrderRemarkRequest{
+			OrderID:  orderId,
+			InfoType: entity.OrderRemarkInfoTypeRevoke,
+			Info:     info,
+			Content:  content,
+		}, operator)
+		if err != nil {
+			log.Warning.Printf("AddOrderRemark failed, orderId: %#v, content: %#v, err: %v\n", orderId, content, err)
+			return err
+		}
+
 		student, err := GetStudentService().GetStudentById(ctx, orderObj.Order.StudentID, operator)
 		if err != nil {
 			log.Warning.Printf("Get student failed, StudentID: %#v, err: %v\n", orderObj.Order.StudentID, err)
@@ -315,10 +393,9 @@ func (o *OrderService) RevokeOrder(ctx context.Context, orderId int, operator *e
 		}
 
 		//添加通知
-		content := fmt.Sprintf("订单已退学")
-		err = GetOrderNotifyService().NotifyOrderDeposit(ctx, tx, orderId, content, operator)
+		err = GetOrderNotifyService().NotifyOrderDeposit(ctx, tx, orderId, info, operator)
 		if err != nil {
-			log.Warning.Printf("Add Notify, content: %#v, err: %v\n", content, err)
+			log.Warning.Printf("Add Notify, content: %#v, err: %v\n", info, err)
 			return err
 		}
 		return nil
@@ -330,7 +407,7 @@ func (o *OrderService) RevokeOrder(ctx context.Context, orderId int, operator *e
 	return nil
 }
 
-func (o *OrderService) ConsiderOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error {
+func (o *OrderService) ConsiderOrder(ctx context.Context, orderId int, content string, operator *entity.JWTUser) error {
 	if orderId < 1 {
 		log.Warning.Printf("Consider orderId, orderId: %#v\n", orderId)
 		return ErrInvalidOrderId
@@ -360,6 +437,17 @@ func (o *OrderService) ConsiderOrder(ctx context.Context, orderId int, operator 
 			log.Warning.Printf("Update order status failed, order: %#v, orderId: %#v, err: %v\n", orderObj, orderId, err)
 			return err
 		}
+		info := fmt.Sprintf("订单考虑中")
+		err = o.addOrderRemark(ctx, tx, entity.OrderRemarkRequest{
+			OrderID:  orderId,
+			InfoType: entity.OrderRemarkInfoTypeConsider,
+			Info:     info,
+			Content:  content,
+		}, operator)
+		if err != nil {
+			log.Warning.Printf("AddOrderRemark failed, orderId: %#v, content: %#v, err: %v\n", orderId, content, err)
+			return err
+		}
 
 		student, err := GetStudentService().GetStudentById(ctx, orderObj.Order.StudentID, operator)
 		if err != nil {
@@ -379,10 +467,9 @@ func (o *OrderService) ConsiderOrder(ctx context.Context, orderId int, operator 
 		}
 
 		//添加通知
-		content := fmt.Sprintf("订单考虑中")
-		err = GetOrderNotifyService().NotifyOrderDeposit(ctx, tx, orderId, content, operator)
+		err = GetOrderNotifyService().NotifyOrderDeposit(ctx, tx, orderId, info, operator)
 		if err != nil {
-			log.Warning.Printf("Add Notify, content: %#v, err: %v\n", content, err)
+			log.Warning.Printf("Add Notify, content: %#v, err: %v\n", info, err)
 			return err
 		}
 		return nil
@@ -395,7 +482,7 @@ func (o *OrderService) ConsiderOrder(ctx context.Context, orderId int, operator 
 }
 
 //无效订单
-func (o *OrderService) InvalidOrder(ctx context.Context, orderId int, operator *entity.JWTUser) error {
+func (o *OrderService) InvalidOrder(ctx context.Context, orderId int, content string, operator *entity.JWTUser) error {
 	if orderId < 1 {
 		log.Warning.Printf("Invalid orderId, orderId: %#v\n", orderId)
 		return ErrInvalidOrderId
@@ -425,6 +512,18 @@ func (o *OrderService) InvalidOrder(ctx context.Context, orderId int, operator *
 			return err
 		}
 
+		info := fmt.Sprintf("订单为无效订单")
+		err = o.addOrderRemark(ctx, tx, entity.OrderRemarkRequest{
+			OrderID:  orderId,
+			InfoType: entity.OrderRemarkInfoTypeInvalid,
+			Info:     info,
+			Content:  content,
+		}, operator)
+		if err != nil {
+			log.Warning.Printf("AddOrderRemark failed, orderId: %#v, content: %#v, err: %v\n", orderId, content, err)
+			return err
+		}
+
 		student, err := GetStudentService().GetStudentById(ctx, orderObj.Order.StudentID, operator)
 		if err != nil {
 			log.Warning.Printf("Get student failed, StudentID: %#v, err: %v\n", orderObj.Order.StudentID, err)
@@ -449,10 +548,9 @@ func (o *OrderService) InvalidOrder(ctx context.Context, orderId int, operator *
 		}
 
 		//添加通知
-		content := fmt.Sprintf("订单为无效订单")
-		err = GetOrderNotifyService().NotifyOrderDeposit(ctx, tx, orderId, content, operator)
+		err = GetOrderNotifyService().NotifyOrderDeposit(ctx, tx, orderId, info, operator)
 		if err != nil {
-			log.Warning.Printf("Add Notify, content: %#v, err: %v\n", content, err)
+			log.Warning.Printf("Add Notify, content: %#v, err: %v\n", info, err)
 			return err
 		}
 		return nil
@@ -568,12 +666,37 @@ func (o *OrderService) MarkOrderRemark(ctx context.Context, remarkIDs []int, sta
 
 //TODO: search order pay record
 func (o *OrderService) AddOrderRemark(ctx context.Context, orderId int, content string, operator *entity.JWTUser) error {
-	orderObj, err := da.GetOrderModel().GetOrderById(ctx, orderId)
+	if content == "" {
+		log.Warning.Printf("No remark content, orderID: %v, content: %v\n", orderId,content)
+		return ErrNoRemarkContent
+	}
+	err := db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
+		err := o.addOrderRemark(ctx, tx, entity.OrderRemarkRequest{
+			OrderID:  orderId,
+			InfoType: entity.OrderRemarkInfoTypeNormal,
+			Info:     "普通消息",
+			Content:  content,
+		}, operator)
+		if err != nil {
+			log.Warning.Printf("AddOrderRemark failed, orderId: %#v, content: %v err: %v\n", orderId,content, err)
+			return err
+		}
+		return nil
+	})
 	if err != nil {
-		log.Warning.Printf("Get order failed, orderId: %#v, err: %v\n", orderId, err)
 		return err
 	}
-	log.Info.Printf("Add order remark, id: %#v, content: %#v\n", orderId, content)
+
+	return nil
+}
+
+func (o *OrderService) addOrderRemark(ctx context.Context, tx *gorm.DB, req entity.OrderRemarkRequest, operator *entity.JWTUser) error {
+	orderObj, err := da.GetOrderModel().GetOrderById(ctx, req.OrderID)
+	if err != nil {
+		log.Warning.Printf("Get order failed, orderId: %#v, err: %v\n", req.OrderID, err)
+		return err
+	}
+	log.Info.Printf("Add order remark, req: %#v\n", req)
 	err = o.checkOrderAuthorize(ctx, orderObj, operator)
 	if err != nil {
 		log.Warning.Printf("Check order authorize failed, order: %#v, operator: %#v, err: %v\n", orderObj, operator, err)
@@ -585,43 +708,38 @@ func (o *OrderService) AddOrderRemark(ctx context.Context, orderId int, content 
 	}
 
 	data := &da.OrderRemarkRecord{
-		OrderID: orderId,
+		OrderID: req.OrderID,
 		Author:  operator.UserId,
 		Mode:    mode,
-		Content: content,
+		Content: req.Content,
+		Info: req.Info,
+		InfoType: req.InfoType,
 		Status:  entity.OrderRemarkUnread,
 	}
-	err = db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
-		_, err = da.GetOrderModel().AddRemarkRecordTx(ctx, tx, data)
-		if err != nil {
-			log.Warning.Printf("Add remark record failed, order: %#v, data: %#v, operator: %#v, err: %v\n", orderObj, data, operator, err)
-			return err
-		}
-		_, records, err := da.GetOrderModel().SearchRemarkRecord(ctx, da.SearchRemarkRecordCondition{
-			OrderIDList: []int{orderId},
-		})
-		if err != nil {
-			log.Error.Printf("search remarks failed, orderId: %v, err:%v", orderId, err)
-			return err
-		}
-		recordsIDs := make([]int, 0)
-		for i := range records {
-			if records[i].Mode != mode {
-				recordsIDs = append(recordsIDs, records[i].ID)
-			}
-		}
-		if len(recordsIDs) > 0 {
-			err = da.GetOrderModel().UpdateOrderRemarkRecordTx(ctx, tx, recordsIDs, entity.OrderRemarkRead)
-			if err != nil {
-				log.Error.Printf("update remarks failed, recordsIDs: %v, err:%v", recordsIDs, err)
-				return err
-			}
-		}
-
-		return nil
+	_, err = da.GetOrderModel().AddRemarkRecordTx(ctx, tx, data)
+	if err != nil {
+		log.Warning.Printf("Add remark record failed, order: %#v, data: %#v, operator: %#v, err: %v\n", orderObj, data, operator, err)
+		return err
+	}
+	_, records, err := da.GetOrderModel().SearchRemarkRecord(ctx, da.SearchRemarkRecordCondition{
+		OrderIDList: []int{req.OrderID},
 	})
 	if err != nil {
+		log.Error.Printf("search remarks failed, req: %#v, err:%v", req, err)
 		return err
+	}
+	recordsIDs := make([]int, 0)
+	for i := range records {
+		if records[i].Mode != mode {
+			recordsIDs = append(recordsIDs, records[i].ID)
+		}
+	}
+	if len(recordsIDs) > 0 {
+		err = da.GetOrderModel().UpdateOrderRemarkRecordTx(ctx, tx, recordsIDs, entity.OrderRemarkRead)
+		if err != nil {
+			log.Error.Printf("update remarks failed, recordsIDs: %v, err:%v", recordsIDs, err)
+			return err
+		}
 	}
 
 	return nil
@@ -680,6 +798,9 @@ func (o *OrderService) SearchOrderRemarks(ctx context.Context, condition *da.Sea
 			Author:  records[i].Author,
 			Mode:    records[i].Mode,
 			Content: records[i].Content,
+			Status: records[i].Status,
+			Info: 	records[i].Info,
+			InfoType: records[i].InfoType,
 
 			UpdatedAt: records[i].UpdatedAt,
 			CreatedAt: records[i].CreatedAt,
@@ -709,7 +830,7 @@ func (o *OrderService) ExportOrders(ctx context.Context, condition *entity.Searc
 		OrderSourceList: condition.OrderSourceList,
 		CreateStartAt:   condition.CreateStartAt,
 		StudentKeywords: condition.StudentsKeywords,
-		AuthorIDList: 	condition.AuthorID,
+		AuthorIDList:    condition.AuthorID,
 		Keywords:        condition.Keywords,
 		CreateEndAt:     condition.CreateEndAt,
 		UpdateStartAt:   condition.UpdateStartAt,
@@ -761,7 +882,7 @@ func (o *OrderService) SearchOrders(ctx context.Context, condition *entity.Searc
 		OrderSourceList: condition.OrderSourceList,
 		CreateStartAt:   condition.CreateStartAt,
 		StudentKeywords: condition.StudentsKeywords,
-		AuthorIDList: 	 condition.AuthorID,
+		AuthorIDList:    condition.AuthorID,
 		Keywords:        condition.Keywords,
 		UpdateStartAt:   condition.UpdateStartAt,
 		UpdateEndAt:     condition.UpdateEndAt,
@@ -931,6 +1052,9 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 			UpdatedAt: orderObj.RemarkInfo[i].UpdatedAt,
 			CreatedAt: orderObj.RemarkInfo[i].CreatedAt,
 			Status:    orderObj.RemarkInfo[i].Status,
+
+			Info: 		orderObj.RemarkInfo[i].Info,
+			InfoType: 	orderObj.RemarkInfo[i].InfoType,
 		}
 	}
 	res.PaymentInfo = payRecords
@@ -960,13 +1084,37 @@ func (o *OrderService) payOrder(ctx context.Context, mode int, req *entity.Order
 		Mode:    mode,
 		Title:   req.Title,
 		Amount:  req.Amount,
+		Content: req.Content,
 		Status:  entity.OrderPayStatusPending,
 	}
-	_, err = da.GetOrderModel().AddOrderPayRecordTx(ctx, db.Get(), payData)
-	if err != nil {
-		log.Warning.Printf("Add order payment failed, order: %#v, payData: %#v, err: %v\n", orderObj, payData, err)
+	err = db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
+		_, err = da.GetOrderModel().AddOrderPayRecordTx(ctx, tx, payData)
+		if err != nil {
+			log.Warning.Printf("Add order payment failed, order: %#v, payData: %#v, err: %v\n", orderObj, payData, err)
+			return err
+		}
+		info := fmt.Sprintf("订单支付%v元", req.Amount)
+		infoType := entity.OrderRemarkInfoTypePay
+		if mode == entity.OrderPayModePayback {
+			info = fmt.Sprintf("订单退费%v元", req.Amount)
+			infoType = entity.OrderRemarkInfoTypePayback
+		}
+		err = o.addOrderRemark(ctx, tx, entity.OrderRemarkRequest{
+			OrderID:  req.OrderID,
+			InfoType: infoType,
+			Info:     info,
+			Content:  req.Content,
+		}, operator)
+		if err != nil {
+			log.Warning.Printf("AddOrderRemark failed, orderId: %#v, err: %v\n", req, err)
+			return err
+		}
+		return nil
+	})
+	if err != nil{
 		return err
 	}
+
 	return nil
 }
 
@@ -1003,6 +1151,7 @@ func (o *OrderService) getPayRecordInfo(ctx context.Context, records []*da.Order
 			Mode:      records[i].Mode,
 			Title:     records[i].Title,
 			Amount:    records[i].Amount,
+			Content: records[i].Content,
 			CreatedAt: records[i].CreatedAt,
 			UpdatedAt: records[i].UpdatedAt,
 
@@ -1160,6 +1309,7 @@ func (o *OrderService) getOrderInfoRecords(ctx context.Context, orders []*da.Ord
 			OrderID:   payRecords[i].OrderID,
 			Mode:      payRecords[i].Mode,
 			Amount:    payRecords[i].Amount,
+			Content: 	payRecords[i].Content,
 			Status:    payRecords[i].Status,
 			UpdatedAt: payRecords[i].UpdatedAt,
 			CreatedAt: payRecords[i].CreatedAt,
@@ -1185,9 +1335,11 @@ func (o *OrderService) getOrderInfoRecords(ctx context.Context, orders []*da.Ord
 			Author:    remarkRecords[i].Author,
 			Mode:      remarkRecords[i].Mode,
 			Content:   remarkRecords[i].Content,
+			Status:    remarkRecords[i].Status,
+			Info: 		remarkRecords[i].Info,
+			InfoType: remarkRecords[i].InfoType,
 			UpdatedAt: remarkRecords[i].UpdatedAt,
 			CreatedAt: remarkRecords[i].CreatedAt,
-			Status:    remarkRecords[i].Status,
 		})
 		remarkInfoMaps[remarkRecords[i].OrderID] = remarks
 	}
@@ -1343,11 +1495,11 @@ func (o *OrderService) getOrgSubOrgs(ctx context.Context, orgIds []int) ([]int, 
 }
 
 var (
-	_orderService     *OrderService
+	_orderService     IOrderService
 	_orderServiceOnce sync.Once
 )
 
-func GetOrderService() *OrderService {
+func GetOrderService() IOrderService {
 	_orderServiceOnce.Do(func() {
 		if _orderService == nil {
 			_orderService = new(OrderService)

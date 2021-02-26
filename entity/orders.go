@@ -20,6 +20,15 @@ const (
 	OrderRemarkModeServer = 1
 	OrderRemarkModeClient = 2
 
+	OrderRemarkInfoTypeNormal   = 1
+	OrderRemarkInfoTypeSignup   = 2
+	OrderRemarkInfoTypeDeposit  = 3
+	OrderRemarkInfoTypeRevoke   = 4
+	OrderRemarkInfoTypeInvalid  = 5
+	OrderRemarkInfoTypeConsider = 6
+	OrderRemarkInfoTypePay = 6
+	OrderRemarkInfoTypePayback = 6
+
 	OrderRemarkUnread = 1
 	OrderRemarkRead   = 2
 
@@ -96,6 +105,7 @@ type PayRecordInfo struct {
 	Mode    int     `json:"mode"`
 	Title   string  `json:"title"`
 	Amount  float64 `json:"amount"`
+	Content string `json:"content"`
 
 	StudentID     int      `json:"student_id"`
 	ToOrgID       int      `json:"to_org_id"`
@@ -156,6 +166,7 @@ type OrderPayRecord struct {
 	Mode    int     `json:"mode"`
 	Amount  float64 `json:"amount"`
 	Title   string  `json:"title"`
+	Content string `json:"content"`
 
 	Status int `json:"status"`
 
@@ -185,15 +196,35 @@ type OrderRemarkRecord struct {
 	Content string `json:"content"`
 	Status  int    `json:"status"`
 
+	Info string `json:"info"`
+	InfoType int `json:"info_type"`
+
 	UpdatedAt *time.Time `json:"updated_at"`
 	CreatedAt *time.Time `json:"created_at"`
+}
+
+type OrderRemarkRequest struct {
+	OrderID int `json:"order_id"`
+	InfoType int `json:"info_type"`
+	Info string `json:"info"`
+	Content string `json:"content"`
 }
 
 type OrderPayRequest struct {
 	OrderID int     `json:"order_id"`
 	Amount  float64 `json:"amount"`
 	Title   string  `json:"title"`
+	Content string  `json:"content"`
 }
+
+type OrderUpdateStatusRequest struct {
+	Status int `json:"status"`
+	OrderID int     `json:"order_id"`
+	Amount  float64 `json:"amount"`
+	Title   string  `json:"title"`
+	Content string  `json:"content"`
+}
+
 
 type OrderMarkRequest struct {
 	OrderID int    `json:"order_id"`

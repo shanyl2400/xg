@@ -66,6 +66,7 @@ type OrderPayRecord struct {
 	Mode    int    `gorm:"type:int;NOT NULL;column:mode"`
 	Title   string `gorm:"type:varchar(128);NOT NULL;column:title"`
 	Amount  float64    `gorm:"type:DECIMAL(11,2);NOT NULL;column:amount"`
+	Content string `gorm:"type:text;NOT NULL;column:content"`
 
 	Status int `gorm:"type:int;NOT NULL;column:status"`
 
@@ -81,6 +82,9 @@ type OrderRemarkRecord struct {
 	Mode    int    `gorm:"type:int;NOT NULL;column:mode"`
 	Content string `gorm:"type:text;NOT NULL;column:content"`
 	Status  int    `gorm:"type:int;NOT NULL;DEFAULT 1;column:status"`
+
+	InfoType int `gorm:"type:int;NOT NULL;column:info_type"`
+	Info	string `gorm:"type:text;NULL;column:info"`
 
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`
 	CreatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:created_at"`

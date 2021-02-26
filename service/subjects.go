@@ -148,7 +148,7 @@ func (s *SubjectService) CreateSubject(ctx context.Context, req entity.CreateSub
 
 	if strings.TrimSpace(req.Name) == "" {
 		log.Warning.Printf("CreateSubject invalid name, req: %#v\n", req)
-		return -1, ErrInvalidSubjctName
+		return -1, ErrInvalidSubjectName
 	}
 
 	err := s.checkSubjectsUnique(ctx, req.ParentId, []string{req.Name})
@@ -198,7 +198,7 @@ func (s *SubjectService) BatchCreateSubject(ctx context.Context, reqs []*entity.
 		//check name
 		if strings.TrimSpace(reqs[i].Name) == "" {
 			log.Warning.Printf("CreateSubject invalid name, req: %#v\n", reqs[i])
-			return ErrInvalidSubjctName
+			return ErrInvalidSubjectName
 		}
 		nameList[i] = reqs[i].Name
 		parentID = reqs[i].ParentId
