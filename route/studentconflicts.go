@@ -70,6 +70,60 @@ func (s *Server) searchStudentConflicts(c *gin.Context) {
 	})
 }
 
+// @Summary updateConflictStudentStatus
+// @Description update conflict student status
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param request body entity.HandleUpdateConflictStudentStatusRequest true "handle student conflict request"
+// @Tags student
+// @Success 200 {object} entity.StudentInfoList
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/students_conflicts [put]
+func (s *Server) updateConflictStudentStatus(c *gin.Context) {
+	req := new(entity.HandleUpdateConflictStudentStatusRequest)
+	err := c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	err = service.GetStudentConflictService().UpdateConflictStudentStatus(c.Request.Context(), *req)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	s.responseSuccess(c)
+}
+
+// @Summary handleStudentConflictRecordStatus
+// @Description handle Student Conflict Record Status
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param request body entity.HandleStudentConflictStatusRequest true "handle student conflict request"
+// @Tags student
+// @Success 200 {object} entity.StudentInfoList
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/students_conflicts [put]
+func (s *Server) handleStudentConflictRecordStatus(c *gin.Context) {
+	req := new(entity.HandleStudentConflictStatusRequest)
+	err := c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	err = service.GetStudentConflictService().HandleStudentConflictRecordStatus(c.Request.Context(), *req)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	s.responseSuccess(c)
+}
+
 func buildStudentConflictsCondition(c *gin.Context) da.SearchStudentConflictCondition {
 	telephone := c.Query("telephone")
 	authorIdStr := c.Query("author_id")

@@ -83,7 +83,13 @@ func Get() *gin.Engine {
 	studentConflicts := api.Group("/student_conflicts")
 	{
 		studentConflicts.GET("/", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.searchStudentConflicts)
-		studentConflicts.PUT("/", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.handleStudentConflict)
+
+	}
+	studentConflict := api.Group("/student_conflict")
+	{
+		studentConflict.PUT("/", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.handleStudentConflict)
+		studentConflict.PUT("/student", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.updateConflictStudentStatus)
+		studentConflict.PUT("/record", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.handleStudentConflictRecordStatus)
 	}
 
 	subject := api.Group("/subject")

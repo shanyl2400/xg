@@ -17,6 +17,14 @@ type HandleStudentConflictRequest struct {
 	RecordID        int `json:"record_id"`
 	SelectStudentID int `json:"select_student_id"`
 }
+type HandleStudentConflictStatusRequest struct {
+	RecordID int `json:"record_id"`
+	Status   int `json:"status"`
+}
+type HandleUpdateConflictStudentStatusRequest struct {
+	StudentID int `json:"student_id"`
+	Status    int `json:"status"`
+}
 
 type StudentConflictRecord struct {
 	ID        int        `json:"id"`

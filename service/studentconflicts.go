@@ -14,14 +14,20 @@ import (
 )
 
 var (
-	ErrMarkProcessedRecord = errors.New("mark processed record")
-	ErrNoValidStudentID    = errors.New("no valid student id")
+	ErrMarkProcessedRecord  = errors.New("mark processed record")
+	ErrNoValidStudentID     = errors.New("no valid student id")
+	ErrInvalidRecordStatus  = errors.New("invlaid record status")
+	ErrInvalidStudentStatus = errors.New("invlaid student status")
+	ErrUnconflictStudent    = errors.New("unconflict student")
 )
 
 type IStudentConflictService interface {
 	CreateOrUpdateStudentConflict(ctx context.Context, tx *gorm.DB, record entity.CreateStudentConflictRequest) error
 	HandleStudentConflict(ctx context.Context, r entity.HandleStudentConflictRequest) error
 	SearchStudentConflicts(ctx context.Context, ss da.SearchStudentConflictCondition) (int, []*entity.StudentConflictRecordDetails, error)
+
+	UpdateConflictStudentStatus(ctx context.Context, r entity.HandleUpdateConflictStudentStatusRequest) error
+	HandleStudentConflictRecordStatus(ctx context.Context, r entity.HandleStudentConflictStatusRequest) error
 }
 
 type StudentConflictService struct {
@@ -63,6 +69,75 @@ func (s *StudentConflictService) CreateOrUpdateStudentConflict(ctx context.Conte
 	}
 	return nil
 }
+
+func (s *StudentConflictService) HandleStudentConflictRecordStatus(ctx context.Context, r entity.HandleStudentConflictStatusRequest) error {
+	err := s.checkConflictRecordStatus(ctx, r.Status)
+	if err != nil {
+		log.Error.Printf("Bad request req: %#v, err: %v\n", r, err)
+		return err
+	}
+
+	record, err := da.GetStudentConflictModel().GetStudentConflictByID(ctx, r.RecordID)
+	if err != nil {
+		log.Error.Printf("Get conflict records failed, id: %#v, err: %v\n", r.RecordID, err)
+		return err
+	}
+
+	record.Status = r.Status
+	err = da.GetStudentConflictModel().UpdateStudentConflict(ctx, db.Get(), record.ID, *record)
+	if err != nil {
+		log.Error.Printf("Update conflict records failed, record: %#v, err: %v\n", record, err)
+		return err
+	}
+	return nil
+}
+func (s *StudentConflictService) UpdateConflictStudentStatus(ctx context.Context, r entity.HandleUpdateConflictStudentStatusRequest) error {
+	err := s.checkStudentStatus(ctx, r.Status)
+	if err != nil {
+		log.Error.Printf("Bad request req: %#v, err: %v\n", r, err)
+		return ErrMarkProcessedRecord
+	}
+
+	student, err := da.GetStudentModel().GetStudentById(ctx, r.StudentID)
+	if err != nil {
+		log.Error.Printf("Search students failed, req: %#v, err: %v\n", r, err)
+		return err
+	}
+	//check student in conflict record
+	_, records, err := da.GetStudentConflictModel().SearchStudentConflicts(ctx, da.SearchStudentConflictCondition{
+		Telephone: student.Telephone,
+	})
+	if err != nil {
+		log.Error.Printf("Search students conflict records failed, student: %#v, err: %v\n", student, err)
+		return err
+	}
+	if len(records) == 0 {
+		log.Error.Printf("Conflict records not found, records: %#v, err: %v\n", records, err)
+		return ErrUnconflictStudent
+	}
+
+	flag := false
+	for i := range records {
+		if records[i].Status == entity.StudentConflictStatusUnprocessed {
+			flag = true
+			break
+		}
+	}
+	if !flag {
+		log.Error.Printf("No processing conflict record, records: %#v, err: %v\n", records, err)
+		return ErrUnconflictStudent
+	}
+
+	student.Status = r.Status
+	err = da.GetStudentModel().UpdateStudent(ctx, db.Get(), r.StudentID, *student)
+	if err != nil {
+		log.Error.Printf("Update student status failed, student: %#v, err: %v\n", student, err)
+		return err
+	}
+
+	return nil
+}
+
 func (s *StudentConflictService) HandleStudentConflict(ctx context.Context, r entity.HandleStudentConflictRequest) error {
 	record, err := da.GetStudentConflictModel().GetStudentConflictByID(ctx, r.RecordID)
 	if err != nil {
@@ -162,6 +237,19 @@ func (s *StudentConflictService) SearchStudentConflicts(ctx context.Context, ss 
 		}
 	}
 	return total, res, nil
+}
+
+func (s *StudentConflictService) checkConflictRecordStatus(ctx context.Context, status int) error {
+	if status != entity.StudentConflictStatusUnprocessed && status != entity.StudentConflictStatusProcessed {
+		return ErrInvalidRecordStatus
+	}
+	return nil
+}
+func (s *StudentConflictService) checkStudentStatus(ctx context.Context, status int) error {
+	if status != entity.StudentCreated && status != entity.StudentConflictFailed && status != entity.StudentConflictSuccess {
+		return ErrInvalidStudentStatus
+	}
+	return nil
 }
 
 var (
