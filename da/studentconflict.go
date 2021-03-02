@@ -65,14 +65,14 @@ func (d *DBStudentConflictModel) SearchStudentConflicts(ctx context.Context, s S
 
 	//获取数量
 	var total int
-	err := db.Get().Model(Student{}).Where(where, values...).Count(&total).Error
+	err := db.Get().Model(StudentConflict{}).Where(where, values...).Count(&total).Error
 	if err != nil {
 		return 0, nil, err
 	}
 
 	//获取学生名单
 	records := make([]*StudentConflict, 0)
-	tx := db.Get().Where(where, values...)
+	tx := db.Get().Model(StudentConflict{}).Where(where, values...)
 	if s.PageSize > 0 {
 		offset, limit := parsePage(s.Page, s.PageSize)
 		tx = tx.Offset(offset).Limit(limit)
