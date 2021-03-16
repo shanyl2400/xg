@@ -1,13 +1,14 @@
 package route
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
 	"time"
 	"xg/da"
 	"xg/entity"
 	"xg/service"
+
+	"github.com/gin-gonic/gin"
 )
 
 // @Summary summary
@@ -16,11 +17,11 @@ import (
 // @Produce json
 // @Param Authorization header string true "With the bearer"
 // @Tags statistics
-// @Success 200 {object} entity.SummaryResponse
+// @Success 200 {object} SummaryResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/statistics/summary [get]
-func (s *Server) summary(c *gin.Context){
+func (s *Server) summary(c *gin.Context) {
 	summary, err := service.GetOrderStatisticsService().Summary(c.Request.Context())
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
@@ -28,7 +29,7 @@ func (s *Server) summary(c *gin.Context){
 	}
 	c.JSON(http.StatusOK, SummaryResponse{
 		Summary: summary,
-		ErrMsg:   "success",
+		ErrMsg:  "success",
 	})
 }
 
@@ -42,7 +43,7 @@ func (s *Server) summary(c *gin.Context){
 // @Param order_source query int false "get statistic with order_source"
 // @Param publisher_id query int  false "get statistic with publisher_id"
 // @Tags statistics
-// @Success 200 {object} entity.StatisticTableResponse
+// @Success 200 {object} StatisticTableResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/statistics/table [get]
@@ -54,8 +55,8 @@ func (s *Server) statisticsTable(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, StatisticTableResponse{
-		Data: res,
-		ErrMsg:   "success",
+		Data:   res,
+		ErrMsg: "success",
 	})
 }
 
@@ -69,7 +70,7 @@ func (s *Server) statisticsTable(c *gin.Context) {
 // @Param order_source query int false "get statistic with order_source"
 // @Param publisher_id query int  false "get statistic with publisher_id"
 // @Tags statistics
-// @Success 200 {object} entity.StatisticTimeTableResponse
+// @Success 200 {object} StatisticTimeTableResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/statistics/group [get]
@@ -83,7 +84,7 @@ func (s *Server) statisticsGroup(c *gin.Context) {
 			s.responseErr(c, http.StatusInternalServerError, err)
 			return
 		}
-	}else{
+	} else {
 		res, err = service.GetOrderStatisticsService().StatisticsGroupByOrderSources(c.Request.Context(), *req)
 		if err != nil {
 			s.responseErr(c, http.StatusInternalServerError, err)
@@ -92,8 +93,8 @@ func (s *Server) statisticsGroup(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, StatisticTimeTableResponse{
-		Data: res,
-		ErrMsg:   "success",
+		Data:   res,
+		ErrMsg: "success",
 	})
 }
 
@@ -103,13 +104,13 @@ func (s *Server) statisticsGroup(c *gin.Context) {
 // @Produce json
 // @Param Authorization header string true "With the bearer"
 // @Tags statistics
-// @Success 200 {object} entity.GraphResponse
+// @Success 200 {object} GraphResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/statistics/graph [get]
 func (s *Server) graph(c *gin.Context) {
 	studentsRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(), da.SearchOrderStatisticsRecordCondition{
-		Key:         entity.OrderStatisticKeyStudent,
+		Key: entity.OrderStatisticKeyStudent,
 	})
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
@@ -127,7 +128,7 @@ func (s *Server) graph(c *gin.Context) {
 			StudentsGraph:     studentsRecords,
 			PerformancesGraph: performanceRecords,
 		},
-		ErrMsg:   "success",
+		ErrMsg: "success",
 	})
 }
 
@@ -155,7 +156,7 @@ func (s *Server) orgGraph(c *gin.Context) {
 
 	performanceRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(),
 		da.SearchOrderStatisticsRecordCondition{
-			Key: entity.OrderStatisticKeyOrder,
+			Key:   entity.OrderStatisticKeyOrder,
 			OrgId: orgIds,
 		})
 	if err != nil {
@@ -166,7 +167,7 @@ func (s *Server) orgGraph(c *gin.Context) {
 		Graph: &entity.PerformancesGraph{
 			PerformancesGraph: performanceRecords,
 		},
-		ErrMsg:   "success",
+		ErrMsg: "success",
 	})
 }
 
@@ -184,7 +185,7 @@ func (s *Server) dispatchGraph(c *gin.Context) {
 	user := s.getJWTUser(c)
 	performanceRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(),
 		da.SearchOrderStatisticsRecordCondition{
-			Key: entity.OrderStatisticKeyOrder,
+			Key:         entity.OrderStatisticKeyOrder,
 			PublisherId: []int{user.UserId},
 		})
 	if err != nil {
@@ -195,10 +196,9 @@ func (s *Server) dispatchGraph(c *gin.Context) {
 		Graph: &entity.PerformancesGraph{
 			PerformancesGraph: performanceRecords,
 		},
-		ErrMsg:   "success",
+		ErrMsg: "success",
 	})
 }
-
 
 // @Summary orderSourceGraph
 // @Description get order source data graph
@@ -220,7 +220,7 @@ func (s *Server) orderSourceGraph(c *gin.Context) {
 	}
 	performanceRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(),
 		da.SearchOrderStatisticsRecordCondition{
-			Key: entity.OrderStatisticKeyOrder,
+			Key:         entity.OrderStatisticKeyOrder,
 			OrderSource: []int{id},
 		})
 	if err != nil {
@@ -231,7 +231,7 @@ func (s *Server) orderSourceGraph(c *gin.Context) {
 		Graph: &entity.PerformancesGraph{
 			PerformancesGraph: performanceRecords,
 		},
-		ErrMsg:   "success",
+		ErrMsg: "success",
 	})
 }
 
@@ -249,7 +249,7 @@ func (s *Server) enterGraph(c *gin.Context) {
 	user := s.getJWTUser(c)
 	publisherPerformanceRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(),
 		da.SearchOrderStatisticsRecordCondition{
-			Key: entity.OrderStatisticKeyOrder,
+			Key:         entity.OrderStatisticKeyOrder,
 			PublisherId: []int{user.UserId},
 		})
 	if err != nil {
@@ -259,9 +259,9 @@ func (s *Server) enterGraph(c *gin.Context) {
 
 	authorPerformanceRecords, err := service.GetOrderStatisticsService().SearchRecordsMonth(c.Request.Context(),
 		da.SearchOrderStatisticsRecordCondition{
-		Key: entity.OrderStatisticKeyOrder,
-		Author: []int{user.UserId},
-	})
+			Key:    entity.OrderStatisticKeyOrder,
+			Author: []int{user.UserId},
+		})
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
@@ -270,13 +270,13 @@ func (s *Server) enterGraph(c *gin.Context) {
 	c.JSON(http.StatusOK, AuthorPerformanceGraphResponse{
 		Graph: &entity.AuthorPerformancesGraph{
 			PublisherPerformancesGraph: publisherPerformanceRecords,
-			AuthorPerformancesGraph: authorPerformanceRecords,
+			AuthorPerformancesGraph:    authorPerformanceRecords,
 		},
-		ErrMsg:   "success",
+		ErrMsg: "success",
 	})
 }
 
-func buildOrderStatisticRecordEntity(c *gin.Context) *entity.OrderStatisticRecordEntity{
+func buildOrderStatisticRecordEntity(c *gin.Context) *entity.OrderStatisticRecordEntity {
 	return &entity.OrderStatisticRecordEntity{
 		Author:      parseInt(c.Query("author")),
 		OrgId:       parseInt(c.Query("org_id")),
@@ -285,7 +285,7 @@ func buildOrderStatisticRecordEntity(c *gin.Context) *entity.OrderStatisticRecor
 	}
 }
 
-func buildOrderStatisticTimeRecordEntity(c *gin.Context) *entity.StatisticRecordCondition{
+func buildOrderStatisticTimeRecordEntity(c *gin.Context) *entity.StatisticRecordCondition {
 	startAt := parseInt(c.Query("start_at"))
 	endAt := parseInt(c.Query("end_at"))
 	var startAtObj *time.Time
@@ -306,7 +306,7 @@ func buildOrderStatisticTimeRecordEntity(c *gin.Context) *entity.StatisticRecord
 			OrderSource: parseInt(c.Query("order_source")),
 		},
 		StartAt: startAtObj,
-		EndAt: endAtObj,
+		EndAt:   endAtObj,
 		GroupBy: groupBy,
 	}
 }

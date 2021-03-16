@@ -43,7 +43,6 @@ func (s *Server) createOrder(c *gin.Context) {
 	})
 }
 
-
 // @Summary updateOrder
 // @Description update an order
 // @Accept json
@@ -70,7 +69,6 @@ func (s *Server) updateOrder(c *gin.Context) {
 	}
 	s.responseSuccess(c)
 }
-
 
 // @Summary searchOrder
 // @Description search order with condition
@@ -121,7 +119,7 @@ func (s *Server) searchOrder(c *gin.Context) {
 // @Param page_size query int true "order list page size"
 // @Param page query int false "order list page index"
 // @Tags order
-// @Success 200 {string} ""
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/orders [get]
@@ -413,7 +411,7 @@ func (s *Server) considerOrder(c *gin.Context) {
 		return
 	}
 	user := s.getJWTUser(c)
-	err = service.GetOrderService().ConsiderOrder(c.Request.Context(), id, "",user)
+	err = service.GetOrderService().ConsiderOrder(c.Request.Context(), id, "", user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
@@ -440,14 +438,13 @@ func (s *Server) invalidOrder(c *gin.Context) {
 		return
 	}
 	user := s.getJWTUser(c)
-	err = service.GetOrderService().InvalidOrder(c.Request.Context(), id, "",user)
+	err = service.GetOrderService().InvalidOrder(c.Request.Context(), id, "", user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
 	s.responseSuccess(c)
 }
-
 
 // @Summary revokeOrderWithContent
 // @Description revoke order by id
@@ -512,7 +509,7 @@ func (s *Server) considerOrderWithContent(c *gin.Context) {
 	}
 
 	user := s.getJWTUser(c)
-	err = service.GetOrderService().ConsiderOrder(c.Request.Context(), id, req.Content,user)
+	err = service.GetOrderService().ConsiderOrder(c.Request.Context(), id, req.Content, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
@@ -547,14 +544,13 @@ func (s *Server) invalidOrderWithContent(c *gin.Context) {
 	}
 
 	user := s.getJWTUser(c)
-	err = service.GetOrderService().InvalidOrder(c.Request.Context(), id, req.Content,user)
+	err = service.GetOrderService().InvalidOrder(c.Request.Context(), id, req.Content, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
 	s.responseSuccess(c)
 }
-
 
 // @Summary payOrder
 // @Description pay order by id

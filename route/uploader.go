@@ -20,10 +20,14 @@ type Partition string
 
 func (p Partition) PartitionPath() string {
 	uploads := conf.Get().UploadPath
-	if p == "avatar" {
+	switch p {
+	case "avatar":
 		return uploads + "/avatar"
+	case "org_attach":
+		return uploads + "/org_attach"
+	default:
+		return uploads + "/others"
 	}
-	return uploads + "/others"
 }
 
 func NewPartition(p string) (Partition, error) {
