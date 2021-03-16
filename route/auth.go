@@ -13,7 +13,7 @@ import (
 // @Produce json
 // @Tags auth
 // @Param Authorization header string true "With the bearer"
-// @Success 200 {object} entity.Auth
+// @Success 200 {object} AuthsListResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/auths [get]

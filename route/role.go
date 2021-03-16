@@ -43,7 +43,7 @@ func (s *Server) createRole(c *gin.Context) {
 // @Produce json
 // @Param Authorization header string true "With the bearer"
 // @Tags role
-// @Success 200 {array} entity.Role
+// @Success 200 {array} RolesResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/roles [get]

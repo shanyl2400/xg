@@ -17,7 +17,7 @@ import (
 // @Param Authorization header string true "With the bearer"
 // @Param request body entity.HandleStudentConflictRequest true "handle student conflict request"
 // @Tags student
-// @Success 200 {object} entity.StudentInfoList
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/students_conflicts [put]
@@ -50,7 +50,7 @@ func (s *Server) handleStudentConflict(c *gin.Context) {
 // @Param page_size query int true "student list page size"
 // @Param page query int false "student list page index"
 // @Tags student
-// @Success 200 {object} entity.StudentInfoList
+// @Success 200 {object} StudentConflictListResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/students_conflicts [get]
@@ -77,7 +77,7 @@ func (s *Server) searchStudentConflicts(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param request body entity.HandleUpdateConflictStudentStatusRequest true "handle student conflict request"
 // @Tags student
-// @Success 200 {object} entity.StudentInfoList
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/students_conflicts [put]
@@ -104,7 +104,7 @@ func (s *Server) updateConflictStudentStatus(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param request body entity.HandleStudentConflictStatusRequest true "handle student conflict request"
 // @Tags student
-// @Success 200 {object} entity.StudentInfoList
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/students_conflicts [put]

@@ -50,7 +50,7 @@ func (s *Server) createOrder(c *gin.Context) {
 // @Param request body entity.OrderUpdateStatusRequest true "create request"
 // @Param Authorization header string true "With the bearer"
 // @Tags order
-// @Success 200 {object} IdResponse
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/order [put]
@@ -85,7 +85,7 @@ func (s *Server) updateOrder(c *gin.Context) {
 // @Param page_size query int true "order list page size"
 // @Param page query int false "order list page index"
 // @Tags order
-// @Success 200 {object} entity.OrderInfoList
+// @Success 200 {object} OrderInfoListResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/orders [get]
@@ -153,7 +153,7 @@ func (s *Server) exportOrder(c *gin.Context) {
 // @Param page_size query int true "order list page size"
 // @Param page query int false "order list page index"
 // @Tags order
-// @Success 200 {object} entity.OrderInfoList
+// @Success 200 {object} OrderInfoListResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/orders/author [get]
@@ -186,7 +186,7 @@ func (s *Server) searchOrderWithAuthor(c *gin.Context) {
 // @Param page_size query int true "order list page size"
 // @Param page query int false "order list page index"
 // @Tags order
-// @Success 200 {object} entity.OrderInfoList
+// @Success 200 {object} OrderInfoListResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/orders/org [get]
@@ -212,7 +212,7 @@ func (s *Server) searchOrderWithOrgID(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param id path string true "order id"
 // @Tags order
-// @Success 200 {object} entity.OrderInfoWithRecords
+// @Success 200 {object} OrderRecordResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/order/{id} [get]
@@ -250,7 +250,7 @@ func (s *Server) getOrderByID(c *gin.Context) {
 // @Param page_size query int true "order pay record list page size"
 // @Param page query int true "order pay record list page index"
 // @Tags order
-// @Success 200 {object} entity.OrderRemarkList
+// @Success 200 {object} OrderPaymentRecordListResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/orders/pending [get]
@@ -306,7 +306,7 @@ func (s *Server) searchOrderRemarks(c *gin.Context) {
 // @Param id path string true "order id"
 // @Param request body entity.OrderPayRequest true "order signup request"
 // @Tags order
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/order/{id}/signup [put]
@@ -339,7 +339,7 @@ func (s *Server) signupOrder(c *gin.Context) {
 // @Param id path string true "order id"
 // @Param request body entity.OrderPayRequest true "order signup request"
 // @Tags order
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/order/{id}/deposit [put]
@@ -371,7 +371,7 @@ func (s *Server) depositOrder(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param id path string true "order id"
 // @Tags order
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/order/{id}/revoke [put]
@@ -399,7 +399,7 @@ func (s *Server) revokeOrder(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param id path string true "order id"
 // @Tags order
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/order/{id}/invalid [put]
@@ -426,7 +426,7 @@ func (s *Server) considerOrder(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param id path string true "order id"
 // @Tags order
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/order/{id}/invalid [put]
@@ -454,7 +454,7 @@ func (s *Server) invalidOrder(c *gin.Context) {
 // @Param id path string true "order id"
 // @Param request body entity.OrderMarkRequest true "create remark request"
 // @Tags order
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/order/{id}/revoke/content [put]
@@ -490,7 +490,7 @@ func (s *Server) revokeOrderWithContent(c *gin.Context) {
 // @Param id path string true "order id"
 // @Param request body entity.OrderMarkRequest true "create remark request"
 // @Tags order
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/order/{id}/consider/content [put]
@@ -525,7 +525,7 @@ func (s *Server) considerOrderWithContent(c *gin.Context) {
 // @Param id path string true "order id"
 // @Param request body entity.OrderMarkRequest true "create remark request"
 // @Tags order
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/order/{id}/invalid/content [put]
@@ -560,7 +560,7 @@ func (s *Server) invalidOrderWithContent(c *gin.Context) {
 // @Param id path string true "order id"
 // @Param request body entity.OrderPayRequest true "order pay request"
 // @Tags order
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/order/{id}/pay [put]
@@ -593,7 +593,7 @@ func (s *Server) payOrder(c *gin.Context) {
 // @Param id path string true "order id"
 // @Param request body entity.OrderPayRequest true "order payback request"
 // @Tags order
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/order/{id}/payback [put]
@@ -625,7 +625,7 @@ func (s *Server) paybackOrder(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param id path string true "payment id"
 // @Tags order
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/payment/{id}/review/accept [put]
@@ -652,7 +652,7 @@ func (s *Server) acceptPayment(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param id path string true "payment id"
 // @Tags order
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/payment/{id}/review/reject [put]
@@ -680,7 +680,7 @@ func (s *Server) rejectPayment(c *gin.Context) {
 // @Param id path string true "order id"
 // @Param request body entity.OrderMarkRequest true "create mark"
 // @Tags order
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/order/{id}/mark [post]
@@ -716,7 +716,7 @@ func (s *Server) addOrderMark(c *gin.Context) {
 // @Param page_size query int true "order notify list page size"
 // @Param page query int true " order notify list page index"
 // @Tags order
-// @Success 200 {object} entity.OrderRemarkList
+// @Success 200 {object} OrderNotifyResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/notifies/orders/author [get]
@@ -747,7 +747,7 @@ func (s *Server) searchAuthorNotifies(c *gin.Context) {
 // @Param page_size query int true "order notify list page size"
 // @Param page query int true " order notify list page index"
 // @Tags order
-// @Success 200 {object} entity.OrderRemarkList
+// @Success 200 {object} OrderNotifyResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/notifies/orders [get]
@@ -774,7 +774,7 @@ func (s *Server) searchNotifies(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param id path string true "order id"
 // @Tags order
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/notify/orders/{id} [put]
@@ -800,7 +800,7 @@ func (s *Server) markOrderNotify(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param request body entity.MarkOrderRemarkRequest true "mark order remarks requests"
 // @Tags order
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/orders/marks [put]

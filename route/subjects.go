@@ -117,7 +117,7 @@ func (s *Server) createSubject(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param request body entity.BatchCreateSubjectRequest true "create subject request"
 // @Tags subject
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/subjects [post]

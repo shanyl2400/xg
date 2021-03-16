@@ -15,7 +15,7 @@ import (
 // @Produce json
 // @Param Authorization header string true "With the bearer"
 // @Tags orderSource
-// @Success 200 {array} entity.OrderSource
+// @Success 200 {object} OrderSourcesListResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/order_sources [get]
@@ -39,7 +39,7 @@ func (s *Server) listOrderSources(c *gin.Context) {
 // @Tags orderSource
 // @Param Authorization header string true "With the bearer"
 // @Param request body entity.CreateOrderSourceRequest true "create order source"
-// @Success 200 {object} Response
+// @Success 200 {object} IdResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/order_source [post]
@@ -70,7 +70,7 @@ func (s *Server) createOrderSource(c *gin.Context) {
 // @Tags orderSource
 // @Param Authorization header string true "With the bearer"
 // @Param id path string true "order source id"
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/order_source [delete]

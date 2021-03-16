@@ -44,14 +44,14 @@ func (s *Server) createStudent(c *gin.Context) {
 	})
 }
 
-// @Summary createStudent
-// @Description create a new student
+// @Summary getStudentById
+// @Description get student by id
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "With the bearer"
 // @Param id path string true "student id"
 // @Tags student
-// @Success 200 {object} entity.StudentInfosWithOrders
+// @Success 200 {object} StudentWithDetailsListResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/student/{id} [get]
@@ -80,13 +80,18 @@ func (s *Server) getStudentById(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param name query string false "search student with name"
 // @Param telephone query string false "search student with telephone"
-// @Param intent_subjects query string false "search student with intent_subjects"
+// @Param no_dispatch_order query string false "search student with no_dispatch_order"
+// @Param keywords query string false "search student with keywords"
+// @Param status query string false "search student with status"
+// @Param order_source_ids query string false "search student with order_source_ids"
 // @Param address query string false "search student with address"
+// @Param intent_subjects query string false "search student with intent_subjects"
+// @Param author_id query string false "search student with author_id"
 // @Param order_by query string false "search student order by column name"
 // @Param page_size query int true "student list page size"
 // @Param page query int false "student list page index"
 // @Tags student
-// @Success 200 {object} entity.StudentInfoList
+// @Success 200 {object} StudentListResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/students/private [get]
@@ -115,6 +120,10 @@ func (s *Server) searchPrivateStudents(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param name query string false "search student with name"
 // @Param telephone query string false "search student with telephone"
+// @Param no_dispatch_order query string false "search student with no_dispatch_order"
+// @Param keywords query string false "search student with keywords"
+// @Param status query string false "search student with status"
+// @Param order_source_ids query string false "search student with order_source_ids"
 // @Param address query string false "search student with address"
 // @Param intent_subjects query string false "search student with intent_subjects"
 // @Param author_id query string false "search student with author_id"
@@ -122,7 +131,7 @@ func (s *Server) searchPrivateStudents(c *gin.Context) {
 // @Param page_size query int true "student list page size"
 // @Param page query int false "student list page index"
 // @Tags student
-// @Success 200 {object} entity.StudentInfoList
+// @Success 200 {object} StudentListResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/students [get]

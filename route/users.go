@@ -21,7 +21,7 @@ var (
 // @Param Authorization header string true "With the bearer"
 // @Param request body entity.UserLoginRequest true "user login request"
 // @Tags user
-// @Success 200 {object} entity.UserLoginResponse
+// @Success 200 {object} UserLoginResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Failure 406 {object} Response
@@ -56,7 +56,7 @@ func (s *Server) login(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param request body entity.UserUpdatePasswordRequest true "password to update"
 // @Tags user
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/user/password [put]
@@ -83,7 +83,7 @@ func (s *Server) updatePassword(c *gin.Context) {
 // @Produce json
 // @Param Authorization header string true "With the bearer"
 // @Tags user
-// @Success 200 {array} entity.Auth
+// @Success 200 {object} AuthorizationListResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/user/authority [get]
@@ -105,8 +105,14 @@ func (s *Server) listUserAuthority(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "With the bearer"
+// @Param name query string  false "search users with name"
+// @Param role_id query string  false "search users with role_id"
+// @Param org_id query string  false "search users with org_id"
+// @Param order_by query string false "search users order by column name"
+// @Param page_size query int true "users list page size"
+// @Param page query int false "users list page index"
 // @Tags user
-// @Success 200 {array} entity.UserInfo
+// @Success 200 {object} UserListResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/users [get]
@@ -132,7 +138,7 @@ func (s *Server) listUsers(c *gin.Context) {
 // @Param Authorization header string true "With the bearer"
 // @Param id path string true "user id"
 // @Tags user
-// @Success 200 {object} Response
+// @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
 // @Router /api/user/reset/{id} [put]
