@@ -257,6 +257,8 @@ func (s *StudentService) GetStudentById(ctx context.Context, id int, operator *e
 			Status:          student.Status,
 			Note:            student.Note,
 			OrderCount:      student.OrderCount,
+			CreatedAt:		 student.CreatedAt,
+			UpdatedAt:		 student.UpdatedAt,
 		},
 	}
 
