@@ -53,7 +53,7 @@ func (s *Server) handleStudentConflict(c *gin.Context) {
 // @Success 200 {object} StudentConflictListResponse
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
-// @Router /api/students_conflicts [get]
+// @Router /api/student_conflicts [get]
 func (s *Server) searchStudentConflicts(c *gin.Context) {
 	condition := buildStudentConflictsCondition(c)
 	total, records, err := service.GetStudentConflictService().SearchStudentConflicts(c.Request.Context(), condition)
