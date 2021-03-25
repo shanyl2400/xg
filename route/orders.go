@@ -630,6 +630,13 @@ func (s *Server) paybackOrder(c *gin.Context) {
 // @Failure 400 {object} Response
 // @Router /api/payment/{id}/review/accept [put]
 func (s *Server) acceptPayment(c *gin.Context) {
+	req := new(entity.OrderPayRequest)
+	err := c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -638,6 +645,43 @@ func (s *Server) acceptPayment(c *gin.Context) {
 	}
 	user := s.getJWTUser(c)
 	err = service.GetOrderService().ConfirmOrderPay(c.Request.Context(), id, entity.OrderPayStatusChecked, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
+// @Summary updatePaymentAmount
+// @Description update Payment Amount
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param request body entity.UpdateOrderPayAmountRequest true "update order amount request"
+// @Param id path string true "payment id"
+// @Tags order
+// @Success 200 {string} string "success"
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/payment/{id}/amount [put]
+func (s *Server) updatePaymentAmount(c *gin.Context) {
+	fmt.Println(">>>>>>>>>>>>>1123123")
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	req := new(entity.UpdateOrderPayAmountRequest)
+	err = c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+
+	user := s.getJWTUser(c)
+	fmt.Println(">>>>>>>>>>>>>4444")
+	err = service.GetOrderService().UpdateOrderPayPrice(c.Request.Context(), id, req.Amount, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return

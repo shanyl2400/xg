@@ -27,6 +27,7 @@ type UserInfo struct {
 	RoleName string `json:"role_name"`
 	OrgName  string `json:"org_name"`
 	Name     string `json:"name"`
+	Avatar   string `json:"avatar"`
 }
 
 type UserLoginRequest struct {

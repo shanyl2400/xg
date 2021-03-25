@@ -109,6 +109,7 @@ func Get() *gin.Engine {
 		org.GET("/:id", s.mustLogin, s.getOrgById)
 		org.GET("/:id/subjects", s.mustLogin, s.getOrgSubjectsById)
 		org.PUT("/:id/revoke", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.revokeOrg)
+		org.PUT("/:id/renew", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.renewOrg)
 		org.PUT("/:id/review/reject", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.rejectOrg)
 		org.PUT("/:id/review/approve", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.approveOrg)
 
@@ -119,6 +120,7 @@ func Get() *gin.Engine {
 	{
 		orgs.GET("/", s.mustLogin, s.listOrgs)
 		orgs.GET("/pending", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrg}), s.listPendingOrgs)
+		orgs.GET("/expired", s.mustLogin, s.hasPermission([]int{entity.AuthManageOrg}), s.listNearExpiredOrgs)
 		orgs.GET("/campus", s.mustLogin, s.searchSubOrgs)
 	}
 
@@ -165,6 +167,7 @@ func Get() *gin.Engine {
 	{
 		payment.POST("/:id/pay", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.payOrder)
 		payment.POST("/:id/payback", s.mustLogin, s.hasPermission([]int{entity.AuthListOrgOrder}), s.paybackOrder)
+		payment.PUT("/:id/amount", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrder}), s.updatePaymentAmount)
 		payment.PUT("/:id/review/accept", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrder}), s.acceptPayment)
 		payment.PUT("/:id/review/reject", s.mustLogin, s.hasPermission([]int{entity.AuthCheckOrder}), s.rejectPayment)
 	}

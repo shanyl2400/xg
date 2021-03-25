@@ -7,6 +7,7 @@ import (
 	"xg/log"
 	_ "xg/log"
 	"xg/route"
+	"xg/routine"
 )
 
 func loadConfig() {
@@ -51,5 +52,9 @@ func main() {
 	da.AutoMigrate()
 	da.InitData(true)
 
+	//启动协程服务
+	orgExpireChecker := new(routine.OrgExpire)
+
+	orgExpireChecker.Start()
 	engine.Run(":8088")
 }

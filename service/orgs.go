@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 	"sync"
+	"time"
 	"xg/da"
 	"xg/db"
 	"xg/entity"
@@ -18,14 +19,16 @@ type IOrgService interface {
 	CreateOrgWithSubOrgs(ctx context.Context, req *entity.CreateOrgWithSubOrgsRequest, operator *entity.JWTUser) (int, error)
 	UpdateOrgById(ctx context.Context, req *entity.UpdateOrgRequest, operator *entity.JWTUser) error
 	RevokeOrgById(ctx context.Context, id int, operator *entity.JWTUser) error
+	ExpireOrgById(ctx context.Context, id int) error
+	RenewOrgById(ctx context.Context, tx *gorm.DB, req *entity.RenewOrgRequest, operator *entity.JWTUser) error
 	CheckOrgById(ctx context.Context, id, status int, operator *entity.JWTUser) error
 	GetOrgById(ctx context.Context, orgId int) (*entity.Org, error)
 	GetOrgSubjectsById(ctx context.Context, orgId int) ([]string, error)
 	ListOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error)
 	ListOrgsByStatus(ctx context.Context, status []int) (int, []*entity.Org, error)
 	SearchSubOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.SubOrgWithDistance, error)
-	SearchPendingOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.SubOrgWithDistance, error)
-
+	SearchPendingOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error)
+	SearchNearExpiredOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error)
 	UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *entity.UpdateOrgWithSubOrgsRequest, operator *entity.JWTUser) error
 }
 
@@ -147,6 +150,57 @@ func (s *OrgService) RevokeOrgById(ctx context.Context, id int, operator *entity
 	return nil
 }
 
+func (s *OrgService) ExpireOrgById(ctx context.Context, id int) error {
+	log.Info.Printf("expire org, id: %#v\n", id)
+	if id == 1 {
+		log.Warning.Printf("Can't expire root org, id: %v\n", id)
+		return ErrOperateOnRootOrg
+	}
+	org, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), id)
+	if err != nil {
+		log.Warning.Printf("Get expire org failed, id: %v, err: %v\n", id, err)
+		return err
+	}
+	if org.Status != entity.OrgStatusCertified {
+		log.Info.Printf("Expire org workded, id: %v\n", id)
+		return nil
+	}
+	if org.ParentID != 0 {
+		log.Info.Printf("Expire sub org, id: %v, org: %#v\n", id, org)
+		return ErrNotSuperOrg
+	}
+
+	subOrgs, err := da.GetOrgModel().GetOrgsByParentIdWithStatus(ctx, org.ID, []int{entity.OrgStatusCreated, entity.OrgStatusCertified, entity.OrgStatusRejected})
+	if err != nil {
+		log.Warning.Printf("Get orgs by parent failed, org: %#v, err: %v\n", org, err)
+		return err
+	}
+
+	err = db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
+		err = da.GetOrgModel().UpdateOrg(ctx, tx, id, da.Org{
+			Status: entity.OrgStatusOverDue,
+		})
+		if err != nil {
+			log.Warning.Printf("Update org status failed, org: %#v, err: %v\n", org, err)
+			return err
+		}
+		for i := range subOrgs {
+			err = da.GetOrgModel().UpdateOrg(ctx, tx, subOrgs[i].ID, da.Org{
+				Status: entity.OrgStatusOverDue,
+			})
+			if err != nil {
+				log.Warning.Printf("Update sub org status failed, sub org: %#v, err: %v\n", subOrgs[i], err)
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *OrgService) CheckOrgById(ctx context.Context, id, status int, operator *entity.JWTUser) error {
 	log.Info.Printf("check org, id: %#v, status: %#v\n", id, status)
 	org, err := da.GetOrgModel().GetOrgById(ctx, db.Get(), id)
@@ -225,6 +279,7 @@ func (s *OrgService) GetOrgById(ctx context.Context, orgId int) (*entity.Org, er
 		CorporateIdentity:     org.CorporateIdentity,
 		SchoolPermission:      org.SchoolPermission,
 		Extra:                 org.Extra,
+		ExpiredAt:             org.ExpiredAt,
 		SubOrgs:               ToOrgEntities(subOrgs),
 	}, nil
 }
@@ -251,7 +306,7 @@ func (s *OrgService) GetOrgSubjectsById(ctx context.Context, orgId int) ([]strin
 
 func (s *OrgService) ListOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error) {
 	log.Info.Printf("ListOrgs, condition: %#v\n", condition)
-	condition.Status = []int{entity.OrgStatusCertified}
+	// condition.Status = []int{entity.OrgStatusCertified}
 	condition.ParentIDs = []int{0}
 
 	count, orgs, err := da.GetOrgModel().SearchOrgs(ctx, condition)
@@ -281,6 +336,7 @@ func (s *OrgService) ListOrgs(ctx context.Context, condition da.SearchOrgsCondit
 			SchoolPermission:      orgs[i].SchoolPermission,
 			SettlementInstruction: orgs[i].SettlementInstruction,
 			Extra:                 orgs[i].Extra,
+			ExpiredAt:             orgs[i].ExpiredAt,
 			SupportRoleID:         entity.StringToIntArray(orgs[i].SupportRoleID),
 		}
 	}
@@ -319,6 +375,7 @@ func (s *OrgService) ListOrgsByStatus(ctx context.Context, status []int) (int, [
 			SchoolPermission:      orgs[i].SchoolPermission,
 			SettlementInstruction: orgs[i].SettlementInstruction,
 			Extra:                 orgs[i].Extra,
+			ExpiredAt:             orgs[i].ExpiredAt,
 			SupportRoleID:         entity.StringToIntArray(orgs[i].SupportRoleID),
 		}
 	}
@@ -361,6 +418,44 @@ func (s *OrgService) SearchPendingOrgs(ctx context.Context, condition da.SearchO
 			SchoolPermission:      orgs[i].SchoolPermission,
 			SettlementInstruction: orgs[i].SettlementInstruction,
 			Extra:                 orgs[i].Extra,
+			ExpiredAt:             orgs[i].ExpiredAt,
+			SupportRoleID:         entity.StringToIntArray(orgs[i].SupportRoleID),
+		}
+	}
+	return count, res, nil
+}
+
+func (s *OrgService) SearchNearExpiredOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error) {
+	condition.Status = []int{entity.OrgStatusCertified}
+	condition.ParentIDs = []int{0}
+	condition.ExpiredRecentMonth = 1
+	count, orgs, err := da.GetOrgModel().SearchOrgs(ctx, condition)
+	if err != nil {
+		log.Warning.Printf("Search org failed, condition: %#v, err: %v\n", condition, err)
+		return 0, nil, err
+	}
+	res := make([]*entity.Org, len(orgs))
+
+	for i := range orgs {
+		var subjects []string
+		if len(orgs[i].Subjects) > 0 {
+			subjects = strings.Split(orgs[i].Subjects, ",")
+		}
+		res[i] = &entity.Org{
+			ID:                    orgs[i].ID,
+			Name:                  orgs[i].Name,
+			Subjects:              subjects,
+			Status:                orgs[i].Status,
+			Address:               orgs[i].Address,
+			AddressExt:            orgs[i].AddressExt,
+			ParentID:              orgs[i].ParentID,
+			Telephone:             orgs[i].Telephone,
+			BusinessLicense:       orgs[i].BusinessLicense,
+			CorporateIdentity:     orgs[i].CorporateIdentity,
+			SchoolPermission:      orgs[i].SchoolPermission,
+			SettlementInstruction: orgs[i].SettlementInstruction,
+			Extra:                 orgs[i].Extra,
+			ExpiredAt:             orgs[i].ExpiredAt,
 			SupportRoleID:         entity.StringToIntArray(orgs[i].SupportRoleID),
 		}
 	}
@@ -415,6 +510,7 @@ func (s *OrgService) searchOrgs(ctx context.Context, condition da.SearchOrgsCond
 			SchoolPermission:      orgs[i].SchoolPermission,
 			SettlementInstruction: orgs[i].SettlementInstruction,
 			Extra:                 orgs[i].Extra,
+			ExpiredAt:             orgs[i].ExpiredAt,
 
 			SupportRoleID: entity.StringToIntArray(orgs[i].SupportRoleID),
 			Distance:      orgs[i].Distance,
@@ -722,6 +818,12 @@ func (s *OrgService) createOrg(ctx context.Context, tx *gorm.DB, req *entity.Cre
 		SchoolPermission:  req.SchoolPermission,
 		Extra:             req.Extra,
 	}
+
+	if req.ValidMonth > 0 {
+		expiredAt := time.Now().AddDate(0, req.ValidMonth, 0)
+		data.ExpiredAt = &expiredAt
+	}
+
 	id, err := da.GetOrgModel().CreateOrg(ctx, tx, data)
 	if err != nil {
 		log.Warning.Printf("Create org failed, data: %#v, err: %v\n", data, err)
@@ -731,6 +833,69 @@ func (s *OrgService) createOrg(ctx context.Context, tx *gorm.DB, req *entity.Cre
 }
 
 func (s *OrgService) updateOrgById(ctx context.Context, tx *gorm.DB, req *entity.UpdateOrgRequest, operator *entity.JWTUser) error {
+	log.Info.Printf("update org, req: %#v\n", req)
+	pendingUpdateOrg, err := da.GetOrgModel().GetOrgById(ctx, tx, req.ID)
+	if err != nil {
+		log.Warning.Printf("Get org failed, req: %#v, err: %v\n", req, err)
+		return err
+	}
+	if req.Name != "" {
+		pendingUpdateOrg.Name = req.Name
+	}
+	pendingUpdateOrg.Subjects = strings.Join(req.Subjects, ",")
+	pendingUpdateOrg.Address = req.Address
+	pendingUpdateOrg.AddressExt = req.AddressExt
+	pendingUpdateOrg.Telephone = req.Telephone
+	pendingUpdateOrg.Latitude = req.Latitude
+	pendingUpdateOrg.Longitude = req.Longitude
+	pendingUpdateOrg.BusinessLicense = req.BusinessLicense
+	pendingUpdateOrg.CorporateIdentity = req.CorporateIdentity
+	pendingUpdateOrg.SchoolPermission = req.SchoolPermission
+	pendingUpdateOrg.SettlementInstruction = req.SettlementInstruction
+	pendingUpdateOrg.Extra = req.Extra
+	log.Info.Printf("pendingUpdateOrg org: %#v\n", pendingUpdateOrg)
+
+	err = da.GetOrgModel().SaveOrg(ctx, tx, *pendingUpdateOrg)
+	if err != nil {
+		log.Warning.Printf("Update org failed, req: %#v, err: %v\n", req, err)
+		return err
+	}
+	return nil
+}
+
+func (s *OrgService) RenewOrgById(ctx context.Context, tx *gorm.DB, req *entity.RenewOrgRequest, operator *entity.JWTUser) error {
+	log.Info.Printf("update org, req: %#v\n", req)
+	pendingUpdateOrg, err := da.GetOrgModel().GetOrgById(ctx, tx, req.ID)
+	if err != nil {
+		log.Warning.Printf("Get org failed, req: %#v, err: %v\n", req, err)
+		return err
+	}
+	if req.ValidMonth < 1 {
+		log.Warning.Printf("Valid month is less than 1, req: %#v\n", req)
+		return nil
+	}
+	if pendingUpdateOrg.ExpiredAt == nil {
+		log.Warning.Printf("Org is indefinite duration, req: %#v\n", req)
+		return nil
+	}
+	now := time.Now()
+	if pendingUpdateOrg.ExpiredAt.After(now) {
+		expiredAt := pendingUpdateOrg.ExpiredAt.AddDate(0, req.ValidMonth, 0)
+		pendingUpdateOrg.ExpiredAt = &expiredAt
+	} else {
+		expiredAt := time.Now().AddDate(0, req.ValidMonth, 0)
+		pendingUpdateOrg.ExpiredAt = &expiredAt
+	}
+
+	err = da.GetOrgModel().SaveOrg(ctx, tx, *pendingUpdateOrg)
+	if err != nil {
+		log.Warning.Printf("Update org failed, req: %#v, err: %v\n", req, err)
+		return err
+	}
+	return nil
+}
+
+func (s *OrgService) updateOrgByIdV1(ctx context.Context, tx *gorm.DB, req *entity.UpdateOrgRequest, operator *entity.JWTUser) error {
 	log.Info.Printf("update org, req: %#v\n", req)
 	err := da.GetOrgModel().UpdateOrg(ctx, tx, req.ID, da.Org{
 		Subjects:   strings.Join(req.Subjects, ","),

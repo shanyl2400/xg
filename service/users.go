@@ -17,7 +17,7 @@ var (
 	ErrInvalidPublisherID   = errors.New("invalid publisher id")
 	ErrInvalidToOrgID       = errors.New("invalid to org id")
 	ErrInvalidStudentID     = errors.New("invalid student id")
-	ErrNoRemarkContent = errors.New("no remark content")
+	ErrNoRemarkContent      = errors.New("no remark content")
 	ErrStudentIsConflict    = errors.New("student is conflict")
 	ErrNoAuthorizeToOperate = errors.New("no auth to operate")
 	ErrNoAuthToOperateOrder = errors.New("no auth to operate order")
@@ -34,7 +34,7 @@ var (
 	ErrCreateSuperUser     = errors.New("can't create super user")
 	ErrInvalidStatisticKey = errors.New("invalid statistics key")
 	ErrInvalidOrderId      = errors.New("invalid order id")
-	ErrInvalidOrderStatus      = errors.New("invalid order status")
+	ErrInvalidOrderStatus  = errors.New("invalid order status")
 	ErrInvalidSubjectName  = errors.New("invalid subject name")
 
 	ErrStudentIdNeeded = errors.New("student id is needed")
@@ -180,6 +180,7 @@ func (u *UserService) ListUsers(ctx context.Context, condition da.SearchUserCond
 			OrgId:    users[i].OrgId,
 			RoleName: roleMap[users[i].RoleId],
 			OrgName:  orgMap[users[i].OrgId],
+			Avatar:   users[i].Avatar,
 		}
 	}
 	return total, userList, nil

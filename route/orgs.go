@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 	"xg/da"
+	"xg/db"
 	"xg/entity"
 	"xg/service"
 
@@ -76,6 +77,40 @@ func (s *Server) listOrgs(c *gin.Context) {
 func (s *Server) listPendingOrgs(c *gin.Context) {
 	condition := buildOrgsSearchCondition(c)
 	count, orgs, err := service.GetOrgService().SearchPendingOrgs(c.Request.Context(), condition)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, OrgsListResponse{
+		Data: &OrgListInfo{
+			Orgs:  orgs,
+			Total: count,
+		},
+		ErrMsg: "success",
+	})
+}
+
+// @Summary listNearExpiredOrgs
+// @Description list near expired organizations
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param student_id query string false "search org with student_id"
+// @Param subjects query string false "search org by subjects"
+// @Param parent_id query string false "search org by parent_id"
+// @Param address query string false "search org by address"
+// @Param name query string false "search org by name"
+// @Param order_by query string false "search org order by column name"
+// @Param page_size query int true "org list page size"
+// @Param page query int false "org list page index"
+// @Tags organization
+// @Success 200 {object} OrgsListResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/orgs/pending [get]
+func (s *Server) listNearExpiredOrgs(c *gin.Context) {
+	condition := buildOrgsSearchCondition(c)
+	count, orgs, err := service.GetOrgService().SearchNearExpiredOrgs(c.Request.Context(), condition)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
@@ -293,6 +328,41 @@ func (s *Server) revokeOrg(c *gin.Context) {
 	s.responseSuccess(c)
 }
 
+// @Summary revokeOrg
+// @Description revoke org
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param id path string true "org id"
+// @Tags organization
+// @Success 200 {string} string "success"
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/org/{id}/renew [put]
+func (s *Server) renewOrg(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	req := new(entity.RenewOrgRequest)
+	err = c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	req.ID = id
+
+	user := s.getJWTUser(c)
+	err = service.GetOrgService().RenewOrgById(c.Request.Context(), db.Get(), req, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	s.responseSuccess(c)
+}
+
 // @Summary updateOrgById
 // @Description update orgs
 // @Accept json
@@ -371,12 +441,14 @@ func buildOrgsSearchCondition(c *gin.Context) da.SearchOrgsCondition {
 		parentIDs = []int{parentID}
 	}
 	return da.SearchOrgsCondition{
-		Subjects:  subjects,
-		Address:   c.Query("address"),
-		Name:      c.Query("name"),
-		OrderBy:   orderBy,
-		StudentID: parseInt(c.Query("student_id")),
-		ParentIDs: parentIDs,
+		Subjects:   subjects,
+		SubSubject: c.Query("subsubjects"),
+		Address:    c.Query("address"),
+		Name:       c.Query("name"),
+		OrderBy:    orderBy,
+		Status:     parseInts(c.Query("status")),
+		StudentID:  parseInt(c.Query("student_id")),
+		ParentIDs:  parentIDs,
 
 		PageSize: parseInt(pageSize),
 		Page:     parseInt(page),

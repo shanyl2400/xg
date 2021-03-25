@@ -8,6 +8,7 @@ import (
 	"time"
 	"xg/db"
 	"xg/entity"
+	"xg/log"
 
 	"github.com/jinzhu/gorm"
 )
@@ -17,6 +18,7 @@ type IOrgModel interface {
 	GetOrgById(ctx context.Context, tx *gorm.DB, id int) (*Org, error)
 	ListOrgs(ctx context.Context) ([]*Org, error)
 	UpdateOrg(ctx context.Context, tx *gorm.DB, id int, org Org) error
+	SaveOrg(ctx context.Context, tx *gorm.DB, org Org) error
 	CountOrgs(ctx context.Context, s SearchOrgsCondition) (int, error)
 
 	ListOrgsByIDs(ctx context.Context, ids []int) ([]*Org, error)
@@ -49,6 +51,8 @@ type Org struct {
 	Status        int    `gorm:"type:int;NOT NULL;column:status;index"`
 	SupportRoleID string `gorm:"type:varchar(255);NOT NULL;column:support_role_ids"`
 
+	ExpiredAt *time.Time `gorm:"type:datetime;NULL;column:expired_at"`
+
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`
 	CreatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:created_at"`
 	DeletedAt *time.Time `gorm:"type:datetime;column:deleted_at"`
@@ -74,7 +78,7 @@ func (d *DBOrgModel) CreateOrg(ctx context.Context, tx *gorm.DB, org Org) (int, 
 
 func (d *DBOrgModel) UpdateOrg(ctx context.Context, tx *gorm.DB, id int, org Org) error {
 	now := time.Now()
-	err := db.Get().Model(Org{}).Where(&Org{ID: id}).Updates(Org{
+	newOrg := Org{
 		Status:                org.Status,
 		Subjects:              org.Subjects,
 		Name:                  org.Name,
@@ -88,7 +92,21 @@ func (d *DBOrgModel) UpdateOrg(ctx context.Context, tx *gorm.DB, id int, org Org
 		Extra:                 org.Extra,
 		Latitude:              org.Latitude,
 		Telephone:             org.Telephone,
-		UpdatedAt:             &now}).Error
+		UpdatedAt:             &now,
+	}
+	log.Info.Printf("Update org: %#v\n", newOrg)
+	err := db.Get().Model(Org{}).Where(&Org{ID: id}).Updates(newOrg).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *DBOrgModel) SaveOrg(ctx context.Context, tx *gorm.DB, org Org) error {
+	now := time.Now()
+	org.UpdatedAt = &now
+	log.Info.Printf("Save org: %#v\n", org)
+	err := db.Get().Model(Org{}).Save(org).Error
 	if err != nil {
 		return err
 	}
@@ -231,8 +249,12 @@ type SearchOrgsCondition struct {
 	Status    []int
 	StudentID int
 
+	SubSubject string
+
 	ParentIDs []int
 	IsSubOrg  bool
+
+	ExpiredRecentMonth int
 
 	OrderBy  string
 	Page     int
@@ -261,6 +283,17 @@ func (s SearchOrgsCondition) GetConditions() (string, []interface{}) {
 		where := "(" + strings.Join(partsWhere, " or ") + ")"
 		wheres = append(wheres, where)
 	}
+	if s.SubSubject != "" {
+		where := "id IN (SELECT parent_id FROM orgs WHERE subjects LIKE ?)"
+		values = append(values, s.SubSubject+"%")
+		wheres = append(wheres, where)
+	}
+	if s.ExpiredRecentMonth > 0 {
+		where := "(expired_at < date_add(now(), interval ? month))"
+		values = append(values, s.ExpiredRecentMonth)
+		wheres = append(wheres, where)
+	}
+
 	if s.Address != "" {
 		wheres = append(wheres, "address LIKE ?")
 		values = append(values, "%"+s.Address+"%")

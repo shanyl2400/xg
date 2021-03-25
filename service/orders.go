@@ -34,6 +34,7 @@ type IOrderService interface {
 	PaybackOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error
 
 	ConfirmOrderPay(ctx context.Context, orderPayId int, status int, operator *entity.JWTUser) error
+	UpdateOrderPayPrice(ctx context.Context, orderPayId int, price float64, operator *entity.JWTUser) error
 	AddOrderRemark(ctx context.Context, orderId int, content string, operator *entity.JWTUser) error
 	MarkOrderRemark(ctx context.Context, remarkIDs []int, status int, operator *entity.JWTUser) error
 	SearchOrderPayRecords(ctx context.Context, condition *entity.SearchPayRecordCondition, operator *entity.JWTUser) (*entity.PayRecordInfoList, error)
@@ -128,12 +129,12 @@ func (o *OrderService) CreateOrder(ctx context.Context, req *entity.CreateOrderR
 	return id.(int), nil
 }
 
-func (o *OrderService) UpdateOrderStatus(ctx context.Context, req *entity.OrderUpdateStatusRequest, operator *entity.JWTUser) error{
+func (o *OrderService) UpdateOrderStatus(ctx context.Context, req *entity.OrderUpdateStatusRequest, operator *entity.JWTUser) error {
 	switch req.Status {
 	case entity.OrderStatusCreated:
 		log.Warning.Printf("Invalid status, req: %#v\n", req)
 		return ErrInvalidOrderStatus
-	case entity.OrderStatusSigned :
+	case entity.OrderStatusSigned:
 		return o.SignUpOrder(ctx, &entity.OrderPayRequest{
 			OrderID: req.OrderID,
 			Amount:  req.Amount,
@@ -142,9 +143,9 @@ func (o *OrderService) UpdateOrderStatus(ctx context.Context, req *entity.OrderU
 		}, operator)
 	case entity.OrderStatusRevoked:
 		return o.RevokeOrder(ctx, req.OrderID, req.Content, operator)
-	case entity.OrderStatusInvalid :
+	case entity.OrderStatusInvalid:
 		return o.InvalidOrder(ctx, req.OrderID, req.Content, operator)
-	case entity.OrderStatusDeposit :
+	case entity.OrderStatusDeposit:
 		return o.DepositOrder(ctx, &entity.OrderPayRequest{
 			OrderID: req.OrderID,
 			Amount:  req.Amount,
@@ -180,7 +181,7 @@ func (o *OrderService) SignUpOrder(ctx context.Context, req *entity.OrderPayRequ
 
 	if orderObj.Order.Status != entity.OrderStatusCreated &&
 		orderObj.Order.Status != entity.OrderStatusDeposit &&
-		orderObj.Order.Status != entity.OrderStatusConsider{
+		orderObj.Order.Status != entity.OrderStatusConsider {
 		log.Warning.Printf("Check order status failed, req: %#v, order: %#v, err: %v\n", req, orderObj, err)
 		return ErrNoAuthToOperateOrder
 	}
@@ -275,7 +276,7 @@ func (o *OrderService) DepositOrder(ctx context.Context, req *entity.OrderPayReq
 		return err
 	}
 
-	if orderObj.Order.Status != entity.OrderStatusCreated && orderObj.Order.Status != entity.OrderStatusConsider{
+	if orderObj.Order.Status != entity.OrderStatusCreated && orderObj.Order.Status != entity.OrderStatusConsider {
 		log.Warning.Printf("Check order status failed, req: %#v, order: %#v, err: %v\n", req, orderObj, err)
 		return ErrNoAuthToOperateOrder
 	}
@@ -598,17 +599,6 @@ func (o *OrderService) ConfirmOrderPay(ctx context.Context, orderPayId int, stat
 			}
 			orderInfo, err := o.GetOrderById(ctx, payment.OrderID, operator)
 
-			//err = GetStatisticsService().AddPerformance(ctx, tx, entity.OrderPerformanceInfo{
-			//	OrgId:       orderInfo.ToOrgID,
-			//	AuthorId:    orderInfo.StudentSummary.AuthorId,
-			//	PublisherId: orderInfo.PublisherIDList,
-			//	OrderSourceId: orderInfo.OrderSource,
-			//}, performance)
-			//if err != nil {
-			//	log.Warning.Printf("Add performance failed, payment: %#v, performance: %#v, err: %v\n", payment, performance, err)
-			//	return err
-			//}
-
 			err = GetOrderStatisticsService().AddPerformance(ctx, tx, entity.OrderStatisticRecordEntity{
 				Author:      orderInfo.StudentSummary.AuthorId,
 				OrgId:       orderInfo.ToOrgID,
@@ -623,6 +613,22 @@ func (o *OrderService) ConfirmOrderPay(ctx context.Context, orderPayId int, stat
 		return nil
 	})
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+//改价格
+func (o *OrderService) UpdateOrderPayPrice(ctx context.Context, orderPayId int, price float64, operator *entity.JWTUser) error {
+	//所有payRecord都确认，才能将order确认
+	//检查order状态
+	//修改支付记录状态
+	o.lock.Lock()
+	defer o.lock.Unlock()
+	log.Info.Printf("Update order pay price, payId: %#v, status: %#v\n", orderPayId, price)
+	err := da.GetOrderModel().UpdateOrderPayRecordPriceTx(ctx, db.Get(), orderPayId, price)
+	if err != nil {
+		log.Warning.Printf("Update order pay record failed, orderPayId: %#v, err: %v\n", orderPayId, err)
 		return err
 	}
 	return nil
@@ -667,7 +673,7 @@ func (o *OrderService) MarkOrderRemark(ctx context.Context, remarkIDs []int, sta
 //TODO: search order pay record
 func (o *OrderService) AddOrderRemark(ctx context.Context, orderId int, content string, operator *entity.JWTUser) error {
 	if content == "" {
-		log.Warning.Printf("No remark content, orderID: %v, content: %v\n", orderId,content)
+		log.Warning.Printf("No remark content, orderID: %v, content: %v\n", orderId, content)
 		return ErrNoRemarkContent
 	}
 	err := db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
@@ -678,7 +684,7 @@ func (o *OrderService) AddOrderRemark(ctx context.Context, orderId int, content 
 			Content:  content,
 		}, operator)
 		if err != nil {
-			log.Warning.Printf("AddOrderRemark failed, orderId: %#v, content: %v err: %v\n", orderId,content, err)
+			log.Warning.Printf("AddOrderRemark failed, orderId: %#v, content: %v err: %v\n", orderId, content, err)
 			return err
 		}
 		return nil
@@ -708,13 +714,13 @@ func (o *OrderService) addOrderRemark(ctx context.Context, tx *gorm.DB, req enti
 	}
 
 	data := &da.OrderRemarkRecord{
-		OrderID: req.OrderID,
-		Author:  operator.UserId,
-		Mode:    mode,
-		Content: req.Content,
-		Info: req.Info,
+		OrderID:  req.OrderID,
+		Author:   operator.UserId,
+		Mode:     mode,
+		Content:  req.Content,
+		Info:     req.Info,
 		InfoType: req.InfoType,
-		Status:  entity.OrderRemarkUnread,
+		Status:   entity.OrderRemarkUnread,
 	}
 	_, err = da.GetOrderModel().AddRemarkRecordTx(ctx, tx, data)
 	if err != nil {
@@ -793,13 +799,13 @@ func (o *OrderService) SearchOrderRemarks(ctx context.Context, condition *da.Sea
 
 	for i := range records {
 		res.Records[i] = &entity.OrderRemarkRecord{
-			ID:      records[i].ID,
-			OrderID: records[i].OrderID,
-			Author:  records[i].Author,
-			Mode:    records[i].Mode,
-			Content: records[i].Content,
-			Status: records[i].Status,
-			Info: 	records[i].Info,
+			ID:       records[i].ID,
+			OrderID:  records[i].OrderID,
+			Author:   records[i].Author,
+			Mode:     records[i].Mode,
+			Content:  records[i].Content,
+			Status:   records[i].Status,
+			Info:     records[i].Info,
 			InfoType: records[i].InfoType,
 
 			UpdatedAt: records[i].UpdatedAt,
@@ -1053,8 +1059,8 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 			CreatedAt: orderObj.RemarkInfo[i].CreatedAt,
 			Status:    orderObj.RemarkInfo[i].Status,
 
-			Info: 		orderObj.RemarkInfo[i].Info,
-			InfoType: 	orderObj.RemarkInfo[i].InfoType,
+			Info:     orderObj.RemarkInfo[i].Info,
+			InfoType: orderObj.RemarkInfo[i].InfoType,
 		}
 	}
 	res.PaymentInfo = payRecords
@@ -1111,7 +1117,7 @@ func (o *OrderService) payOrder(ctx context.Context, mode int, req *entity.Order
 		}
 		return nil
 	})
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
@@ -1151,7 +1157,7 @@ func (o *OrderService) getPayRecordInfo(ctx context.Context, records []*da.Order
 			Mode:      records[i].Mode,
 			Title:     records[i].Title,
 			Amount:    records[i].Amount,
-			Content: records[i].Content,
+			Content:   records[i].Content,
 			CreatedAt: records[i].CreatedAt,
 			UpdatedAt: records[i].UpdatedAt,
 
@@ -1309,7 +1315,7 @@ func (o *OrderService) getOrderInfoRecords(ctx context.Context, orders []*da.Ord
 			OrderID:   payRecords[i].OrderID,
 			Mode:      payRecords[i].Mode,
 			Amount:    payRecords[i].Amount,
-			Content: 	payRecords[i].Content,
+			Content:   payRecords[i].Content,
 			Status:    payRecords[i].Status,
 			UpdatedAt: payRecords[i].UpdatedAt,
 			CreatedAt: payRecords[i].CreatedAt,
@@ -1336,8 +1342,8 @@ func (o *OrderService) getOrderInfoRecords(ctx context.Context, orders []*da.Ord
 			Mode:      remarkRecords[i].Mode,
 			Content:   remarkRecords[i].Content,
 			Status:    remarkRecords[i].Status,
-			Info: 		remarkRecords[i].Info,
-			InfoType: remarkRecords[i].InfoType,
+			Info:      remarkRecords[i].Info,
+			InfoType:  remarkRecords[i].InfoType,
 			UpdatedAt: remarkRecords[i].UpdatedAt,
 			CreatedAt: remarkRecords[i].CreatedAt,
 		})

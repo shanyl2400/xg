@@ -23,6 +23,7 @@ type IOrderModel interface {
 	UpdateOrderRemarkRecordTx(ctx context.Context, tx *gorm.DB, ids []int, status int) error
 
 	ReplaceOrderSource(ctx context.Context, tx *gorm.DB, oldOrderSource, newOrderSource int) error
+	UpdateOrderPayRecordPriceTx(ctx context.Context, tx *gorm.DB, id int, price float64) error
 
 	GetOrderById(ctx context.Context, id int) (*OrderInfo, error)
 	SearchOrder(ctx context.Context, s SearchOrderCondition) (int, []*Order, error)
@@ -48,8 +49,8 @@ type Order struct {
 	IntentSubjects string `gorm:"type:varchar(255);NOT NULL;column:intent_subjects"`
 	PublisherID    int    `gorm:"type:int;NOT NULL;column:publisher_id;index"`
 
-	Address string `gorm:"type:varchar(255);NULL;column:address"`
-	AuthorID int `gorm:"type:int;NOT NULL;DEFAULT 1;column:author_id;index"`
+	Address  string `gorm:"type:varchar(255);NULL;column:address"`
+	AuthorID int    `gorm:"type:int;NOT NULL;DEFAULT 1;column:author_id;index"`
 
 	OrderSource int `gorm:"type:int;NOT NULL;column:order_source;index"`
 
@@ -61,12 +62,12 @@ type Order struct {
 }
 
 type OrderPayRecord struct {
-	ID      int    `gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
-	OrderID int    `gorm:"type:int;NOT NULL;column:order_id"`
-	Mode    int    `gorm:"type:int;NOT NULL;column:mode"`
-	Title   string `gorm:"type:varchar(128);NOT NULL;column:title"`
-	Amount  float64    `gorm:"type:DECIMAL(11,2);NOT NULL;column:amount"`
-	Content string `gorm:"type:text;NOT NULL;column:content"`
+	ID      int     `gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
+	OrderID int     `gorm:"type:int;NOT NULL;column:order_id"`
+	Mode    int     `gorm:"type:int;NOT NULL;column:mode"`
+	Title   string  `gorm:"type:varchar(128);NOT NULL;column:title"`
+	Amount  float64 `gorm:"type:DECIMAL(11,2);NOT NULL;column:amount"`
+	Content string  `gorm:"type:text;NOT NULL;column:content"`
 
 	Status int `gorm:"type:int;NOT NULL;column:status"`
 
@@ -83,8 +84,8 @@ type OrderRemarkRecord struct {
 	Content string `gorm:"type:text;NOT NULL;column:content"`
 	Status  int    `gorm:"type:int;NOT NULL;DEFAULT 1;column:status"`
 
-	InfoType int `gorm:"type:int;NOT NULL;column:info_type"`
-	Info	string `gorm:"type:text;NULL;column:info"`
+	InfoType int    `gorm:"type:int;NOT NULL;column:info_type"`
+	Info     string `gorm:"type:text;NULL;column:info"`
 
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`
 	CreatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:created_at"`
@@ -189,7 +190,7 @@ type SearchOrderCondition struct {
 	StudentKeywords string
 
 	Keywords string
-	Address string
+	Address  string
 
 	CreateStartAt *time.Time
 	CreateEndAt   *time.Time
@@ -234,7 +235,7 @@ func (s SearchOrderCondition) GetConditions() (string, []interface{}) {
 	}
 	if s.Address != "" {
 		wheres = append(wheres, "address LIKE ?")
-		values = append(values, s.Address + "%")
+		values = append(values, s.Address+"%")
 	}
 	if len(s.Status) > 0 {
 		wheres = append(wheres, "status IN (?)")
@@ -258,7 +259,7 @@ func (s SearchOrderCondition) GetConditions() (string, []interface{}) {
 			orderTable)
 		condition2 := fmt.Sprintf("(exists (%v))", sql)
 
-		condition := "(" + condition1 + " or " + condition2 +")"
+		condition := "(" + condition1 + " or " + condition2 + ")"
 		wheres = append(wheres, condition)
 
 		values = append(values, "%"+s.Keywords+"%")
@@ -371,6 +372,15 @@ func (d *DBOrderModel) UpdateOrderStatusTx(ctx context.Context, tx *gorm.DB, id,
 func (d *DBOrderModel) UpdateOrderPayRecordTx(ctx context.Context, tx *gorm.DB, id, status int) error {
 	now := time.Now()
 	err := tx.Model(OrderPayRecord{}).Where(&OrderPayRecord{ID: id}).Updates(OrderPayRecord{Status: status, UpdatedAt: &now}).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *DBOrderModel) UpdateOrderPayRecordPriceTx(ctx context.Context, tx *gorm.DB, id int, price float64) error {
+	now := time.Now()
+	err := tx.Model(OrderPayRecord{}).Where(&OrderPayRecord{ID: id}).Updates(OrderPayRecord{Amount: price, UpdatedAt: &now}).Error
 	if err != nil {
 		return err
 	}

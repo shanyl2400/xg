@@ -3,14 +3,16 @@ package entity
 import (
 	"strconv"
 	"strings"
+	"time"
 	"xg/log"
 )
 
 const (
-	OrgStatusCreated = iota + 1
-	OrgStatusCertified
-	OrgStatusRejected
-	OrgStatusRevoked
+	OrgStatusCreated   = 1
+	OrgStatusCertified = 2
+	OrgStatusRejected  = 3
+	OrgStatusRevoked   = 4
+	OrgStatusOverDue   = 5
 
 	RootOrgId = 1
 )
@@ -29,11 +31,12 @@ type Org struct {
 
 	SubOrgs []*Org `json:"sub_orgs"`
 
-	BusinessLicense       string `json:"business_license"`
-	CorporateIdentity     string `json:"corporate_identity"`
-	SchoolPermission      string `json:"school_permission"`
-	SettlementInstruction string `json:"settlement_instruction"`
-	Extra                 string `json:"extra"`
+	BusinessLicense       string     `json:"business_license"`
+	CorporateIdentity     string     `json:"corporate_identity"`
+	SchoolPermission      string     `json:"school_permission"`
+	SettlementInstruction string     `json:"settlement_instruction"`
+	Extra                 string     `json:"extra"`
+	ExpiredAt             *time.Time `json:"expired_at"`
 }
 
 type SubOrgWithDistance struct {
@@ -49,11 +52,12 @@ type SubOrgWithDistance struct {
 	Status   int     `json:"status"`
 	Distance float64 `json:"distance"`
 
-	BusinessLicense       string `json:"business_license"`
-	CorporateIdentity     string `json:"corporate_identity"`
-	SchoolPermission      string `json:"school_permission"`
-	SettlementInstruction string `json:"settlement_instruction"`
-	Extra                 string `json:"extra"`
+	BusinessLicense       string     `json:"business_license"`
+	CorporateIdentity     string     `json:"corporate_identity"`
+	SchoolPermission      string     `json:"school_permission"`
+	SettlementInstruction string     `json:"settlement_instruction"`
+	Extra                 string     `json:"extra"`
+	ExpiredAt             *time.Time `json:"expired_at"`
 }
 
 type CreateOrgRequest struct {
@@ -74,7 +78,8 @@ type CreateOrgRequest struct {
 	SchoolPermission      string `json:"school_permission"`
 	SettlementInstruction string `json:"settlement_instruction"`
 
-	Extra string `json:"extra"`
+	Extra      string `json:"extra"`
+	ValidMonth int    `json:"valid_month"`
 }
 
 type CreateOrgWithSubOrgsRequest struct {
@@ -129,6 +134,11 @@ type UpdateOrgRequest struct {
 	Extra                 string   `json:"extra"`
 
 	Status int `json:"status"`
+}
+
+type RenewOrgRequest struct {
+	ID         int `json:"id"`
+	ValidMonth int `json:"valid_month"`
 }
 
 func IntArrayToString(a []int) string {
