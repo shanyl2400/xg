@@ -680,7 +680,7 @@ func (o *OrderService) AddOrderRemark(ctx context.Context, orderId int, content 
 		err := o.addOrderRemark(ctx, tx, entity.OrderRemarkRequest{
 			OrderID:  orderId,
 			InfoType: entity.OrderRemarkInfoTypeNormal,
-			Info:     "普通消息",
+			Info:     "文本消息",
 			Content:  content,
 		}, operator)
 		if err != nil {
@@ -768,6 +768,11 @@ func (o *OrderService) SearchOrderPayRecords(ctx context.Context, condition *ent
 	if err != nil {
 		log.Warning.Printf("Search order failed, condition: %#v, err: %v\n", condition, err)
 		return nil, err
+	}
+	if len(records) < 1 {
+		return &entity.PayRecordInfoList{
+			Total: 0,
+		}, nil
 	}
 	res, err := o.getPayRecordInfo(ctx, records)
 	if err != nil {

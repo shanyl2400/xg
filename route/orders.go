@@ -665,7 +665,6 @@ func (s *Server) acceptPayment(c *gin.Context) {
 // @Failure 400 {object} Response
 // @Router /api/payment/{id}/amount [put]
 func (s *Server) updatePaymentAmount(c *gin.Context) {
-	fmt.Println(">>>>>>>>>>>>>1123123")
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
