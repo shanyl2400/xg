@@ -116,17 +116,17 @@ func (s *StudentConflictService) UpdateConflictStudentStatus(ctx context.Context
 		return ErrUnconflictStudent
 	}
 
-	flag := false
-	for i := range records {
-		if records[i].Status == entity.StudentConflictStatusUnprocessed {
-			flag = true
-			break
-		}
-	}
-	if !flag {
-		log.Error.Printf("No processing conflict record, records: %#v, err: %v\n", records, err)
-		return ErrUnconflictStudent
-	}
+	// flag := false
+	// for i := range records {
+	// 	if records[i].Status == entity.StudentConflictStatusUnprocessed {
+	// 		flag = true
+	// 		break
+	// 	}
+	// }
+	// if !flag {
+	// 	log.Error.Printf("No processing conflict record, records: %#v, err: %v\n", records, err)
+	// 	return ErrUnconflictStudent
+	// }
 
 	student.Status = r.Status
 	err = da.GetStudentModel().UpdateStudent(ctx, db.Get(), r.StudentID, *student)
