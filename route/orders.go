@@ -122,7 +122,7 @@ func (s *Server) searchOrder(c *gin.Context) {
 // @Success 200 {string} string "success"
 // @Failure 500 {object} Response
 // @Failure 400 {object} Response
-// @Router /api/orders [get]
+// @Router /api/orders/export [get]
 func (s *Server) exportOrder(c *gin.Context) {
 	req := buildOrderCondition(c)
 	user := s.getJWTUser(c)

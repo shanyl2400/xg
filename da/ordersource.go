@@ -2,10 +2,11 @@ package da
 
 import (
 	"context"
-	"github.com/jinzhu/gorm"
 	"sync"
 	"time"
 	"xg/db"
+
+	"github.com/jinzhu/gorm"
 )
 
 type IOrderSourceModel interface {
@@ -13,6 +14,7 @@ type IOrderSourceModel interface {
 	CreateOrderSourcesWithID(ctx context.Context, id int, name string) error
 	ListOrderSources(ctx context.Context) ([]*OrderSource, error)
 	GetOrderSourceById(ctx context.Context, orderSourceId int) (*OrderSource, error)
+	UpdateOrderSourceByID(ctx context.Context, tx *gorm.DB, id int, name string) error
 
 	DeleteOrderSourceByID(ctx context.Context, tx *gorm.DB, id int) error
 }
@@ -51,7 +53,16 @@ func (d *DBOrderSourceModel) CreateOrderSources(ctx context.Context, name string
 	return os.ID, nil
 }
 
-func (d *DBOrderSourceModel)DeleteOrderSourceByID(ctx context.Context, tx *gorm.DB, id int) error{
+func (d *DBOrderSourceModel) UpdateOrderSourceByID(ctx context.Context, tx *gorm.DB, id int, name string) error {
+	now := time.Now()
+	err := tx.Model(OrderSource{}).Where(&OrderSource{ID: id}).Updates(OrderSource{Name: name, UpdatedAt: &now}).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *DBOrderSourceModel) DeleteOrderSourceByID(ctx context.Context, tx *gorm.DB, id int) error {
 	os, err := d.GetOrderSourceById(ctx, id)
 	if err != nil {
 		return err

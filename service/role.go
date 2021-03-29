@@ -2,15 +2,16 @@ package service
 
 import (
 	"context"
-	"github.com/jinzhu/gorm"
 	"sync"
 	"xg/da"
 	"xg/db"
 	"xg/entity"
 	"xg/log"
+
+	"github.com/jinzhu/gorm"
 )
 
-type IRoleService interface{
+type IRoleService interface {
 	CreateRole(ctx context.Context, name string, authList []int) (int, error)
 	ListRole(ctx context.Context) ([]*entity.Role, error)
 	SetRoleAuth(ctx context.Context, id int, ids []int) error
@@ -35,7 +36,7 @@ func (r *RoleService) CreateRole(ctx context.Context, name string, authList []in
 		}
 		return id, nil
 	})
-	if err != nil{
+	if err != nil {
 		return -1, err
 	}
 	return id.(int), nil
@@ -68,13 +69,13 @@ func (r *RoleService) SetRoleAuth(ctx context.Context, id int, ids []int) error 
 	log.Info.Printf("SetRoleAuth, roleId: %#v, authList: %#v\n", id, ids)
 	err := db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
 		err := da.GetRoleModel().SetRoleAuth(ctx, tx, id, ids)
-		if err != nil{
+		if err != nil {
 			log.Warning.Printf("Set role auth failed, roleId: %#v, authIds: %#v, err: %v\n", id, ids, err)
 			return err
 		}
 		return nil
 	})
-	if err != nil{
+	if err != nil {
 		return err
 	}
 

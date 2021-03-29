@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"strings"
 	"sync"
@@ -64,19 +65,20 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 		}
 	}
 	student := da.Student{
-		Name:          c.Name,
-		Gender:        c.Gender,
-		Telephone:     c.Telephone,
-		Address:       c.Address,
-		AddressExt:    c.AddressExt,
-		Email:         c.Email,
-		IntentSubject: strings.Join(c.IntentSubject, ","),
-		Status:        status,
-		AuthorID:      operator.UserId,
-		OrderSourceID: c.OrderSourceID,
-		Latitude:      c.Latitude,
-		Longitude:     c.Longitude,
-		Note:          c.Note,
+		Name:           c.Name,
+		Gender:         c.Gender,
+		Telephone:      c.Telephone,
+		Address:        c.Address,
+		AddressExt:     c.AddressExt,
+		Email:          c.Email,
+		IntentSubject:  strings.Join(c.IntentSubject, ","),
+		Status:         status,
+		AuthorID:       operator.UserId,
+		OrderSourceID:  c.OrderSourceID,
+		OrderSourceExt: c.OrderSourceExt,
+		Latitude:       c.Latitude,
+		Longitude:      c.Longitude,
+		Note:           c.Note,
 	}
 	log.Info.Printf("create student, student: %#v, err: %v\n", student, err)
 
@@ -154,16 +156,17 @@ func (s *StudentService) UpdateStudent(ctx context.Context, id int, req *entity.
 		}
 	}
 	data := da.Student{
-		Name:          req.Name,
-		Gender:        req.Gender,
-		Telephone:     req.Telephone,
-		Address:       req.Address,
-		AddressExt:    req.AddressExt,
-		Email:         req.Email,
-		IntentSubject: strings.Join(req.IntentSubject, ","),
-		OrderSourceID: req.OrderSourceID,
-		Longitude:     req.Longitude,
-		Latitude:      req.Latitude,
+		Name:           req.Name,
+		Gender:         req.Gender,
+		Telephone:      req.Telephone,
+		Address:        req.Address,
+		AddressExt:     req.AddressExt,
+		Email:          req.Email,
+		IntentSubject:  strings.Join(req.IntentSubject, ","),
+		OrderSourceID:  req.OrderSourceID,
+		OrderSourceExt: req.OrderSourceExt,
+		Longitude:      req.Longitude,
+		Latitude:       req.Latitude,
 	}
 	err := da.GetStudentModel().UpdateStudent(ctx, db.Get(), id, data)
 	if err != nil {
@@ -253,12 +256,13 @@ func (s *StudentService) GetStudentById(ctx context.Context, id int, operator *e
 			AuthorName:      user.Name,
 			OrderSourceID:   student.OrderSourceID,
 			OrderSourceName: orderSourceMap[student.OrderSourceID],
+			OrderSourceExt:  student.OrderSourceExt,
 			IntentSubject:   strings.Split(student.IntentSubject, ","),
 			Status:          student.Status,
 			Note:            student.Note,
 			OrderCount:      student.OrderCount,
-			CreatedAt:		 student.CreatedAt,
-			UpdatedAt:		 student.UpdatedAt,
+			CreatedAt:       student.CreatedAt,
+			UpdatedAt:       student.UpdatedAt,
 		},
 	}
 
@@ -292,6 +296,22 @@ func (s *StudentService) SearchPrivateStudents(ctx context.Context, ss *entity.S
 	return s.SearchStudents(ctx, ss, operator)
 }
 
+func (s *StudentService) ExportStudents(ctx context.Context, ss *entity.SearchStudentRequest, operator *entity.JWTUser) ([]byte, error) {
+	_, data, err := s.SearchStudents(ctx, ss, operator)
+	if err != nil {
+		log.Warning.Printf("SearchStudents failed, condition: %#v, err: %v\n", ss, err)
+		return nil, err
+	}
+	file, err := StudentsToXlsx(ctx, data)
+	if err != nil {
+		log.Warning.Printf("Build xlsx file failed, condition: %#v, orderInfos: %#v, err: %v\n", ss, data, err)
+		return nil, err
+	}
+	buf := &bytes.Buffer{}
+	file.Write(buf)
+	return buf.Bytes(), nil
+}
+
 func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchStudentRequest, operator *entity.JWTUser) (int, []*entity.StudentInfo, error) {
 	log.Info.Printf("SearchStudents, condition: %#v\n", ss)
 	condition := da.SearchStudentCondition{
@@ -303,9 +323,9 @@ func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchSt
 		IntentString:    ss.IntentSubject,
 		Status:          ss.Status,
 		NoDispatchOrder: ss.NoDispatchOrder,
-		OrderSourceIDs: ss.OrderSourceIDs,
-		CreatedStartAt: ss.CreatedStartAt,
-		CreatedEndAt: 	ss.CreatedEndAt,
+		OrderSourceIDs:  ss.OrderSourceIDs,
+		CreatedStartAt:  ss.CreatedStartAt,
+		CreatedEndAt:    ss.CreatedEndAt,
 		OrderBy:         ss.OrderBy,
 		PageSize:        ss.PageSize,
 		Page:            ss.Page,

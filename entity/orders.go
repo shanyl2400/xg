@@ -13,6 +13,7 @@ const (
 	OrderPayStatusPending  = 1
 	OrderPayStatusChecked  = 2
 	OrderPayStatusRejected = 3
+	OrderPayStatusUpdated  = 4
 
 	OrderPayModePay     = 1
 	OrderPayModePayback = 2

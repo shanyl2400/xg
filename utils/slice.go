@@ -1,4 +1,7 @@
 package utils
+
+import "strconv"
+
 func SliceDeduplication(s []string) []string {
 	temp := make(map[string]bool)
 	for i := range s {
@@ -29,4 +32,16 @@ func SliceDeduplicationInt(s []int) []int {
 	}
 
 	return result
+}
+
+func StringsToInts(s []string) ([]int, error) {
+	ret := make([]int, len(s))
+	var err error
+	for i := range s {
+		ret[i], err = strconv.Atoi(s[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return ret, nil
 }

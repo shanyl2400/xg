@@ -2,11 +2,12 @@ package da
 
 import (
 	"context"
-	"github.com/jinzhu/gorm"
 	"strings"
 	"sync"
 	"time"
 	"xg/db"
+
+	"github.com/jinzhu/gorm"
 )
 
 type IStudentsModel interface {
@@ -31,6 +32,8 @@ type Student struct {
 	Status        int    `gorm:"type:int;NOT NULL;column:status;index"`
 	Note          string `gorm:"type:text;NOT NULL;column:note"`
 	OrderSourceID int    `gorm:"type:int;NOT NULL;column:order_source_id"`
+
+	OrderSourceExt string `gorm:"type:varchar(256);NULL;column:order_source_ext"`
 
 	OrderCount int `gorm:"type:int;NOT NULL;column:order_count"`
 
@@ -144,9 +147,9 @@ type SearchStudentCondition struct {
 
 	AuthorIDList []int `json:"author_id_list"`
 
-	OrderSourceIDs []int `json:"order_source_ids"`
+	OrderSourceIDs []int      `json:"order_source_ids"`
 	CreatedStartAt *time.Time `json:"created_start_at"`
-	CreatedEndAt *time.Time `json:"created_end_at"`
+	CreatedEndAt   *time.Time `json:"created_end_at"`
 
 	OrderBy  string `json:"order_by"`
 	PageSize int    `json:"page_size"`

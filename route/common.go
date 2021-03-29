@@ -194,6 +194,12 @@ type RolesResponse struct {
 	ErrMsg string         `json:"err_msg"`
 }
 
+type SettlementsResponse struct {
+	Settlements []*entity.SettlementData `json:"settlements"`
+	Total       int                      `json:"total"`
+	ErrMsg      string                   `json:"err_msg"`
+}
+
 func (r RolesResponse) Error() error {
 	if r.ErrMsg == "success" {
 		return nil

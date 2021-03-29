@@ -626,9 +626,32 @@ func (o *OrderService) UpdateOrderPayPrice(ctx context.Context, orderPayId int, 
 	o.lock.Lock()
 	defer o.lock.Unlock()
 	log.Info.Printf("Update order pay price, payId: %#v, status: %#v\n", orderPayId, price)
-	err := da.GetOrderModel().UpdateOrderPayRecordPriceTx(ctx, db.Get(), orderPayId, price)
+	err := db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
+		record, err := da.GetOrderModel().GetPayRecordById(ctx, orderPayId)
+		if err != nil {
+			log.Warning.Printf("Get order pay record failed, orderPayId: %#v, err: %v\n", orderPayId, err)
+			return err
+		}
+		err = da.GetOrderModel().UpdateOrderPayRecordTx(ctx, tx, orderPayId, entity.OrderPayStatusUpdated)
+		if err != nil {
+			log.Warning.Printf("Update order pay record status failed, orderPayId: %#v, err: %v\n", orderPayId, err)
+			return err
+		}
+		_, err = da.GetOrderModel().AddOrderPayRecordTx(ctx, tx, &da.OrderPayRecord{
+			OrderID: record.OrderID,
+			Mode:    record.Mode,
+			Title:   record.Title,
+			Amount:  price,
+			Content: record.Content,
+			Status:  entity.OrderPayStatusPending,
+		})
+		if err != nil {
+			log.Warning.Printf("Update order pay record failed, orderPayId: %#v, err: %v\n", orderPayId, err)
+			return err
+		}
+		return nil
+	})
 	if err != nil {
-		log.Warning.Printf("Update order pay record failed, orderPayId: %#v, err: %v\n", orderPayId, err)
 		return err
 	}
 	return nil

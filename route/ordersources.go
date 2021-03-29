@@ -27,8 +27,8 @@ func (s *Server) listOrderSources(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, OrderSourcesListResponse{
-		Sources:     sources,
-		ErrMsg: "success",
+		Sources: sources,
+		ErrMsg:  "success",
 	})
 }
 
@@ -62,7 +62,6 @@ func (s *Server) createOrderSource(c *gin.Context) {
 	})
 }
 
-
 // @Summary deleteOrderSource
 // @Description delete an order source
 // @Accept json
@@ -82,7 +81,42 @@ func (s *Server) deleteOrderSource(c *gin.Context) {
 		return
 	}
 
-	err = service.GetOrderSourceService().DeleteOrderService(c.Request.Context(),id)
+	err = service.GetOrderSourceService().DeleteOrderService(c.Request.Context(), id)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	s.responseSuccess(c)
+}
+
+// @Summary updateOrderSource
+// @Description update an order source
+// @Accept json
+// @Produce json
+// @Tags orderSource
+// @Param Authorization header string true "With the bearer"
+// @Param request body entity.UpdateOrderSourceRequest true "update order source"
+// @Param id path string true "order source id"
+// @Success 200 {string} string "success"
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/order_source [put]
+func (s *Server) updateOrderSource(c *gin.Context) {
+	idStr := c.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	req := new(entity.UpdateOrderSourceRequest)
+	err = c.ShouldBind(req)
+	if err != nil {
+		s.responseErr(c, http.StatusBadRequest, err)
+		return
+	}
+	req.ID = id
+	err = service.GetOrderSourceService().UpdateOrderSourceByID(c.Request.Context(), *req)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return

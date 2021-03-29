@@ -12,15 +12,16 @@ const (
 )
 
 type CreateStudentRequest struct {
-	Name          string   `json:"name"`
-	Gender        bool     `json:"gender"`
-	Telephone     string   `json:"telephone"`
-	Address       string   `json:"address"`
-	AddressExt    string   `json:"address_ext"`
-	Email         string   `json:"email"`
-	IntentSubject []string `json:"intent_subject"`
-	Note          string   `json:"note"`
-	OrderSourceID int      `json:"order_source_id"`
+	Name           string   `json:"name"`
+	Gender         bool     `json:"gender"`
+	Telephone      string   `json:"telephone"`
+	Address        string   `json:"address"`
+	AddressExt     string   `json:"address_ext"`
+	Email          string   `json:"email"`
+	IntentSubject  []string `json:"intent_subject"`
+	Note           string   `json:"note"`
+	OrderSourceID  int      `json:"order_source_id"`
+	OrderSourceExt string   `json:"order_source_ext"`
 
 	Longitude float64 `json:"longitude"`
 	Latitude  float64 `json:"latitude"`
@@ -32,14 +33,15 @@ type CreateStudentResponse struct {
 }
 
 type UpdateStudentRequest struct {
-	Name          string   `json:"name"`
-	Gender        bool     `json:"gender"`
-	Telephone     string   `json:"telephone"`
-	Email         string   `json:"email"`
-	Address       string   `json:"address"`
-	AddressExt    string   `json:"address_ext"`
-	IntentSubject []string `json:"intent_subject"`
-	OrderSourceID int      `json:"order_source_id"`
+	Name           string   `json:"name"`
+	Gender         bool     `json:"gender"`
+	Telephone      string   `json:"telephone"`
+	Email          string   `json:"email"`
+	Address        string   `json:"address"`
+	AddressExt     string   `json:"address_ext"`
+	IntentSubject  []string `json:"intent_subject"`
+	OrderSourceID  int      `json:"order_source_id"`
+	OrderSourceExt string   `json:"order_source_ext"`
 
 	Longitude float64 `json:"longitude"`
 	Latitude  float64 `json:"latitude"`
@@ -57,9 +59,9 @@ type SearchStudentRequest struct {
 
 	NoDispatchOrder bool `json:"no_dispatch_order"`
 
-	OrderSourceIDs []int `json:"order_source_ids"`
+	OrderSourceIDs []int      `json:"order_source_ids"`
 	CreatedStartAt *time.Time `json:"created_start_at"`
-	CreatedEndAt *time.Time `json:"created_end_at"`
+	CreatedEndAt   *time.Time `json:"created_end_at"`
 
 	OrderBy  string `json:"order_by"`
 	PageSize int    `json:"page_size"`
@@ -87,6 +89,7 @@ type StudentInfo struct {
 	Note            string     `json:"note"`
 	OrderSourceID   int        `json:"order_source_id"`
 	OrderSourceName string     `json:"order_source_name"`
+	OrderSourceExt  string     `json:"order_source_ext"`
 	CreatedAt       *time.Time `json:"created_at"`
 	UpdatedAt       *time.Time `json:"updated_at"`
 }

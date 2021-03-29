@@ -134,6 +134,11 @@ func initAuth() {
 	if err != nil {
 		panic(err)
 	}
+
+	err = GetAuthModel().CreateAuthWithID(context.Background(), entity.AuthManageSettlement, "结算")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func Migrate0(flag bool) {
@@ -164,7 +169,7 @@ func initRole() {
 		panic(err)
 	}
 
-	err = GetRoleModel().SetRoleAuth(context.Background(), db.Get(), adminId, []int{1, 3, 4, 5, 7, 8, 9, 10, 11, 12})
+	err = GetRoleModel().SetRoleAuth(context.Background(), db.Get(), adminId, []int{1, 3, 4, 5, 7, 8, 9, 10, 11, 12, entity.AuthManageSettlement})
 	if err != nil {
 		panic(err)
 	}
@@ -209,7 +214,7 @@ func initRole() {
 	if err != nil {
 		panic(err)
 	}
-	err = GetRoleModel().SetRoleAuth(context.Background(), db.Get(), checkId, []int{4, 5})
+	err = GetRoleModel().SetRoleAuth(context.Background(), db.Get(), checkId, []int{4, 5, entity.AuthManageSettlement})
 	if err != nil {
 		panic(err)
 	}

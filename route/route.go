@@ -77,6 +77,7 @@ func Get() *gin.Engine {
 	students := api.Group("/students")
 	{
 		students.GET("/", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder, entity.AuthDispatchOrder}), s.searchStudents)
+		students.GET("/export", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder, entity.AuthDispatchOrder}), s.exportStudents)
 		students.GET("/private", s.mustLogin, s.hasPermission([]int{entity.AuthEnterStudent}), s.searchPrivateStudents)
 	}
 
@@ -179,6 +180,7 @@ func Get() *gin.Engine {
 	{
 		orderSource.POST("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageOrderSource}), s.createOrderSource)
 		orderSource.DELETE("/:id", s.mustLogin, s.hasPermission([]int{entity.AuthManageOrderSource}), s.deleteOrderSource)
+		orderSource.PUT("/:id", s.mustLogin, s.hasPermission([]int{entity.AuthManageOrderSource}), s.updateOrderSource)
 	}
 	orderSources := api.Group("/order_sources")
 	{
@@ -197,9 +199,18 @@ func Get() *gin.Engine {
 		statistics.GET("/graph/order_source/:id", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.orderSourceGraph)
 	}
 
+	settlement := api.Group("/settlement")
+	{
+		settlement.POST("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageSettlement}), s.createSettlement)
+	}
+	settlements := api.Group("/settlements")
+	{
+		settlements.GET("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageSettlement}), s.searchSettlements)
+	}
+
 	socks := api.Group("/socks")
 	{
-		socks.GET("/register", s.mustLogin, s.registerSocks)
+		socks.GET("/register", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.registerSocks)
 	}
 
 	uploader := api.Group("/upload")
