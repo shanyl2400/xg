@@ -16,9 +16,13 @@ const (
 	AuthManageSelfOrg     = 13
 
 	AuthManageSettlement = 14
+
+	AuthModeRootAuth = 1
+	AuthModeOrgAuth  = 2
 )
 
 type Auth struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
+	Mode int    `json:"mode"`
 }

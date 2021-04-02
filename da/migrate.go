@@ -26,6 +26,8 @@ func AutoMigrate() {
 	db.Get().AutoMigrate(Subject{})
 	db.Get().AutoMigrate(User{})
 	db.Get().AutoMigrate(StatisticsRecord{})
+	db.Get().AutoMigrate(CommissionSettlementRecord{})
+	db.Get().AutoMigrate(SettlementRecord{})
 
 	db.Get().AutoMigrate(OrderStatisticsRecord{})
 	db.Get().Model(&OrderStatisticsRecord{}).AddIndex("idx_new_statistics_date", "year", "month", "day")

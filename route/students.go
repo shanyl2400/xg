@@ -113,6 +113,78 @@ func (s *Server) searchPrivateStudents(c *gin.Context) {
 	})
 }
 
+// @Summary statisticStudentByAuthor
+// @Description Statistic Student By Author
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param name query string false "search student with name"
+// @Param telephone query string false "search student with telephone"
+// @Param no_dispatch_order query string false "search student with no_dispatch_order"
+// @Param keywords query string false "search student with keywords"
+// @Param status query string false "search student with status"
+// @Param order_source_ids query string false "search student with order_source_ids"
+// @Param address query string false "search student with address"
+// @Param intent_subjects query string false "search student with intent_subjects"
+// @Param author_id query string false "search student with author_id"
+// @Param order_by query string false "search student order by column name"
+// @Param page_size query int true "student list page size"
+// @Param page query int false "student list page index"
+// @Tags student
+// @Success 200 {object} StudentStatisticsResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/statistics/students/author [get]
+func (s *Server) statisticStudentByAuthor(c *gin.Context) {
+	condition := buildCondition(c)
+	user := s.getJWTUser(c)
+	statistics, err := service.GetStudentService().StatisticStudentByAuthor(c.Request.Context(), 0, condition, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, GroupbyStatisticEntitiesByAuthorResponse{
+		Result: statistics,
+		ErrMsg: "success",
+	})
+}
+
+// @Summary statisticStudentByAuthorRank
+// @Description Statistic Student By Author List
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param name query string false "search student with name"
+// @Param telephone query string false "search student with telephone"
+// @Param no_dispatch_order query string false "search student with no_dispatch_order"
+// @Param keywords query string false "search student with keywords"
+// @Param status query string false "search student with status"
+// @Param order_source_ids query string false "search student with order_source_ids"
+// @Param address query string false "search student with address"
+// @Param intent_subjects query string false "search student with intent_subjects"
+// @Param author_id query string false "search student with author_id"
+// @Param order_by query string false "search student order by column name"
+// @Param page_size query int true "student list page size"
+// @Param page query int false "student list page index"
+// @Tags student
+// @Success 200 {object} StudentStatisticsResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/statistics/students/author/rank [get]
+func (s *Server) statisticStudentByAuthorRank(c *gin.Context) {
+	condition := buildCondition(c)
+	user := s.getJWTUser(c)
+	statistics, err := service.GetStudentService().StatisticStudentRank(c.Request.Context(), condition, user)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, GroupbyStatisticEntitiesByAuthorResponse{
+		Result: statistics,
+		ErrMsg: "success",
+	})
+}
+
 // @Summary searchStudents
 // @Description search students with condition
 // @Accept json

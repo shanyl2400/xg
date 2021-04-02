@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"xg/da"
 	"xg/db"
@@ -9,6 +10,16 @@ import (
 	"xg/log"
 
 	"github.com/jinzhu/gorm"
+)
+
+const (
+	RoleModeRootRole = 1
+	RoleModeOrgRole  = 2
+)
+
+var (
+	ErrInvalidAuth     = errors.New("invalid auth")
+	ErrInvalidAuthMode = errors.New("invalid auth mode")
 )
 
 type IRoleService interface {
@@ -34,6 +45,40 @@ func (r *RoleService) CreateRole(ctx context.Context, name string, authList []in
 			log.Warning.Printf("Set role failed, name: %#v, authList: %#v, err: %v\n", name, authList, err)
 			return -1, err
 		}
+		return id, nil
+	})
+	if err != nil {
+		return -1, err
+	}
+	return id.(int), nil
+}
+
+func (r *RoleService) CreateRoleForOrgs(ctx context.Context, name string, authList []int, roleMode int) (int, error) {
+	log.Info.Printf("CreateRole, name: %#v, authList: %#v\n", name, authList)
+
+	err := r.checkAuth(ctx, authList, roleMode)
+	if err != nil {
+		return -1, err
+	}
+	id, err := db.GetTransResult(ctx, func(ctx context.Context, tx *gorm.DB) (interface{}, error) {
+		id, err := da.GetRoleModel().CreateRole(ctx, tx, name)
+		if err != nil {
+			log.Warning.Printf("Get role failed, name: %#v, authList: %#v, err: %v\n", name, authList, err)
+			return -1, err
+		}
+		err = da.GetRoleModel().SetRoleAuth(ctx, tx, id, authList)
+		if err != nil {
+			log.Warning.Printf("Set role failed, name: %#v, authList: %#v, err: %v\n", name, authList, err)
+			return -1, err
+		}
+
+		//Update orgs
+		err = da.GetOrgModel().UpdateOrgsRole(ctx, tx, roleMode == RoleModeOrgRole, id)
+		if err != nil {
+			log.Warning.Printf("UpdateOrgsRole failed, name: %#v, authList: %#v, err: %v\n", name, authList, err)
+			return -1, err
+		}
+
 		return id, nil
 	})
 	if err != nil {
@@ -91,6 +136,34 @@ func (r *RoleService) GetRoleAuth(ctx context.Context, id int) ([]*entity.Auth, 
 	}
 
 	return res.Auth, nil
+}
+
+func (r *RoleService) checkAuth(ctx context.Context, authList []int, roleMode int) error {
+	auths, err := GetAuthService().ListAuths(ctx)
+	if err != nil {
+		log.Warning.Printf("Get Auths failed, authList: %#v, err: %v\n", authList, err)
+		return err
+	}
+	authMap := make(map[int]*entity.Auth)
+	for i := range auths {
+		authMap[auths[i].ID] = auths[i]
+	}
+
+	for i := range authList {
+		auth, ok := authMap[authList[i]]
+		if !ok {
+			log.Warning.Printf("invalid auth, aluth: %#v authList: %#v\n", authList[i], authList)
+			return ErrInvalidAuth
+		}
+		if (auth.Mode == entity.AuthModeOrgAuth && roleMode != RoleModeOrgRole) ||
+			(auth.Mode == entity.AuthModeRootAuth && roleMode != RoleModeRootRole) {
+			log.Warning.Printf("invalid auth mode, aluth : %#v authList: %#v\n", auth, authList)
+			return ErrInvalidAuthMode
+		}
+
+	}
+
+	return nil
 }
 
 var (

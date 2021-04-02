@@ -23,6 +23,21 @@ const (
 	OrderStatisticKeySignupOrder   = "signup_order"
 )
 
+type GroupbyStatisticEntity struct {
+	ID     int     `json:"id"`
+	Status int     `json:"status"`
+	Cnt    int     `json:"count"`
+	Amount float64 `json:"amount"`
+}
+
+type GroupbyStatisticEntityForName struct {
+	ID     int     `json:"id"`
+	Name   string  `json:"name"`
+	Status int     `json:"status"`
+	Cnt    int     `json:"count"`
+	Amount float64 `json:"amount"`
+}
+
 type OrderStatisticRecordId struct {
 	Key         string `json:"key"`
 	Author      int    `json:"author"`

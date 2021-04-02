@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 	"xg/db"
+	"xg/entity"
 	"xg/log"
 
 	"github.com/jinzhu/gorm"
@@ -20,6 +21,7 @@ type IOrderModel interface {
 	AddOrderPayRecordTx(ctx context.Context, tx *gorm.DB, o *OrderPayRecord) (int, error)
 	UpdateOrderStatusTx(ctx context.Context, db *gorm.DB, id, status int) error
 	UpdateOrderPayRecordTx(ctx context.Context, tx *gorm.DB, id, status int) error
+	UpdateOrderPayRecordForParentTx(ctx context.Context, tx *gorm.DB, id, status, parentID int) error
 	UpdateOrderRemarkRecordTx(ctx context.Context, tx *gorm.DB, ids []int, status int) error
 
 	ReplaceOrderSource(ctx context.Context, tx *gorm.DB, oldOrderSource, newOrderSource int) error
@@ -34,6 +36,9 @@ type IOrderModel interface {
 	SearchPayRecord(ctx context.Context, s SearchPayRecordCondition) (int, []*OrderPayRecord, error)
 
 	SearchRemarkRecord(ctx context.Context, s SearchRemarkRecordCondition) (int, []*OrderRemarkRecord, error)
+
+	StatisticOrdersPayments(ctx context.Context, groupby string, limit int, s SearchOrderCondition, s0 SearchPayRecordCondition) ([]*entity.GroupbyStatisticEntity, error)
+	StatisticOrders(ctx context.Context, groupby string, limit int, s SearchOrderCondition) ([]*entity.GroupbyStatisticEntity, error)
 }
 
 type OrderInfo struct {
@@ -48,6 +53,8 @@ type Order struct {
 	ToOrgID        int    `gorm:"type:int;NOT NULL;column:org_id;index"`
 	IntentSubjects string `gorm:"type:varchar(255);NOT NULL;column:intent_subjects"`
 	PublisherID    int    `gorm:"type:int;NOT NULL;column:publisher_id;index"`
+
+	ParentOrgID int `gorm:"type:int;NOT NULL;column:parent_org_id;index"`
 
 	Address  string `gorm:"type:varchar(255);NULL;column:address"`
 	AuthorID int    `gorm:"type:int;NOT NULL;DEFAULT 1;column:author_id;index"`
@@ -69,7 +76,10 @@ type OrderPayRecord struct {
 	Amount  float64 `gorm:"type:DECIMAL(11,2);NOT NULL;column:amount"`
 	Content string  `gorm:"type:text;NOT NULL;column:content"`
 
-	Status int `gorm:"type:int;NOT NULL;column:status"`
+	RealPrice float64 `gorm:"type:DECIMAL(11,2);NOT NULL;column:real_price"`
+
+	Status   int `gorm:"type:int;NOT NULL;column:status"`
+	ParentID int `gorm:"type:int;NOT NULL;column:parent_id"`
 
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`
 	CreatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:created_at"`
@@ -98,11 +108,22 @@ type SearchPayRecordCondition struct {
 	AuthorIDList    []int
 	Mode            int
 	StatusList      []int
+	CreateStartAt   *time.Time
+	CreateEndAt     *time.Time
 
 	OrderBy string
 
 	PageSize int
 	Page     int
+
+	Prefix string
+}
+
+func (s SearchPayRecordCondition) prefix(column string) string {
+	if s.Prefix == "" {
+		return "" + column
+	}
+	return s.Prefix + "." + column
 }
 
 func (s SearchPayRecordCondition) GetConditions() (string, []interface{}) {
@@ -110,23 +131,28 @@ func (s SearchPayRecordCondition) GetConditions() (string, []interface{}) {
 	values := make([]interface{}, 0)
 
 	if len(s.PayRecordIDList) > 0 {
-		wheres = append(wheres, "id IN (?)")
+		wheres = append(wheres, s.prefix("id")+" IN (?)")
 		values = append(values, s.PayRecordIDList)
 	}
 	if len(s.AuthorIDList) > 0 {
-		wheres = append(wheres, "author IN (?)")
+		wheres = append(wheres, s.prefix("author")+" IN (?)")
 		values = append(values, s.AuthorIDList)
 	}
 	if len(s.OrderIDList) > 0 {
-		wheres = append(wheres, "order_id IN (?)")
+		wheres = append(wheres, s.prefix("order_id")+" IN (?)")
 		values = append(values, s.OrderIDList)
 	}
+	if s.CreateStartAt != nil && s.CreateEndAt != nil {
+		wheres = append(wheres, s.prefix("created_at")+" BETWEEN ? AND ?")
+		values = append(values, s.CreateStartAt, s.CreateEndAt)
+	}
+
 	if s.Mode > 0 {
-		wheres = append(wheres, "mode = ?")
+		wheres = append(wheres, s.prefix("mode")+" = ?")
 		values = append(values, s.Mode)
 	}
 	if len(s.StatusList) > 0 {
-		wheres = append(wheres, "status IN (?)")
+		wheres = append(wheres, s.prefix("status")+" IN (?)")
 		values = append(values, s.StatusList)
 	}
 
@@ -187,6 +213,8 @@ type SearchOrderCondition struct {
 	PublisherIDList []int
 	AuthorIDList    []int
 
+	RelatedUserIDList []int
+
 	StudentKeywords string
 
 	Keywords string
@@ -203,6 +231,15 @@ type SearchOrderCondition struct {
 
 	PageSize int
 	Page     int
+
+	Prefix string
+}
+
+func (s SearchOrderCondition) prefix(column string) string {
+	if s.Prefix == "" {
+		return "" + column
+	}
+	return s.Prefix + "." + column
 }
 
 func (s SearchOrderCondition) GetConditions() (string, []interface{}) {
@@ -210,39 +247,43 @@ func (s SearchOrderCondition) GetConditions() (string, []interface{}) {
 	values := make([]interface{}, 0)
 
 	if len(s.OrderIDList) > 0 {
-		wheres = append(wheres, "id IN (?)")
+		wheres = append(wheres, s.prefix("id")+" IN (?)")
 		values = append(values, s.OrderIDList)
 	}
 	if len(s.StudentIDList) > 0 {
-		wheres = append(wheres, "student_id IN (?)")
+		wheres = append(wheres, s.prefix("student_id")+" IN (?)")
 		values = append(values, s.StudentIDList)
 	}
 	if len(s.ToOrgIDList) > 0 {
-		wheres = append(wheres, "org_id IN (?)")
+		wheres = append(wheres, s.prefix("org_id")+" IN (?)")
 		values = append(values, s.ToOrgIDList)
 	}
 	if s.IntentSubjects != "" {
-		wheres = append(wheres, "intent_subjects LIKE ?")
+		wheres = append(wheres, s.prefix("intent_subjects")+" LIKE ?")
 		values = append(values, "%"+s.IntentSubjects+"%")
 	}
+	if len(s.RelatedUserIDList) > 0 {
+		wheres = append(wheres, fmt.Sprintf("(%v IN (?) or %v IN (?))", s.prefix("publisher_id"), s.prefix("author_id")))
+		values = append(values, s.RelatedUserIDList, s.RelatedUserIDList)
+	}
 	if len(s.PublisherIDList) > 0 {
-		wheres = append(wheres, "publisher_id IN (?)")
+		wheres = append(wheres, s.prefix("publisher_id")+" IN (?)")
 		values = append(values, s.PublisherIDList)
 	}
 	if len(s.AuthorIDList) > 0 {
-		wheres = append(wheres, "author_id IN (?)")
+		wheres = append(wheres, s.prefix("author_id")+" IN (?)")
 		values = append(values, s.AuthorIDList)
 	}
 	if s.Address != "" {
-		wheres = append(wheres, "address LIKE ?")
+		wheres = append(wheres, s.prefix("address")+" LIKE ?")
 		values = append(values, s.Address+"%")
 	}
 	if len(s.Status) > 0 {
-		wheres = append(wheres, "status IN (?)")
+		wheres = append(wheres, s.prefix("status")+" IN (?)")
 		values = append(values, s.Status)
 	}
 	if len(s.OrderSourceList) > 0 {
-		wheres = append(wheres, "order_source IN (?)")
+		wheres = append(wheres, s.prefix("order_source")+" IN (?)")
 		values = append(values, s.OrderSourceList)
 	}
 
@@ -281,12 +322,12 @@ func (s SearchOrderCondition) GetConditions() (string, []interface{}) {
 	}
 
 	if s.CreateStartAt != nil && s.CreateEndAt != nil {
-		wheres = append(wheres, "created_at BETWEEN ? AND ?")
+		wheres = append(wheres, s.prefix("created_at")+" BETWEEN ? AND ?")
 		values = append(values, s.CreateStartAt, s.CreateEndAt)
 	}
 
 	if s.UpdateStartAt != nil && s.UpdateEndAt != nil {
-		wheres = append(wheres, "updated BETWEEN ? AND ?")
+		wheres = append(wheres, s.prefix("updated_at")+" BETWEEN ? AND ?")
 		values = append(values, s.UpdateStartAt, s.UpdateEndAt)
 	}
 
@@ -313,6 +354,11 @@ func (d *DBOrderModel) AddOrderPayRecord(ctx context.Context, o *OrderPayRecord)
 	o.CreatedAt = &now
 	o.UpdatedAt = &now
 
+	if o.Mode == entity.OrderPayModePayback {
+		o.RealPrice = -o.Amount
+	} else {
+		o.RealPrice = o.Amount
+	}
 	err := db.Get().Create(o).Error
 	if err != nil {
 		return -1, err
@@ -323,7 +369,11 @@ func (d *DBOrderModel) AddOrderPayRecordTx(ctx context.Context, tx *gorm.DB, o *
 	now := time.Now()
 	o.CreatedAt = &now
 	o.UpdatedAt = &now
-
+	if o.Mode == entity.OrderPayModePayback {
+		o.RealPrice = -o.Amount
+	} else {
+		o.RealPrice = o.Amount
+	}
 	err := tx.Create(o).Error
 	if err != nil {
 		return -1, err
@@ -378,8 +428,18 @@ func (d *DBOrderModel) UpdateOrderPayRecordTx(ctx context.Context, tx *gorm.DB, 
 	return nil
 }
 
+func (d *DBOrderModel) UpdateOrderPayRecordForParentTx(ctx context.Context, tx *gorm.DB, id, status, parentID int) error {
+	now := time.Now()
+	err := tx.Model(OrderPayRecord{}).Where(&OrderPayRecord{ID: id}).Updates(OrderPayRecord{Status: status, ParentID: parentID, UpdatedAt: &now}).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (d *DBOrderModel) UpdateOrderPayRecordPriceTx(ctx context.Context, tx *gorm.DB, id int, price float64) error {
 	now := time.Now()
+
 	err := tx.Model(OrderPayRecord{}).Where(&OrderPayRecord{ID: id}).Updates(OrderPayRecord{Amount: price, UpdatedAt: &now}).Error
 	if err != nil {
 		return err
@@ -394,6 +454,78 @@ func (d *DBOrderModel) UpdateOrderRemarkRecordTx(ctx context.Context, tx *gorm.D
 		return err
 	}
 	return nil
+}
+
+func (d *DBOrderModel) StatisticOrdersWithStatus(ctx context.Context, groupby string, limit int, s SearchOrderCondition) ([]*entity.GroupbyStatisticEntity, error) {
+	where, values := s.GetConditions()
+	tx := db.Get().Table("orders").Select(fmt.Sprintf("%v as id, status, count(*) as cnt", groupby)).Where(where, values...).Group(groupby + ",status")
+	if limit > 0 {
+		tx = tx.Limit(limit)
+	}
+	tx = tx.Order("cnt desc")
+	entities := make([]*entity.GroupbyStatisticEntity, 0)
+	err := tx.Find(&entities).Error
+	if err != nil {
+		return nil, err
+	}
+	return entities, nil
+}
+
+func (d *DBOrderModel) StatisticOrders(ctx context.Context, groupby string, limit int, s SearchOrderCondition) ([]*entity.GroupbyStatisticEntity, error) {
+	where, values := s.GetConditions()
+	tx := db.Get().Table("orders").Select(fmt.Sprintf("%v as id, status, count(*) as cnt", groupby)).Where(where, values...).Group(groupby + ",status")
+	if limit > 0 {
+		tx = tx.Limit(limit)
+	}
+	tx = tx.Order("cnt desc")
+	entities := make([]*entity.GroupbyStatisticEntity, 0)
+	err := tx.Find(&entities).Error
+	if err != nil {
+		return nil, err
+	}
+	return entities, nil
+}
+
+func (d *DBOrderModel) StatisticOrdersPayments(ctx context.Context, groupby string, limit int, s SearchOrderCondition, s0 SearchPayRecordCondition) ([]*entity.GroupbyStatisticEntity, error) {
+	//查询所有相关orders
+	s.Prefix = "o"
+	s0.Prefix = "p"
+	where1, values1 := s.GetConditions()
+	where2, values2 := s0.GetConditions()
+	rawSQL := fmt.Sprintf(`SELECT o.%v as id, o.status as status, count(*) as cnt, sum(real_price) as amount
+	FROM orders as o left join order_pay_records as p on o.id=p.order_id `, groupby)
+
+	wheres := make([]string, 0)
+	if where1 != "" {
+		wheres = append(wheres, "("+where1+")")
+	}
+	if where2 != "" {
+		wheres = append(wheres, "("+where2+")")
+	}
+	where := strings.Join(wheres, "AND")
+
+	if where != "" {
+		rawSQL = rawSQL + " WHERE " + where
+	}
+
+	rawSQL = rawSQL + fmt.Sprintf(" group by o.%v, o.status", groupby)
+	values := append(values1, values2...)
+	tx := db.Get().Raw(rawSQL, values...)
+
+	fmt.Println(rawSQL)
+	fmt.Println(values1)
+	if s.OrderBy != "" {
+		tx = tx.Order("o." + s.OrderBy)
+	}
+	if limit > 0 {
+		tx = tx.Limit(limit)
+	}
+	entities := make([]*entity.GroupbyStatisticEntity, 0)
+	err := tx.Find(&entities).Error
+	if err != nil {
+		return nil, err
+	}
+	return entities, nil
 }
 
 func (d *DBOrderModel) GetOrderById(ctx context.Context, id int) (*OrderInfo, error) {

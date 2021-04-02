@@ -9,6 +9,7 @@ import (
 	"xg/db"
 	"xg/entity"
 	"xg/log"
+	"xg/utils"
 )
 
 var (
@@ -51,9 +52,43 @@ type IUserService interface {
 	ListUsers(ctx context.Context, condition da.SearchUserCondition) (int, []*entity.UserInfo, error)
 	CreateUser(ctx context.Context, req *entity.CreateUserRequest) (int, error)
 	UpdateUserAvatar(ctx context.Context, avatar string, operator *entity.JWTUser) error
+	GetUserListMap(ctx context.Context, ids []int) (map[int]string, error)
+	AllRootUserListMap(ctx context.Context) (map[int]string, error)
 }
 
 type UserService struct {
+}
+
+func (u *UserService) GetUserListMap(ctx context.Context, ids []int) (map[int]string, error) {
+	_, users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
+		IDList: utils.UniqueInts(ids),
+	})
+	if err != nil {
+		log.Warning.Printf("Get User failed, ids: %#v, err: %v\n", ids, err)
+		return nil, err
+	}
+
+	authorNameMaps := make(map[int]string)
+	for i := range users {
+		authorNameMaps[users[i].ID] = users[i].Name
+	}
+	return authorNameMaps, nil
+}
+
+func (u *UserService) AllRootUserListMap(ctx context.Context) (map[int]string, error) {
+	_, users, err := da.GetUsersModel().SearchUsers(ctx, da.SearchUserCondition{
+		OrgIdList: []int{entity.RootOrgId},
+	})
+	if err != nil {
+		log.Warning.Printf("Get User failed, OrgIdList: %#v, err: %v\n", entity.RootOrgId, err)
+		return nil, err
+	}
+
+	authorNameMaps := make(map[int]string)
+	for i := range users {
+		authorNameMaps[users[i].ID] = users[i].Name
+	}
+	return authorNameMaps, nil
 }
 
 func (u *UserService) Login(ctx context.Context, name, password string) (*entity.UserLoginResponse, error) {

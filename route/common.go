@@ -199,6 +199,11 @@ type SettlementsResponse struct {
 	Total       int                      `json:"total"`
 	ErrMsg      string                   `json:"err_msg"`
 }
+type CommissionSettlementsResponse struct {
+	Settlements []*entity.CommissionSettlementData `json:"settlements"`
+	Total       int                                `json:"total"`
+	ErrMsg      string                             `json:"err_msg"`
+}
 
 func (r RolesResponse) Error() error {
 	if r.ErrMsg == "success" {
@@ -311,6 +316,11 @@ func (r StudentWithDetailsListResponse) Error() error {
 type StudentListResponse struct {
 	Result *entity.StudentInfoList `json:"result"`
 	ErrMsg string                  `json:"err_msg"`
+}
+
+type GroupbyStatisticEntitiesByAuthorResponse struct {
+	Result []*entity.GroupbyStatisticEntityForName `json:"result"`
+	ErrMsg string                                  `json:"err_msg"`
 }
 
 type StudentConflictListResponse struct {

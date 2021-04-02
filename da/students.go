@@ -2,10 +2,12 @@ package da
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
 	"xg/db"
+	"xg/entity"
 
 	"github.com/jinzhu/gorm"
 )
@@ -16,6 +18,9 @@ type IStudentsModel interface {
 	GetStudentById(ctx context.Context, id int) (*Student, error)
 	SearchStudents(ctx context.Context, s SearchStudentCondition) (int, []*Student, error)
 	CountStudents(ctx context.Context) (int, error)
+
+	StatisticStudentsWithStatus(ctx context.Context, groupby string, limit int, s SearchStudentCondition) ([]*entity.GroupbyStatisticEntity, error)
+	StatisticStudents(ctx context.Context, groupby string, limit int, s SearchStudentCondition) ([]*entity.GroupbyStatisticEntity, error)
 
 	ReplaceStudentOrderSource(ctx context.Context, tx *gorm.DB, oldOrderSource, newOrderSource int) error
 }
@@ -94,6 +99,35 @@ func (d *DBStudentsModel) GetStudentById(ctx context.Context, id int) (*Student,
 		return nil, err
 	}
 	return student, nil
+}
+func (d *DBStudentsModel) StatisticStudentsWithStatus(ctx context.Context, groupby string, limit int, s SearchStudentCondition) ([]*entity.GroupbyStatisticEntity, error) {
+	where, values := s.GetConditions()
+	tx := db.Get().Table("students").Select(fmt.Sprintf("%v as id, status, count(*) as cnt", groupby)).Where(where, values...).Group(groupby + ",status")
+	if limit > 0 {
+		tx = tx.Limit(limit)
+	}
+	tx = tx.Order("cnt desc")
+	entities := make([]*entity.GroupbyStatisticEntity, 0)
+	err := tx.Find(&entities).Error
+	if err != nil {
+		return nil, err
+	}
+	return entities, nil
+}
+
+func (d *DBStudentsModel) StatisticStudents(ctx context.Context, groupby string, limit int, s SearchStudentCondition) ([]*entity.GroupbyStatisticEntity, error) {
+	where, values := s.GetConditions()
+	tx := db.Get().Table("students").Select(fmt.Sprintf("%v as id, count(*) as cnt", groupby)).Where(where, values...).Group(groupby)
+	if limit > 0 {
+		tx = tx.Limit(limit)
+	}
+	tx = tx.Order("cnt desc")
+	entities := make([]*entity.GroupbyStatisticEntity, 0)
+	err := tx.Find(&entities).Error
+	if err != nil {
+		return nil, err
+	}
+	return entities, nil
 }
 func (d *DBStudentsModel) SearchStudents(ctx context.Context, s SearchStudentCondition) (int, []*Student, error) {
 	where, values := s.GetConditions()

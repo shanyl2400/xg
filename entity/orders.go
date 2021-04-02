@@ -14,6 +14,7 @@ const (
 	OrderPayStatusChecked  = 2
 	OrderPayStatusRejected = 3
 	OrderPayStatusUpdated  = 4
+	OrderPayStatusSettled  = 5
 
 	OrderPayModePay     = 1
 	OrderPayModePayback = 2
@@ -49,16 +50,17 @@ type CreateOrderRequest struct {
 }
 
 type SearchOrderCondition struct {
-	IDs              []int  `json:"i_ds"`
-	StudentIDList    []int  `json:"student_id_list"`
-	ToOrgIDList      []int  `json:"to_org_id_list"`
-	IntentSubjects   string `json:"intent_subjects"`
-	PublisherID      []int  `json:"publisher_id"`
-	OrderSourceList  []int  `json:"order_source"`
-	StudentsKeywords string `json:"students_keywords"`
-	Keywords         string `json:"keywords"`
-	Address          string `json:"address"`
-	AuthorID         []int  `json:"author_id"`
+	IDs               []int  `json:"i_ds"`
+	StudentIDList     []int  `json:"student_id_list"`
+	ToOrgIDList       []int  `json:"to_org_id_list"`
+	IntentSubjects    string `json:"intent_subjects"`
+	PublisherID       []int  `json:"publisher_id"`
+	RelatedUserIDList []int  `json:"related_user_id"`
+	OrderSourceList   []int  `json:"order_source"`
+	StudentsKeywords  string `json:"students_keywords"`
+	Keywords          string `json:"keywords"`
+	Address           string `json:"address"`
+	AuthorID          []int  `json:"author_id"`
 
 	CreateStartAt *time.Time `json:"create_start_at"`
 	CreateEndAt   *time.Time `json:"create_end_at"`

@@ -30,6 +30,8 @@ type IOrgService interface {
 	SearchPendingOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error)
 	SearchNearExpiredOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error)
 	UpdateOrgWithSubOrgs(ctx context.Context, orgId int, req *entity.UpdateOrgWithSubOrgsRequest, operator *entity.JWTUser) error
+
+	AllOrgsListMap(ctx context.Context) (map[int]string, error)
 }
 
 type OrgService struct {
@@ -302,6 +304,22 @@ func (s *OrgService) GetOrgSubjectsById(ctx context.Context, orgId int) ([]strin
 		}
 	}
 	return subjects, nil
+}
+
+func (u *OrgService) AllOrgsListMap(ctx context.Context) (map[int]string, error) {
+	_, orgs, err := da.GetOrgModel().SearchOrgs(ctx, da.SearchOrgsCondition{
+		ParentIDs: []int{0},
+	})
+	if err != nil {
+		log.Warning.Printf("Get User failed, OrgIdList: %#v, err: %v\n", entity.RootOrgId, err)
+		return nil, err
+	}
+
+	orgNameMaps := make(map[int]string)
+	for i := range orgs {
+		orgNameMaps[orgs[i].ID] = orgs[i].Name
+	}
+	return orgNameMaps, nil
 }
 
 func (s *OrgService) ListOrgs(ctx context.Context, condition da.SearchOrgsCondition) (int, []*entity.Org, error) {

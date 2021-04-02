@@ -16,6 +16,7 @@ type IAuthModel interface {
 type Auth struct {
 	ID   int    `gorm:"PRIMARY_KEY;AUTO_INCREMENT;column:id"`
 	Name string `gorm:"type:varchar(128);NOT NULL;column:name"`
+	Mode int    `gorm:"type:int;NOT NULL;column:mode"`
 }
 
 type DBAuthModel struct {

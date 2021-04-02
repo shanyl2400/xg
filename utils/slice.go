@@ -45,3 +45,11 @@ func StringsToInts(s []string) ([]int, error) {
 	}
 	return ret, nil
 }
+
+func IntsToStrings(d []int) []string {
+	ret := make([]string, len(d))
+	for i := range d {
+		ret[i] = strconv.Itoa(d[i])
+	}
+	return ret
+}

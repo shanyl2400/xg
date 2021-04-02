@@ -104,6 +104,135 @@ func (s *Server) searchOrder(c *gin.Context) {
 	})
 }
 
+// @Summary statisticOrders
+// @Description statistic order with condition
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param student_ids query string false "search order with student_ids"
+// @Param to_org_ids query string false "search order with to_org_ids"
+// @Param students_keywords query string false "search order by students info"
+// @Param intent_subjects query string false "search order with intent_subjects"
+// @Param publisher_id query int  false "search order with publisher_id"
+// @Param status query string  false "search order with status"
+// @Param order_by query string false "search order order by column name"
+// @Param page_size query int true "order list page size"
+// @Param page query int false "order list page index"
+// @Tags order
+// @Success 200 {object} OrderInfoListResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/statistics/orders [get]
+func (s *Server) statisticOrders(c *gin.Context) {
+	req := buildOrderCondition(c)
+	orders, err := service.GetOrderService().StatisticOrders(c.Request.Context(), "parent_org_id", 0, *req)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, GroupbyStatisticEntitiesByAuthorResponse{
+		Result: orders,
+		ErrMsg: "success",
+	})
+}
+
+// @Summary statisticOrdersRank
+// @Description statistic order list with condition
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param student_ids query string false "search order with student_ids"
+// @Param to_org_ids query string false "search order with to_org_ids"
+// @Param students_keywords query string false "search order by students info"
+// @Param intent_subjects query string false "search order with intent_subjects"
+// @Param publisher_id query int  false "search order with publisher_id"
+// @Param status query string  false "search order with status"
+// @Param order_by query string false "search order order by column name"
+// @Param page_size query int true "order list page size"
+// @Param page query int false "order list page index"
+// @Tags order
+// @Success 200 {object} OrderInfoListResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/statistics/orders [get]
+func (s *Server) statisticOrdersRank(c *gin.Context) {
+	req := buildOrderCondition(c)
+	orders, err := service.GetOrderService().StatisticOrdersRank(c.Request.Context(), *req)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, GroupbyStatisticEntitiesByAuthorResponse{
+		Result: orders,
+		ErrMsg: "success",
+	})
+}
+
+// @Summary statisticOrderPaymentsRank
+// @Description statistic order payment list with condition
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param student_ids query string false "search order with student_ids"
+// @Param to_org_ids query string false "search order with to_org_ids"
+// @Param students_keywords query string false "search order by students info"
+// @Param intent_subjects query string false "search order with intent_subjects"
+// @Param publisher_id query int  false "search order with publisher_id"
+// @Param status query string  false "search order with status"
+// @Param order_by query string false "search order order by column name"
+// @Param page_size query int true "order list page size"
+// @Param page query int false "order list page index"
+// @Tags order
+// @Success 200 {object} OrderInfoListResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/statistics/orders/payment [get]
+func (s *Server) statisticOrderPaymentsRank(c *gin.Context) {
+	req := buildOrderCondition(c)
+	orders, err := service.GetOrderService().StatisticOrderPaymentsRank(c.Request.Context(), *req)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, GroupbyStatisticEntitiesByAuthorResponse{
+		Result: orders,
+		ErrMsg: "success",
+	})
+}
+
+// @Summary statisticOrdersPayments
+// @Description statistic order payments with condition
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "With the bearer"
+// @Param student_ids query string false "search order with student_ids"
+// @Param to_org_ids query string false "search order with to_org_ids"
+// @Param students_keywords query string false "search order by students info"
+// @Param intent_subjects query string false "search order with intent_subjects"
+// @Param publisher_id query int  false "search order with publisher_id"
+// @Param status query string  false "search order with status"
+// @Param order_by query string false "search order order by column name"
+// @Param page_size query int true "order list page size"
+// @Param page query int false "order list page index"
+// @Tags order
+// @Success 200 {object} OrderInfoListResponse
+// @Failure 500 {object} Response
+// @Failure 400 {object} Response
+// @Router /api/statistics/orders/payment [get]
+func (s *Server) statisticOrdersPayments(c *gin.Context) {
+	req := buildOrderCondition(c)
+	req2 := buildSearchPayRecordConditionWithPrefix(c)
+	orders, err := service.GetOrderService().StatisticOrdersPayments(c.Request.Context(), "parent_org_id", 0, *req, *req2)
+	if err != nil {
+		s.responseErr(c, http.StatusInternalServerError, err)
+		return
+	}
+	c.JSON(http.StatusOK, GroupbyStatisticEntitiesByAuthorResponse{
+		Result: orders,
+		ErrMsg: "success",
+	})
+}
+
 // @Summary exportOrder
 // @Description export order with condition
 // @Accept json
@@ -886,6 +1015,22 @@ func buildSearchPayRecordCondition(c *gin.Context) *entity.SearchPayRecordCondit
 
 		PageSize: parseInt(pageSize),
 		Page:     parseInt(page),
+	}
+}
+
+func buildSearchPayRecordConditionWithPrefix(c *gin.Context) *entity.SearchPayRecordCondition {
+	payRecordIds := c.Query("pay_record_ids")
+	orderIds := c.Query("pay_record_order_ids")
+	authorIds := c.Query("pay_record_author_ids")
+	mode := c.Query("pay_record_mode")
+	status := c.Query("pay_record_status")
+
+	return &entity.SearchPayRecordCondition{
+		PayRecordIDList: parseInts(payRecordIds),
+		OrderIDList:     parseInts(orderIds),
+		AuthorIDList:    parseInts(authorIds),
+		Mode:            parseInt(mode),
+		StatusList:      parseInts(status),
 	}
 }
 

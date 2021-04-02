@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"context"
+	"errors"
 	"strings"
 	"sync"
 	"time"
@@ -19,6 +20,11 @@ const (
 	ChallengeDate = 60 * time.Hour * 24 * 6
 )
 
+var (
+	ErrInvalidStudentRequest = errors.New("create student request invalid")
+	ErrOrderSourceNotFound   = errors.New("order source not found")
+)
+
 type IStudentService interface {
 	CreateStudent(ctx context.Context, c *entity.CreateStudentRequest, operator *entity.JWTUser) (int, int, error)
 	UpdateStudent(ctx context.Context, id int, req *entity.UpdateStudentRequest) error
@@ -28,14 +34,57 @@ type IStudentService interface {
 	AddStudentNote(ctx context.Context, c entity.AddStudentNoteRequest) error
 
 	UpdateStudentOrderCount(ctx context.Context, tx *gorm.DB, id int, count int) error
+	StatisticStudentByAuthor(ctx context.Context, ss *entity.SearchStudentRequest, operator *entity.JWTUser) ([]*entity.GroupbyStatisticEntity, error)
+	StatisticStudentByAuthorList(ctx context.Context, ss *entity.SearchStudentRequest, operator *entity.JWTUser) ([]*entity.GroupbyStatisticEntityForName, error)
 }
 
 type StudentService struct {
 	sync.Mutex
 }
 
+func (s *StudentService) checkStudentRequest(ctx context.Context, c *entity.CreateStudentRequest) error {
+	if c.Name == "" {
+		log.Warning.Printf("Invalid student request, req: %#v", c)
+		return ErrInvalidStudentRequest
+	}
+	if c.Telephone == "" {
+		log.Warning.Printf("Invalid student request, req: %#v", c)
+		return ErrInvalidStudentRequest
+	}
+	if c.Address == "" {
+		log.Warning.Printf("Invalid student request, req: %#v", c)
+		return ErrInvalidStudentRequest
+	}
+	if c.OrderSourceID < 0 {
+		log.Warning.Printf("Invalid student request, req: %#v", c)
+		return ErrInvalidStudentRequest
+	} else {
+		data, err := da.GetOrderSourceModel().GetOrderSourceById(ctx, c.OrderSourceID)
+		if err != nil {
+			log.Warning.Printf("Search order source failed, req: %#v, err: %#v", c, err)
+			return err
+		}
+		if data == nil {
+			log.Warning.Printf("Order source not found, req: %#v", c)
+			return ErrOrderSourceNotFound
+		}
+	}
+	if len(c.IntentSubject) < 0 {
+		log.Warning.Printf("Invalid student request, req: %#v", c)
+		return ErrInvalidStudentRequest
+	}
+
+	return nil
+}
+
 func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStudentRequest, operator *entity.JWTUser) (int, int, error) {
 	status := entity.StudentCreated
+
+	err := s.checkStudentRequest(ctx, c)
+	if err != nil {
+		return -1, -1, err
+	}
+
 	log.Info.Printf("CreateStudent, req: %#v\n", c)
 	//检查冲单，查询相同手机号是否有学生
 	condition := da.SearchStudentCondition{
@@ -312,6 +361,71 @@ func (s *StudentService) ExportStudents(ctx context.Context, ss *entity.SearchSt
 	return buf.Bytes(), nil
 }
 
+func (s *StudentService) StatisticStudentByAuthor(ctx context.Context, limit int, ss *entity.SearchStudentRequest, operator *entity.JWTUser) ([]*entity.GroupbyStatisticEntityForName, error) {
+	log.Info.Printf("SearchStudents, condition: %#v\n", ss)
+	condition := da.SearchStudentCondition{
+		Name:            ss.Name,
+		Telephone:       ss.Telephone,
+		Keywords:        ss.Keywords,
+		Address:         ss.Address,
+		AuthorIDList:    ss.AuthorIDList,
+		IntentString:    ss.IntentSubject,
+		Status:          ss.Status,
+		NoDispatchOrder: ss.NoDispatchOrder,
+		OrderSourceIDs:  ss.OrderSourceIDs,
+		CreatedStartAt:  ss.CreatedStartAt,
+		CreatedEndAt:    ss.CreatedEndAt,
+	}
+	res, err := da.GetStudentModel().StatisticStudentsWithStatus(ctx, "author_id", limit, condition)
+	if err != nil {
+		log.Warning.Printf("StatisticStudents failed, condition: %#v, req: %#v, err: %v\n", condition, ss, err)
+		return nil, err
+	}
+	return GetStatisticsService().GroupbyStatisticEntityFillName(ctx, GroupDataTypeUser, res)
+}
+
+func (s *StudentService) StatisticStudentRank(ctx context.Context, ss *entity.SearchStudentRequest, operator *entity.JWTUser) ([]*entity.GroupbyStatisticEntityForName, error) {
+	log.Info.Printf("SearchStudents, condition: %#v\n", ss)
+	limit := 5
+	now := time.Now()
+	firstDay := utils.GetFirstDateOfMonth(now)
+	condition := da.SearchStudentCondition{
+		Name:            ss.Name,
+		Telephone:       ss.Telephone,
+		Keywords:        ss.Keywords,
+		Address:         ss.Address,
+		AuthorIDList:    ss.AuthorIDList,
+		IntentString:    ss.IntentSubject,
+		Status:          ss.Status,
+		NoDispatchOrder: ss.NoDispatchOrder,
+		OrderSourceIDs:  ss.OrderSourceIDs,
+		CreatedStartAt:  &firstDay,
+		CreatedEndAt:    &now,
+	}
+	res, err := da.GetStudentModel().StatisticStudents(ctx, "author_id", limit, condition)
+	if err != nil {
+		return nil, err
+	}
+	authorIDs := make([]int, len(res))
+	for i := range res {
+		authorIDs[i] = res[i].ID
+	}
+	authorNameMaps, err := GetUserService().AllRootUserListMap(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := make([]*entity.GroupbyStatisticEntityForName, len(res))
+	for i := range res {
+		ret[i] = &entity.GroupbyStatisticEntityForName{
+			ID:   res[i].ID,
+			Cnt:  res[i].Cnt,
+			Name: authorNameMaps[res[i].ID],
+		}
+	}
+	return completeData(ctx, GroupDataTypeUser, ret, limit)
+}
+
 func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchStudentRequest, operator *entity.JWTUser) (int, []*entity.StudentInfo, error) {
 	log.Info.Printf("SearchStudents, condition: %#v\n", ss)
 	condition := da.SearchStudentCondition{
@@ -348,29 +462,43 @@ func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchSt
 		return 0, nil, err
 	}
 
+	orderSources, err := da.GetOrderSourceModel().ListOrderSources(ctx)
+	if err != nil {
+		log.Warning.Printf("Get OrderSources failed, ids: %#v, req: %#v, err: %v\n", authorIds, ss, err)
+		return 0, nil, err
+	}
+
 	authorNameMaps := make(map[int]string)
 	for i := range users {
 		authorNameMaps[users[i].ID] = users[i].Name
 	}
 
+	orderSourceNameMaps := make(map[int]string)
+	for i := range orderSources {
+		orderSourceNameMaps[orderSources[i].ID] = orderSources[i].Name
+	}
+
 	res := make([]*entity.StudentInfo, len(students))
 	for i := range students {
 		res[i] = &entity.StudentInfo{
-			ID:            students[i].ID,
-			Name:          students[i].Name,
-			Gender:        students[i].Gender,
-			Telephone:     students[i].Telephone,
-			Address:       students[i].Address,
-			AddressExt:    students[i].AddressExt,
-			AuthorID:      students[i].AuthorID,
-			Email:         students[i].Email,
-			AuthorName:    authorNameMaps[students[i].AuthorID],
-			IntentSubject: strings.Split(students[i].IntentSubject, ","),
-			Status:        students[i].Status,
-			Note:          students[i].Note,
-			OrderCount:    students[i].OrderCount,
-			CreatedAt:     students[i].CreatedAt,
-			UpdatedAt:     students[i].UpdatedAt,
+			ID:              students[i].ID,
+			Name:            students[i].Name,
+			Gender:          students[i].Gender,
+			Telephone:       students[i].Telephone,
+			Address:         students[i].Address,
+			AddressExt:      students[i].AddressExt,
+			AuthorID:        students[i].AuthorID,
+			Email:           students[i].Email,
+			AuthorName:      authorNameMaps[students[i].AuthorID],
+			IntentSubject:   strings.Split(students[i].IntentSubject, ","),
+			Status:          students[i].Status,
+			Note:            students[i].Note,
+			OrderSourceID:   students[i].OrderSourceID,
+			OrderSourceName: orderSourceNameMaps[students[i].OrderSourceID],
+			OrderSourceExt:  students[i].OrderSourceExt,
+			OrderCount:      students[i].OrderCount,
+			CreatedAt:       students[i].CreatedAt,
+			UpdatedAt:       students[i].UpdatedAt,
 		}
 	}
 	return total, res, nil
@@ -378,6 +506,54 @@ func (s *StudentService) SearchStudents(ctx context.Context, ss *entity.SearchSt
 
 func (s *StudentService) AddStudentNote(ctx context.Context, c entity.AddStudentNoteRequest) error {
 	panic("not implemented")
+}
+
+func completeData(ctx context.Context, typeData int, data []*entity.GroupbyStatisticEntityForName, length int) ([]*entity.GroupbyStatisticEntityForName, error) {
+	if len(data) >= length {
+		return data, nil
+	}
+	nameMaps := make(map[int]string)
+	var err error
+	switch typeData {
+	case GroupDataTypeOrg:
+		nameMaps, err = GetOrgService().AllOrgsListMap(ctx)
+		if err != nil {
+			return nil, err
+		}
+	case GroupDataTypeUser:
+		nameMaps, err = GetUserService().AllRootUserListMap(ctx)
+		if err != nil {
+			return nil, err
+		}
+	default:
+		return data, nil
+	}
+	//补充数据
+	pendingAddCount := length - len(data)
+	for i := 0; i < pendingAddCount; i++ {
+		for k, v := range nameMaps {
+			if !hasAuthorInEntityList(ctx, data, k) {
+				data = append(data, &entity.GroupbyStatisticEntityForName{
+					ID:     k,
+					Name:   v,
+					Cnt:    0,
+					Status: 0,
+					Amount: 0,
+				})
+				break
+			}
+		}
+	}
+	return data, nil
+}
+
+func hasAuthorInEntityList(ctx context.Context, data []*entity.GroupbyStatisticEntityForName, id int) bool {
+	for i := range data {
+		if data[i].ID == id {
+			return true
+		}
+	}
+	return false
 }
 
 var (

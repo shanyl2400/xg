@@ -8,17 +8,17 @@ import (
 	"xg/log"
 )
 
-type IAuthService interface{
+type IAuthService interface {
 	ListAuths(ctx context.Context) ([]*entity.Auth, error)
 }
 
 type AuthService struct {
 }
 
-func (a *AuthService) ListAuths(ctx context.Context) ([]*entity.Auth, error){
+func (a *AuthService) ListAuths(ctx context.Context) ([]*entity.Auth, error) {
 	log.Info.Printf("list all auths\n")
 	auths, err := da.GetAuthModel().ListAuth(ctx)
-	if err != nil{
+	if err != nil {
 		log.Warning.Printf("List auth failed, err: %v\n", err)
 		return nil, err
 	}
@@ -29,14 +29,14 @@ func (a *AuthService) ListAuths(ctx context.Context) ([]*entity.Auth, error){
 	return res, nil
 }
 
-var(
-	_authService *AuthService
+var (
+	_authService      *AuthService
 	__authServiceOnce sync.Once
 )
 
-func GetAuthService() *AuthService{
+func GetAuthService() *AuthService {
 	__authServiceOnce.Do(func() {
-		if _authService == nil{
+		if _authService == nil {
 			_authService = new(AuthService)
 		}
 	})

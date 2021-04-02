@@ -20,20 +20,20 @@ import (
 // @Failure 400 {object} Response
 // @Router /api/role [post]
 func (s *Server) createRole(c *gin.Context) {
-	req := new(entity.CreateRoleRequest)
+	req := new(entity.CreateRoleRequestForOrgs)
 	err := c.ShouldBind(req)
 	if err != nil {
 		s.responseErr(c, http.StatusBadRequest, err)
 		return
 	}
-	id, err := service.GetRoleService().CreateRole(c.Request.Context(), req.Name, req.AuthIds)
+	id, err := service.GetRoleService().CreateRoleForOrgs(c.Request.Context(), req.Name, req.AuthIds, req.RoleMode)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return
 	}
 	c.JSON(http.StatusOK, IdResponse{
-		ID: id,
-		ErrMsg:   "success",
+		ID:     id,
+		ErrMsg: "success",
 	})
 }
 
@@ -54,7 +54,7 @@ func (s *Server) listRoles(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, RolesResponse{
-		Roles: roles,
-		ErrMsg:   "success",
+		Roles:  roles,
+		ErrMsg: "success",
 	})
 }

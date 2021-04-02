@@ -13,7 +13,12 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-type IStatisticsService interface{
+const (
+	GroupDataTypeUser = 1
+	GroupDataTypeOrg  = 2
+)
+
+type IStatisticsService interface {
 	Summary(ctx context.Context) (*entity.SummaryInfo, error)
 	SearchYearRecords(ctx context.Context, key string) ([]*entity.StatisticRecord, error)
 }
@@ -34,7 +39,7 @@ func (s *StatisticsService) Summary(ctx context.Context) (*entity.SummaryInfo, e
 		log.Warning.Printf("CountStudents failed, err: %v\n", err)
 		return nil, err
 	}
-	payCondition :=  da.SearchPayRecordCondition{
+	payCondition := da.SearchPayRecordCondition{
 		// Mode:       entity.OrderPayModePay,
 		StatusList: []int{entity.OrderPayStatusChecked},
 		PageSize:   1000000,
@@ -54,8 +59,8 @@ func (s *StatisticsService) Summary(ctx context.Context) (*entity.SummaryInfo, e
 	}
 
 	orderCondition := da.SearchOrderCondition{
-		Status: []int{entity.OrderStatusSigned, entity.OrderStatusRevoked, entity.OrderStatusCreated},
-		PageSize:   1000000,
+		Status:   []int{entity.OrderStatusSigned, entity.OrderStatusRevoked, entity.OrderStatusCreated},
+		PageSize: 1000000,
 	}
 	total, orders, err := da.GetOrderModel().SearchOrder(ctx, orderCondition)
 	if err != nil {
@@ -127,7 +132,7 @@ func (s *StatisticsService) SearchYearRecords(ctx context.Context, key string) (
 func (s *StatisticsService) AddStudent(ctx context.Context, tx *gorm.DB, authorId, count int) error {
 	log.Info.Printf("AddStudent, count: %#v\n", count)
 	err := s.addValue(ctx, tx, StatisticKeyId(entity.StudentAuthorStatisticsKey, authorId), float64(count), true)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	return s.addValue(ctx, tx, entity.StudentStatisticsKey, float64(count), true)
@@ -141,28 +146,63 @@ func (s *StatisticsService) AddPerformance(ctx context.Context, tx *gorm.DB, inf
 	}
 
 	err := s.addValue(ctx, tx, StatisticKeyId(entity.OrgPerformanceStatisticsKey, info.OrgId), performance, addCount)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	err = s.addValue(ctx, tx, StatisticKeyId(entity.AuthorPerformanceStatisticsKey, info.AuthorId), performance, addCount)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	err = s.addValue(ctx, tx, StatisticKeyId(entity.PublisherPerformanceStatisticsKey, info.PublisherId), performance, addCount)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
 	err = s.addValue(ctx, tx, StatisticKeyId(entity.OrderSourcePerformanceStatisticsKey, info.OrderSourceId), performance, addCount)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
 	err = s.addValue(ctx, tx, entity.PerformanceStatisticsKey, performance, addCount)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (s *StatisticsService) GroupbyStatisticEntityFillName(ctx context.Context, dataType int, data []*entity.GroupbyStatisticEntity) ([]*entity.GroupbyStatisticEntityForName, error) {
+	ret := make([]*entity.GroupbyStatisticEntityForName, len(data))
+	switch dataType {
+	case GroupDataTypeUser:
+		authorNameMaps, err := GetUserService().AllRootUserListMap(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for i := range data {
+			ret[i] = &entity.GroupbyStatisticEntityForName{
+				ID:     data[i].ID,
+				Cnt:    data[i].Cnt,
+				Status: data[i].Status,
+				Amount: data[i].Amount,
+				Name:   authorNameMaps[data[i].ID],
+			}
+		}
+	case GroupDataTypeOrg:
+		orgNameMaps, err := GetOrgService().AllOrgsListMap(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for i := range data {
+			ret[i] = &entity.GroupbyStatisticEntityForName{
+				ID:     data[i].ID,
+				Cnt:    data[i].Cnt,
+				Status: data[i].Status,
+				Amount: data[i].Amount,
+				Name:   orgNameMaps[data[i].ID],
+			}
+		}
+	}
+	return ret, nil
 }
 
 func (s *StatisticsService) addValue(ctx context.Context, tx *gorm.DB, key string, value float64, addCount bool) error {
@@ -201,7 +241,7 @@ func (s *StatisticsService) addValue(ctx context.Context, tx *gorm.DB, key strin
 		Value:  value,
 		Year:   now.Year(),
 		Month:  int(now.Month()),
-		Count: count,
+		Count:  count,
 		Author: 0,
 	}
 	_, err = da.GetStatisticsRecordModel().CreateStatisticsRecord(ctx, tx, record)
@@ -212,7 +252,7 @@ func (s *StatisticsService) addValue(ctx context.Context, tx *gorm.DB, key strin
 	return nil
 }
 
-func StatisticKeyId(prefix string, id int) string{
+func StatisticKeyId(prefix string, id int) string {
 	return fmt.Sprintf("%v-%v", prefix, id)
 }
 

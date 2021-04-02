@@ -7,16 +7,19 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"time"
 	"xg/da"
 	"xg/db"
 	"xg/entity"
 	"xg/log"
+	"xg/utils"
 
 	"github.com/jinzhu/gorm"
 )
 
 var (
 	ErrInvalidOrderRemarkStatus = errors.New("invalid order remark status")
+	ErrNoOrders                 = errors.New("no orders")
 )
 
 type IOrderService interface {
@@ -45,10 +48,16 @@ type IOrderService interface {
 	GetOrderById(ctx context.Context, orderId int, operator *entity.JWTUser) (*entity.OrderInfoWithRecords, error)
 
 	ExportOrders(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) ([]byte, error)
+
+	StatisticOrders(ctx context.Context, groupby string, limit int, condition entity.SearchOrderCondition) ([]*entity.GroupbyStatisticEntityForName, error)
+	StatisticOrdersPayments(ctx context.Context, groupby string, limit int, s entity.SearchOrderCondition, condition0 entity.SearchPayRecordCondition) ([]*entity.GroupbyStatisticEntityForName, error)
+	StatisticOrdersRank(ctx context.Context, condition entity.SearchOrderCondition) ([]*entity.GroupbyStatisticEntityForName, error)
+	StatisticOrderPaymentsRank(ctx context.Context, condition entity.SearchOrderCondition) ([]*entity.GroupbyStatisticEntityForName, error)
 }
 
 type OrderService struct {
-	lock sync.Mutex
+	lock  sync.Mutex
+	limit int
 }
 type orderEntity struct {
 	StudentID int `json:"student_id"`
@@ -86,6 +95,7 @@ func (o *OrderService) CreateOrder(ctx context.Context, req *entity.CreateOrderR
 	data := da.Order{
 		StudentID:      req.StudentID,
 		ToOrgID:        req.ToOrgID,
+		ParentOrgID:    org.RealParentID(),
 		Address:        org.Address,
 		IntentSubjects: strings.Join(req.IntentSubjects, ","),
 		PublisherID:    operator.UserId,
@@ -632,18 +642,19 @@ func (o *OrderService) UpdateOrderPayPrice(ctx context.Context, orderPayId int, 
 			log.Warning.Printf("Get order pay record failed, orderPayId: %#v, err: %v\n", orderPayId, err)
 			return err
 		}
-		err = da.GetOrderModel().UpdateOrderPayRecordTx(ctx, tx, orderPayId, entity.OrderPayStatusUpdated)
+		err = da.GetOrderModel().UpdateOrderPayRecordForParentTx(ctx, tx, orderPayId, entity.OrderPayStatusUpdated, orderPayId)
 		if err != nil {
 			log.Warning.Printf("Update order pay record status failed, orderPayId: %#v, err: %v\n", orderPayId, err)
 			return err
 		}
 		_, err = da.GetOrderModel().AddOrderPayRecordTx(ctx, tx, &da.OrderPayRecord{
-			OrderID: record.OrderID,
-			Mode:    record.Mode,
-			Title:   record.Title,
-			Amount:  price,
-			Content: record.Content,
-			Status:  entity.OrderPayStatusPending,
+			OrderID:  record.OrderID,
+			Mode:     record.Mode,
+			Title:    record.Title,
+			Amount:   price,
+			Content:  record.Content,
+			Status:   record.Status,
+			ParentID: orderPayId,
 		})
 		if err != nil {
 			log.Warning.Printf("Update order pay record failed, orderPayId: %#v, err: %v\n", orderPayId, err)
@@ -879,6 +890,9 @@ func (o *OrderService) ExportOrders(ctx context.Context, condition *entity.Searc
 		log.Warning.Printf("Search order failed, condition: %#v, err: %v\n", condition, err)
 		return nil, err
 	}
+	if len(orders) < 1 {
+		return nil, ErrNoOrders
+	}
 	//添加具体信息
 	orderInfos, err := o.getOrderInfoRecords(ctx, orders)
 	if err != nil {
@@ -908,30 +922,34 @@ func (o *OrderService) SearchOrders(ctx context.Context, condition *entity.Searc
 	}
 
 	total, orders, err := da.GetOrderModel().SearchOrder(ctx, da.SearchOrderCondition{
-		OrderIDList:     condition.IDs,
-		StudentIDList:   condition.StudentIDList,
-		ToOrgIDList:     condition.ToOrgIDList,
-		IntentSubjects:  condition.IntentSubjects,
-		PublisherIDList: condition.PublisherID,
-		OrderSourceList: condition.OrderSourceList,
-		CreateStartAt:   condition.CreateStartAt,
-		StudentKeywords: condition.StudentsKeywords,
-		AuthorIDList:    condition.AuthorID,
-		Keywords:        condition.Keywords,
-		UpdateStartAt:   condition.UpdateStartAt,
-		UpdateEndAt:     condition.UpdateEndAt,
-		Address:         condition.Address,
-		CreateEndAt:     condition.CreateEndAt,
-		Status:          condition.Status,
-		OrderBy:         condition.OrderBy,
-		Page:            condition.Page,
-		PageSize:        condition.PageSize,
+		OrderIDList:       condition.IDs,
+		StudentIDList:     condition.StudentIDList,
+		ToOrgIDList:       condition.ToOrgIDList,
+		IntentSubjects:    condition.IntentSubjects,
+		PublisherIDList:   condition.PublisherID,
+		OrderSourceList:   condition.OrderSourceList,
+		CreateStartAt:     condition.CreateStartAt,
+		StudentKeywords:   condition.StudentsKeywords,
+		AuthorIDList:      condition.AuthorID,
+		RelatedUserIDList: condition.RelatedUserIDList,
+		Keywords:          condition.Keywords,
+		UpdateStartAt:     condition.UpdateStartAt,
+		UpdateEndAt:       condition.UpdateEndAt,
+		Address:           condition.Address,
+		CreateEndAt:       condition.CreateEndAt,
+		Status:            condition.Status,
+		OrderBy:           condition.OrderBy,
+		Page:              condition.Page,
+		PageSize:          condition.PageSize,
 	})
 	if err != nil {
 		log.Warning.Printf("Search order failed, condition: %#v, err: %v\n", condition, err)
 		return nil, err
 	}
 	//添加具体信息
+	if len(orders) < 1 {
+		return &entity.OrderInfoList{Total: total, Orders: nil}, nil
+	}
 	orderInfos, err := o.getOrderInfoDetails(ctx, orders)
 	if err != nil {
 		log.Warning.Printf("Get order detailed failed, condition: %#v, orders: %#v, err: %v\n", condition, orders, err)
@@ -943,9 +961,150 @@ func (o *OrderService) SearchOrders(ctx context.Context, condition *entity.Searc
 		Orders: orderInfos,
 	}, nil
 }
+func (o *OrderService) StatisticOrdersPayments(ctx context.Context, groupby string, limit int, condition entity.SearchOrderCondition, condition2 entity.SearchPayRecordCondition) ([]*entity.GroupbyStatisticEntityForName, error) {
+	log.Info.Printf("Search order, condition: %#v\n", condition)
+	if len(condition.ToOrgIDList) > 0 {
+		allIds, err := o.getOrgSubOrgs(ctx, condition.ToOrgIDList)
+		if err != nil {
+			log.Warning.Printf("Search org failed, condition: %#v, err: %v\n", condition, err)
+			return nil, err
+		}
+		condition.ToOrgIDList = allIds
+	}
+	condition0 := da.SearchOrderCondition{
+		OrderIDList:       condition.IDs,
+		StudentIDList:     condition.StudentIDList,
+		ToOrgIDList:       condition.ToOrgIDList,
+		IntentSubjects:    condition.IntentSubjects,
+		Status:            condition.Status,
+		PublisherIDList:   condition.PublisherID,
+		OrderSourceList:   condition.OrderSourceList,
+		CreateStartAt:     condition.CreateStartAt,
+		StudentKeywords:   condition.StudentsKeywords,
+		AuthorIDList:      condition.AuthorID,
+		RelatedUserIDList: condition.RelatedUserIDList,
+		Keywords:          condition.Keywords,
+		UpdateStartAt:     condition.UpdateStartAt,
+		UpdateEndAt:       condition.UpdateEndAt,
+		Address:           condition.Address,
+		CreateEndAt:       condition.CreateEndAt,
+		OrderBy:           condition.OrderBy,
+	}
+	condition1 := da.SearchPayRecordCondition{
+		PayRecordIDList: condition2.PayRecordIDList,
+		OrderIDList:     condition2.OrderIDList,
+		AuthorIDList:    condition2.AuthorIDList,
+		Mode:            condition2.Mode,
+		StatusList:      condition2.StatusList,
+	}
+	ret, err := da.GetOrderModel().StatisticOrdersPayments(ctx, groupby, 5, condition0, condition1)
+	if err != nil {
+		log.Error.Printf("StatisticOrdersPayments failed, condition: %#v, condition0: %#v, err: %v\n", condition, condition0, err)
+		return nil, err
+	}
+	return GetStatisticsService().GroupbyStatisticEntityFillName(ctx, GroupDataTypeOrg, ret)
+}
+
+func (o *OrderService) StatisticOrdersRank(ctx context.Context, condition entity.SearchOrderCondition) ([]*entity.GroupbyStatisticEntityForName, error) {
+	now := time.Now()
+	firstDay := utils.GetFirstDateOfMonth(now)
+	condition.CreateStartAt = &firstDay
+	condition.CreateEndAt = &now
+	res, err := o.StatisticOrders(ctx, "parent_org_id", o.limit, condition)
+	if err != nil {
+		return nil, err
+	}
+	orgs, err := da.GetOrgModel().ListOrgs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgNameMaps := make(map[int]string)
+	for i := range orgs {
+		orgNameMaps[orgs[i].ID] = orgs[i].Name
+	}
+	ret := make([]*entity.GroupbyStatisticEntityForName, len(res))
+	for i := range res {
+		ret[i] = &entity.GroupbyStatisticEntityForName{
+			ID:     res[i].ID,
+			Cnt:    res[i].Cnt,
+			Status: res[i].Status,
+			Name:   orgNameMaps[res[i].ID],
+		}
+	}
+	return completeData(ctx, GroupDataTypeOrg, ret, o.limit)
+}
+
+func (o *OrderService) StatisticOrderPaymentsRank(ctx context.Context, condition entity.SearchOrderCondition) ([]*entity.GroupbyStatisticEntityForName, error) {
+	now := time.Now()
+	firstDay := utils.GetFirstDateOfMonth(now)
+	condition.CreateStartAt = &firstDay
+	condition.CreateEndAt = &now
+	condition.Status = []int{entity.OrderPayStatusChecked, entity.OrderPayStatusSettled}
+	res, err := o.StatisticOrdersPayments(ctx, "parent_org_id", o.limit, condition, entity.SearchPayRecordCondition{StatusList: []int{
+		entity.OrderPayStatusChecked, entity.OrderPayStatusSettled,
+	}})
+	if err != nil {
+		return nil, err
+	}
+	orgs, err := da.GetOrgModel().ListOrgs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	orgNameMaps := make(map[int]string)
+	for i := range orgs {
+		orgNameMaps[orgs[i].ID] = orgs[i].Name
+	}
+	ret := make([]*entity.GroupbyStatisticEntityForName, len(res))
+	for i := range res {
+		ret[i] = &entity.GroupbyStatisticEntityForName{
+			ID:     res[i].ID,
+			Cnt:    res[i].Cnt,
+			Status: res[i].Status,
+			Amount: res[i].Amount,
+			Name:   orgNameMaps[res[i].ID],
+		}
+	}
+	return completeData(ctx, GroupDataTypeOrg, ret, o.limit)
+}
+
+func (o *OrderService) StatisticOrders(ctx context.Context, groupby string, limit int, condition entity.SearchOrderCondition) ([]*entity.GroupbyStatisticEntityForName, error) {
+	log.Info.Printf("Search order, condition: %#v\n", condition)
+	if len(condition.ToOrgIDList) > 0 {
+		allIds, err := o.getOrgSubOrgs(ctx, condition.ToOrgIDList)
+		if err != nil {
+			log.Warning.Printf("Search org failed, condition: %#v, err: %v\n", condition, err)
+			return nil, err
+		}
+		condition.ToOrgIDList = allIds
+	}
+	condition0 := da.SearchOrderCondition{
+		OrderIDList:       condition.IDs,
+		StudentIDList:     condition.StudentIDList,
+		ToOrgIDList:       condition.ToOrgIDList,
+		IntentSubjects:    condition.IntentSubjects,
+		PublisherIDList:   condition.PublisherID,
+		OrderSourceList:   condition.OrderSourceList,
+		CreateStartAt:     condition.CreateStartAt,
+		StudentKeywords:   condition.StudentsKeywords,
+		AuthorIDList:      condition.AuthorID,
+		RelatedUserIDList: condition.RelatedUserIDList,
+		Keywords:          condition.Keywords,
+		UpdateStartAt:     condition.UpdateStartAt,
+		UpdateEndAt:       condition.UpdateEndAt,
+		Address:           condition.Address,
+		CreateEndAt:       condition.CreateEndAt,
+		OrderBy:           condition.OrderBy,
+	}
+	ret, err := da.GetOrderModel().StatisticOrders(ctx, groupby, limit, condition0)
+	if err != nil {
+		log.Error.Printf("StatisticOrders failed, condition: %#v, condition0: %#v, err: %v\n", condition, condition0, err)
+		return nil, err
+	}
+	return GetStatisticsService().GroupbyStatisticEntityFillName(ctx, GroupDataTypeOrg, ret)
+}
 
 func (o *OrderService) SearchOrderWithAuthor(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) (*entity.OrderInfoList, error) {
-	condition.PublisherID = []int{operator.UserId}
+	condition.RelatedUserIDList = []int{operator.UserId}
 	log.Info.Printf("Search order with author, condition: %#v\n", condition)
 	//查询订单
 	return o.SearchOrders(ctx, condition, operator)
@@ -1536,7 +1695,9 @@ var (
 func GetOrderService() IOrderService {
 	_orderServiceOnce.Do(func() {
 		if _orderService == nil {
-			_orderService = new(OrderService)
+			_orderService = &OrderService{
+				limit: 5,
+			}
 		}
 	})
 	return _orderService

@@ -3,6 +3,7 @@ package da
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -27,6 +28,7 @@ type IOrgModel interface {
 	GetOrgsByParentId(ctx context.Context, parentId int) ([]*Org, error)
 	GetOrgsByParentIdWithStatus(ctx context.Context, parentId int, status []int) ([]*Org, error)
 	SearchOrgs(ctx context.Context, s SearchOrgsCondition) (int, []*Org, error)
+	UpdateOrgsRole(ctx context.Context, tx *gorm.DB, isRootOrg bool, supportRole int) error
 
 	SearchOrgsWithDistance(ctx context.Context, s SearchOrgsCondition, l *entity.Coordinate) (int, []*OrgWithDistance, error)
 }
@@ -56,6 +58,13 @@ type Org struct {
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`
 	CreatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:created_at"`
 	DeletedAt *time.Time `gorm:"type:datetime;column:deleted_at"`
+}
+
+func (o *Org) RealParentID() int {
+	if o.ParentID == 0 {
+		return o.ID
+	}
+	return o.ParentID
 }
 
 type OrgWithDistance struct {
@@ -98,6 +107,50 @@ func (d *DBOrgModel) UpdateOrg(ctx context.Context, tx *gorm.DB, id int, org Org
 	err := db.Get().Model(Org{}).Where(&Org{ID: id}).Updates(newOrg).Error
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (d *DBOrgModel) UpdateOrgsRole(ctx context.Context, tx *gorm.DB, isRootOrg bool, supportRole int) error {
+	now := time.Now()
+	if isRootOrg {
+		fmt.Println(">>>>>>>>>>>>123123:")
+		org, err := d.GetOrgById(ctx, tx, 1)
+		if err != nil {
+			return err
+		}
+		roles := strings.Split(org.SupportRoleID, ",")
+		roles = append(roles, strconv.Itoa(supportRole))
+		newRoles := strings.Join(roles, ",")
+		fmt.Println(">>>>>>>>>>>>newRoles:", newRoles)
+
+		err = tx.Model(Org{}).Where(&Org{ID: entity.RootOrgId}).Updates(&Org{SupportRoleID: newRoles, UpdatedAt: &now}).Error
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	_, orgs, err := d.SearchOrgs(ctx, SearchOrgsCondition{
+		ParentIDs: []int{0},
+	})
+	if err != nil {
+		return err
+	}
+	for i := range orgs {
+		fmt.Println(">>>>>>>>>>>>4444444:", orgs)
+		if orgs[i].ID == entity.RootOrgId {
+			continue
+		}
+		roles := strings.Split(orgs[i].SupportRoleID, ",")
+		roles = append(roles, strconv.Itoa(supportRole))
+		newRoles := strings.Join(roles, ",")
+
+		fmt.Println(">>>>>>>>>>>>newRoles:", newRoles)
+		err = tx.Model(Org{}).Where(&Org{ID: orgs[i].ID}).Updates(&Org{SupportRoleID: newRoles, UpdatedAt: &now}).Error
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

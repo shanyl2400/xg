@@ -8,6 +8,7 @@ import (
 	"xg/db"
 	"xg/entity"
 	"xg/log"
+	"xg/utils"
 
 	"github.com/jinzhu/gorm"
 )
@@ -200,6 +201,9 @@ func (s *OrderStatisticsService) StatisticsTable(ctx context.Context, et entity.
 }
 
 func (s *OrderStatisticsService) Summary(ctx context.Context) (*entity.SummaryInfo, error) {
+	now := time.Now()
+	firstDay := utils.GetFirstDateOfMonth(now)
+
 	log.Info.Printf("Get summary\n")
 	orgsCount, err := da.GetOrgModel().CountOrgs(ctx, da.SearchOrgsCondition{
 		ParentIDs: []int{0},
@@ -208,15 +212,19 @@ func (s *OrderStatisticsService) Summary(ctx context.Context) (*entity.SummaryIn
 		log.Warning.Printf("CountOrgs failed, err: %v\n", err)
 		return nil, err
 	}
-	studentsCount, err := da.GetStudentModel().CountStudents(ctx)
+	studentsCount, _, err := da.GetStudentModel().SearchStudents(ctx, da.SearchStudentCondition{
+		Status:         []int{entity.StudentCreated, entity.StudentConflictSuccess},
+		CreatedStartAt: &firstDay,
+		CreatedEndAt:   &now,
+	})
 	if err != nil {
 		log.Warning.Printf("CountStudents failed, err: %v\n", err)
 		return nil, err
 	}
 	payCondition := da.SearchPayRecordCondition{
-		// Mode:       entity.OrderPayModePay,
-		StatusList: []int{entity.OrderPayStatusChecked},
-		PageSize:   1000000,
+		StatusList:    []int{entity.OrderPayStatusChecked},
+		CreateStartAt: &firstDay,
+		CreateEndAt:   &now,
 	}
 	_, payRecords, err := da.GetOrderModel().SearchPayRecord(ctx, payCondition)
 	if err != nil {
@@ -238,7 +246,8 @@ func (s *OrderStatisticsService) Summary(ctx context.Context) (*entity.SummaryIn
 			entity.OrderStatusCreated,
 			entity.OrderStatusRevoked,
 			entity.OrderStatusInvalid},
-		Page: 1000000,
+		CreateStartAt: &firstDay,
+		CreateEndAt:   &now,
 	}
 	total, orders, err := da.GetOrderModel().SearchOrder(ctx, orderCondition)
 	if err != nil {
@@ -341,7 +350,7 @@ func (s *OrderStatisticsService) RemoveStatisticsByOrderSource(ctx context.Conte
 	records, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, tx, da.SearchOrderStatisticsRecordCondition{
 		OrderSource: []int{orderSourceID},
 	})
-	if err != nil{
+	if err != nil {
 		log.Error.Printf("Search records failed, orderSourceId: %#v\n", orderSourceID)
 		return err
 	}
@@ -354,14 +363,14 @@ func (s *OrderStatisticsService) RemoveStatisticsByOrderSource(ctx context.Conte
 			PublisherId: records[i].PublisherId,
 			OrderSource: entity.OtherOrderSource,
 		}, records[i].Value, records[i].Count)
-		if err != nil{
+		if err != nil {
 			log.Error.Printf("Move records value failed, record: %#v\n", records[i])
 			return err
 		}
 
 		//删除记录
 		err = da.GetOrderStatisticsRecordModel().DeleteOrderStatisticsRecord(ctx, tx, records[i].ID)
-		if err != nil{
+		if err != nil {
 			log.Error.Printf("Delete records failed, record: %#v\n", records[i])
 			return err
 		}
@@ -499,7 +508,6 @@ func (s *OrderStatisticsService) addValue(ctx context.Context, tx *gorm.DB, id e
 	}
 	return nil
 }
-
 
 func (s *OrderStatisticsService) addValueToOthersOrderSource(ctx context.Context, tx *gorm.DB, id entity.OrderStatisticRecordId, value float64, count int) error {
 	s.locker.Lock()

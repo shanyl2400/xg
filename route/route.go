@@ -197,15 +197,25 @@ func Get() *gin.Engine {
 		statistics.GET("/graph/dispatch", s.mustLogin, s.hasPermission([]int{entity.AuthDispatchOrder}), s.dispatchGraph)
 		statistics.GET("/graph/enter", s.mustLogin, s.hasPermission([]int{entity.AuthEnterStudent}), s.enterGraph)
 		statistics.GET("/graph/order_source/:id", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.orderSourceGraph)
+
+		statistics.GET("/students/author", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.statisticStudentByAuthor)
+		statistics.GET("/students/author/rank", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.statisticStudentByAuthorRank)
+		statistics.GET("/orders/payment", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.statisticOrdersPayments)
+		statistics.GET("/orders", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.statisticOrders)
+		statistics.GET("/orders/rank", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.statisticOrdersRank)
+		statistics.GET("/orders/payment/rank", s.mustLogin, s.hasPermission([]int{entity.AuthListAllOrder}), s.statisticOrderPaymentsRank)
+
 	}
 
 	settlement := api.Group("/settlement")
 	{
 		settlement.POST("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageSettlement}), s.createSettlement)
+		settlement.POST("/commission", s.mustLogin, s.hasPermission([]int{entity.AuthManageSettlement}), s.createCommissionSettlement)
 	}
 	settlements := api.Group("/settlements")
 	{
 		settlements.GET("/", s.mustLogin, s.hasPermission([]int{entity.AuthManageSettlement}), s.searchSettlements)
+		settlements.GET("/commission", s.mustLogin, s.hasPermission([]int{entity.AuthManageSettlement}), s.searchCommissionSettlements)
 	}
 
 	socks := api.Group("/socks")
