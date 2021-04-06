@@ -514,9 +514,9 @@ func (d *DBOrderModel) StatisticOrdersPayments(ctx context.Context, groupby stri
 
 	fmt.Println(rawSQL)
 	fmt.Println(values1)
-	if s.OrderBy != "" {
-		tx = tx.Order("o." + s.OrderBy)
-	}
+	// if s.OrderBy != "" {
+	// 	tx = tx.Order("o." + s.OrderBy)
+	// }
 	if limit > 0 {
 		tx = tx.Limit(limit)
 	}
