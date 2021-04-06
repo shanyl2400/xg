@@ -157,6 +157,7 @@ func (s *OrderStatisticsService) StatisticsTable(ctx context.Context, et entity.
 	}
 	ret := entity.NewOrderStatisticTable()
 	now := time.Now()
+	startDate := now.AddDate(0, -11, 0)
 	for i := range records {
 		recordDate := time.Date(records[i].Year, time.Month(records[i].Month), records[i].Date, 0, 0, 0, 0, time.Local)
 		//当日数据
@@ -186,18 +187,29 @@ func (s *OrderStatisticsService) StatisticsTable(ctx context.Context, et entity.
 		}
 
 		//本年度
-		if records[i].Year == now.Year() {
-			month := records[i].Month - 1
-			if ret.Data[month] == nil {
-				ret.Data[month] = new(entity.OrderStatisticTableMonth)
-			}
-			data := s.handleRecord(ctx, *ret.Data[month], records[i])
-			ret.Data[month] = &data
-		}
+		s.handleYearDataPerMonth(ctx, ret, records[i], startDate, recordDate)
+		// if records[i].Year == now.Year() {
+		// 	month := records[i].Month - 1
+		// 	if ret.Data[month] == nil {
+		// 		ret.Data[month] = new(entity.OrderStatisticTableMonth)
+		// 	}
+		// 	data := s.handleRecord(ctx, *ret.Data[month], records[i])
+		// 	ret.Data[month] = &data
+		// }
 	}
 	//计算成功率
 	ret.CalculateSucceed()
 	return ret, nil
+}
+func (s *OrderStatisticsService) handleYearDataPerMonth(ctx context.Context, ret *entity.OrderStatisticTable, data *da.OrderStatisticsRecord, startDate, recordDate time.Time) {
+	yearDiff := recordDate.Year() - startDate.Year()
+	monthDiff := int(recordDate.Month() - startDate.Month())
+	offset := monthDiff + (yearDiff * 12)
+	if ret.Data[offset] == nil {
+		ret.Data[offset] = new(entity.OrderStatisticTableMonth)
+	}
+	rec := s.handleRecord(ctx, *ret.Data[offset], data)
+	ret.Data[offset] = &rec
 }
 
 func (s *OrderStatisticsService) Summary(ctx context.Context) (*entity.SummaryInfo, error) {
@@ -569,52 +581,59 @@ func (s *OrderStatisticsService) searchLast3MonthRecords(ctx context.Context, et
 	now := time.Now()
 
 	records := make([]*da.OrderStatisticsRecord, 0)
-	switch int(now.Month()) {
-	case 1:
-		condition.Year = []int{now.Year()}
-		condition.Month = []int{1}
-		records0, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
-		if err != nil {
-			log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
-			return nil, err
-		}
-		condition.Year = []int{now.Year() - 1}
-		condition.Month = []int{11, 12}
-		records1, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
-		if err != nil {
-			log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
-			return nil, err
-		}
-		records = append(records0, records1...)
-	case 2:
-		condition.Year = []int{now.Year()}
-		condition.Month = []int{1, 2}
-		records0, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
-		if err != nil {
-			log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
-			return nil, err
-		}
-
-		condition.Year = []int{now.Year() - 1}
-		condition.Month = []int{12}
-		records1, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
-		if err != nil {
-			log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
-			return nil, err
-		}
-
-		records = append(records0, records1...)
-	default:
-		month := int(now.Month())
-		condition.Month = []int{month, month - 1, month - 2}
-		condition.Year = []int{now.Year()}
-		records0, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
-		if err != nil {
-			log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
-			return nil, err
-		}
-		records = records0
+	condition.Year = []int{now.Year(), now.Year() - 1}
+	records0, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
+	if err != nil {
+		log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
+		return nil, err
 	}
+	records = records0
+	// switch int(now.Month()) {
+	// case 1:
+	// 	condition.Year = []int{now.Year()}
+	// 	condition.Month = []int{1}
+	// 	records0, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
+	// 	if err != nil {
+	// 		log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
+	// 		return nil, err
+	// 	}
+	// 	condition.Year = []int{now.Year() - 1}
+	// 	condition.Month = []int{11, 12}
+	// 	records1, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
+	// 	if err != nil {
+	// 		log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
+	// 		return nil, err
+	// 	}
+	// 	records = append(records0, records1...)
+	// case 2:
+	// 	condition.Year = []int{now.Year()}
+	// 	condition.Month = []int{1, 2}
+	// 	records0, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
+	// 	if err != nil {
+	// 		log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
+	// 		return nil, err
+	// 	}
+
+	// 	condition.Year = []int{now.Year() - 1}
+	// 	condition.Month = []int{12}
+	// 	records1, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
+	// 	if err != nil {
+	// 		log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
+	// 		return nil, err
+	// 	}
+
+	// 	records = append(records0, records1...)
+	// default:
+	// 	month := int(now.Month())
+	// 	condition.Month = []int{month, month - 1, month - 2}
+	// 	condition.Year = []int{now.Year()}
+	// 	records0, err := da.GetOrderStatisticsRecordModel().SearchOrderStatisticsRecord(ctx, db.Get(), condition)
+	// 	if err != nil {
+	// 		log.Warning.Printf("SearchStatisticsRecord failed, condition: %#v, err: %v\n", condition, err)
+	// 		return nil, err
+	// 	}
+	// 	records = records0
+	// }
 	return records, nil
 }
 
