@@ -146,7 +146,6 @@ func (d *DBOrgModel) UpdateOrgsRole(ctx context.Context, tx *gorm.DB, isRootOrg 
 		roles = append(roles, strconv.Itoa(supportRole))
 		newRoles := strings.Join(roles, ",")
 
-		fmt.Println(">>>>>>>>>>>>newRoles:", newRoles)
 		err = tx.Model(Org{}).Where(&Org{ID: orgs[i].ID}).Updates(&Org{SupportRoleID: newRoles, UpdatedAt: &now}).Error
 		if err != nil {
 			return err

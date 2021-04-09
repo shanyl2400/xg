@@ -20,6 +20,7 @@ const (
 var (
 	ErrInvalidAuth     = errors.New("invalid auth")
 	ErrInvalidAuthMode = errors.New("invalid auth mode")
+	ErrInvalidAuthName = errors.New("invalid auth name")
 )
 
 type IRoleService interface {
@@ -55,6 +56,10 @@ func (r *RoleService) CreateRole(ctx context.Context, name string, authList []in
 
 func (r *RoleService) CreateRoleForOrgs(ctx context.Context, name string, authList []int, roleMode int) (int, error) {
 	log.Info.Printf("CreateRole, name: %#v, authList: %#v\n", name, authList)
+
+	if name == "" {
+		return -1, ErrInvalidAuthName
+	}
 
 	err := r.checkAuth(ctx, authList, roleMode)
 	if err != nil {
