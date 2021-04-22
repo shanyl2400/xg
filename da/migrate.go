@@ -189,7 +189,7 @@ func initRole() {
 	if err != nil {
 		panic(err)
 	}
-	err = GetRoleModel().SetRoleAuth(context.Background(), db.Get(), dispatchId, []int{3})
+	err = GetRoleModel().SetRoleAuth(context.Background(), db.Get(), dispatchId, []int{3, 5})
 	if err != nil {
 		panic(err)
 	}
