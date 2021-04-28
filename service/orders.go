@@ -721,6 +721,7 @@ func (o *OrderService) AddOrderRemark(ctx context.Context, orderId int, content 
 			log.Warning.Printf("AddOrderRemark failed, orderId: %#v, content: %v err: %v\n", orderId, content, err)
 			return err
 		}
+
 		return nil
 	})
 	if err != nil {
@@ -761,6 +762,12 @@ func (o *OrderService) addOrderRemark(ctx context.Context, tx *gorm.DB, req enti
 		log.Warning.Printf("Add remark record failed, order: %#v, data: %#v, operator: %#v, err: %v\n", orderObj, data, operator, err)
 		return err
 	}
+	err = da.GetOrderModel().UpdateOrderStatusTx(ctx, tx, orderObj.Order.ID, orderObj.Order.Status)
+	if err != nil {
+		log.Warning.Printf("UpdateOrderStatusTxfailed, order: %#v, data: %#v, operator: %#v, err: %v\n", orderObj, data, operator, err)
+		return err
+	}
+
 	_, records, err := da.GetOrderModel().SearchRemarkRecord(ctx, da.SearchRemarkRecordCondition{
 		OrderIDList: []int{req.OrderID},
 	})
