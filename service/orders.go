@@ -140,6 +140,8 @@ func (o *OrderService) CreateOrder(ctx context.Context, req *entity.CreateOrderR
 }
 
 func (o *OrderService) UpdateOrderStatus(ctx context.Context, req *entity.OrderUpdateStatusRequest, operator *entity.JWTUser) error {
+	o.lock.Lock()
+	defer o.lock.Unlock()
 	switch req.Status {
 	case entity.OrderStatusCreated:
 		log.Warning.Printf("Invalid status, req: %#v\n", req)
@@ -575,11 +577,15 @@ func (o *OrderService) InvalidOrder(ctx context.Context, orderId int, content st
 
 //付款
 func (o *OrderService) PayOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error {
+	o.lock.Lock()
+	defer o.lock.Unlock()
 	return o.payOrder(ctx, entity.OrderPayModePay, req, operator)
 }
 
 //退费
 func (o *OrderService) PaybackOrder(ctx context.Context, req *entity.OrderPayRequest, operator *entity.JWTUser) error {
+	o.lock.Lock()
+	defer o.lock.Unlock()
 	return o.payOrder(ctx, entity.OrderPayModePayback, req, operator)
 }
 
@@ -762,7 +768,7 @@ func (o *OrderService) addOrderRemark(ctx context.Context, tx *gorm.DB, req enti
 		log.Warning.Printf("Add remark record failed, order: %#v, data: %#v, operator: %#v, err: %v\n", orderObj, data, operator, err)
 		return err
 	}
-	err = da.GetOrderModel().UpdateOrderStatusTx(ctx, tx, orderObj.Order.ID, orderObj.Order.Status)
+	err = da.GetOrderModel().UpdateOrderUpdateAtTx(ctx, tx, orderObj.Order.ID)
 	if err != nil {
 		log.Warning.Printf("UpdateOrderStatusTxfailed, order: %#v, data: %#v, operator: %#v, err: %v\n", orderObj, data, operator, err)
 		return err

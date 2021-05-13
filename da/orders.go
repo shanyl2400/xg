@@ -19,7 +19,8 @@ type IOrderModel interface {
 	AddRemarkRecord(ctx context.Context, o *OrderRemarkRecord) (int, error)
 	AddRemarkRecordTx(ctx context.Context, tx *gorm.DB, o *OrderRemarkRecord) (int, error)
 	AddOrderPayRecordTx(ctx context.Context, tx *gorm.DB, o *OrderPayRecord) (int, error)
-	UpdateOrderStatusTx(ctx context.Context, db *gorm.DB, id, status int) error
+	UpdateOrderStatusTx(ctx context.Context, db *gorm.DB, id int, status int) error
+	UpdateOrderUpdateAtTx(ctx context.Context, tx *gorm.DB, id int) error
 	UpdateOrderPayRecordTx(ctx context.Context, tx *gorm.DB, id, status int) error
 	UpdateOrderPayRecordForParentTx(ctx context.Context, tx *gorm.DB, id, status, parentID int) error
 	UpdateOrderRemarkRecordTx(ctx context.Context, tx *gorm.DB, ids []int, status int) error
@@ -413,6 +414,15 @@ func (d *DBOrderModel) AddRemarkRecordTx(ctx context.Context, tx *gorm.DB, o *Or
 func (d *DBOrderModel) UpdateOrderStatusTx(ctx context.Context, tx *gorm.DB, id, status int) error {
 	now := time.Now()
 	err := tx.Model(Order{}).Where(&Order{ID: id}).Updates(Order{Status: status, UpdatedAt: &now}).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *DBOrderModel) UpdateOrderUpdateAtTx(ctx context.Context, tx *gorm.DB, id int) error {
+	now := time.Now()
+	err := tx.Model(Order{}).Where(&Order{ID: id}).Updates(Order{UpdatedAt: &now}).Error
 	if err != nil {
 		return err
 	}
