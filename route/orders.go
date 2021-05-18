@@ -869,7 +869,7 @@ func (s *Server) addOrderMark(c *gin.Context) {
 	}
 	req.OrderID = id
 	user := s.getJWTUser(c)
-	err = service.GetOrderService().AddOrderRemark(c.Request.Context(), req.OrderID, req.Content, user)
+	err = service.GetOrderService().AddOrderRemark(c.Request.Context(), req.OrderID, req.Content, req.RevisitAt, user)
 	if err != nil {
 		s.responseErr(c, http.StatusInternalServerError, err)
 		return

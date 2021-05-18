@@ -95,8 +95,9 @@ type OrderRemarkRecord struct {
 	Content string `gorm:"type:text;NOT NULL;column:content"`
 	Status  int    `gorm:"type:int;NOT NULL;DEFAULT 1;column:status"`
 
-	InfoType int    `gorm:"type:int;NOT NULL;column:info_type"`
-	Info     string `gorm:"type:text;NULL;column:info"`
+	InfoType  int        `gorm:"type:int;NOT NULL;column:info_type"`
+	Info      string     `gorm:"type:text;NULL;column:info"`
+	RevisitAt *time.Time `gorm:"type:datetime;NULL;column:revisit_at"`
 
 	UpdatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:updated_at"`
 	CreatedAt *time.Time `gorm:"type:datetime;NOT NULL;column:created_at"`

@@ -38,7 +38,7 @@ type IOrderService interface {
 
 	ConfirmOrderPay(ctx context.Context, orderPayId int, status int, operator *entity.JWTUser) error
 	UpdateOrderPayPrice(ctx context.Context, orderPayId int, price float64, operator *entity.JWTUser) error
-	AddOrderRemark(ctx context.Context, orderId int, content string, operator *entity.JWTUser) error
+	AddOrderRemark(ctx context.Context, orderId int, content string, revisit int64, operator *entity.JWTUser) error
 	MarkOrderRemark(ctx context.Context, remarkIDs []int, status int, operator *entity.JWTUser) error
 	SearchOrderPayRecords(ctx context.Context, condition *entity.SearchPayRecordCondition, operator *entity.JWTUser) (*entity.PayRecordInfoList, error)
 	SearchOrders(ctx context.Context, condition *entity.SearchOrderCondition, operator *entity.JWTUser) (*entity.OrderInfoList, error)
@@ -711,18 +711,23 @@ func (o *OrderService) MarkOrderRemark(ctx context.Context, remarkIDs []int, sta
 }
 
 //TODO: search order pay record
-func (o *OrderService) AddOrderRemark(ctx context.Context, orderId int, content string, operator *entity.JWTUser) error {
+func (o *OrderService) AddOrderRemark(ctx context.Context, orderId int, content string, revisit int64, operator *entity.JWTUser) error {
 	if content == "" {
 		log.Warning.Printf("No remark content, orderID: %v, content: %v\n", orderId, content)
 		return ErrNoRemarkContent
 	}
 	err := db.GetTrans(ctx, func(ctx context.Context, tx *gorm.DB) error {
-		err := o.addOrderRemark(ctx, tx, entity.OrderRemarkRequest{
+		req := entity.OrderRemarkRequest{
 			OrderID:  orderId,
 			InfoType: entity.OrderRemarkInfoTypeNormal,
 			Info:     "文本消息",
 			Content:  content,
-		}, operator)
+		}
+		if revisit > 0 {
+			revisitTime := time.Unix(revisit, 0)
+			req.RevisitAt = &revisitTime
+		}
+		err := o.addOrderRemark(ctx, tx, req, operator)
 		if err != nil {
 			log.Warning.Printf("AddOrderRemark failed, orderId: %#v, content: %v err: %v\n", orderId, content, err)
 			return err
@@ -755,13 +760,14 @@ func (o *OrderService) addOrderRemark(ctx context.Context, tx *gorm.DB, req enti
 	}
 
 	data := &da.OrderRemarkRecord{
-		OrderID:  req.OrderID,
-		Author:   operator.UserId,
-		Mode:     mode,
-		Content:  req.Content,
-		Info:     req.Info,
-		InfoType: req.InfoType,
-		Status:   entity.OrderRemarkUnread,
+		OrderID:   req.OrderID,
+		Author:    operator.UserId,
+		Mode:      mode,
+		Content:   req.Content,
+		Info:      req.Info,
+		InfoType:  req.InfoType,
+		RevisitAt: req.RevisitAt,
+		Status:    entity.OrderRemarkUnread,
 	}
 	_, err = da.GetOrderModel().AddRemarkRecordTx(ctx, tx, data)
 	if err != nil {
@@ -851,14 +857,15 @@ func (o *OrderService) SearchOrderRemarks(ctx context.Context, condition *da.Sea
 
 	for i := range records {
 		res.Records[i] = &entity.OrderRemarkRecord{
-			ID:       records[i].ID,
-			OrderID:  records[i].OrderID,
-			Author:   records[i].Author,
-			Mode:     records[i].Mode,
-			Content:  records[i].Content,
-			Status:   records[i].Status,
-			Info:     records[i].Info,
-			InfoType: records[i].InfoType,
+			ID:        records[i].ID,
+			OrderID:   records[i].OrderID,
+			Author:    records[i].Author,
+			Mode:      records[i].Mode,
+			Content:   records[i].Content,
+			Status:    records[i].Status,
+			Info:      records[i].Info,
+			InfoType:  records[i].InfoType,
+			RevisitAt: records[i].RevisitAt,
 
 			UpdatedAt: records[i].UpdatedAt,
 			CreatedAt: records[i].CreatedAt,
@@ -1258,6 +1265,7 @@ func (o *OrderService) GetOrderById(ctx context.Context, orderId int, operator *
 			UpdatedAt: orderObj.RemarkInfo[i].UpdatedAt,
 			CreatedAt: orderObj.RemarkInfo[i].CreatedAt,
 			Status:    orderObj.RemarkInfo[i].Status,
+			RevisitAt: orderObj.RemarkInfo[i].RevisitAt,
 
 			Info:     orderObj.RemarkInfo[i].Info,
 			InfoType: orderObj.RemarkInfo[i].InfoType,

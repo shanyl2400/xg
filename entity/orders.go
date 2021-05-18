@@ -199,18 +199,20 @@ type OrderRemarkRecord struct {
 	Content string `json:"content"`
 	Status  int    `json:"status"`
 
-	Info     string `json:"info"`
-	InfoType int    `json:"info_type"`
+	Info      string     `json:"info"`
+	InfoType  int        `json:"info_type"`
+	RevisitAt *time.Time `json:"revisit_at"`
 
 	UpdatedAt *time.Time `json:"updated_at"`
 	CreatedAt *time.Time `json:"created_at"`
 }
 
 type OrderRemarkRequest struct {
-	OrderID  int    `json:"order_id"`
-	InfoType int    `json:"info_type"`
-	Info     string `json:"info"`
-	Content  string `json:"content"`
+	OrderID   int        `json:"order_id"`
+	InfoType  int        `json:"info_type"`
+	Info      string     `json:"info"`
+	Content   string     `json:"content"`
+	RevisitAt *time.Time `json:"revisit_at"`
 }
 
 type OrderPayRequest struct {
@@ -234,8 +236,9 @@ type OrderUpdateStatusRequest struct {
 }
 
 type OrderMarkRequest struct {
-	OrderID int    `json:"order_id"`
-	Content string `json:"content"`
+	OrderID   int    `json:"order_id"`
+	Content   string `json:"content"`
+	RevisitAt int64  `json:"revisit_at"`
 }
 
 type MarkOrderRemarkRequest struct {
