@@ -78,6 +78,9 @@ func (s *StudentService) checkStudentRequest(ctx context.Context, c *entity.Crea
 }
 
 func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStudentRequest, operator *entity.JWTUser) (int, int, error) {
+	s.Lock()
+	defer s.Unlock()
+
 	status := entity.StudentCreated
 
 	err := s.checkStudentRequest(ctx, c)
@@ -131,8 +134,6 @@ func (s *StudentService) CreateStudent(ctx context.Context, c *entity.CreateStud
 	}
 	log.Info.Printf("create student, student: %#v, err: %v\n", student, err)
 
-	s.Lock()
-	defer s.Unlock()
 	id, err := db.GetTransResult(ctx, func(ctx context.Context, tx *gorm.DB) (interface{}, error) {
 		//若存在冲突，创建冲突记录
 		if status == entity.StudentConflictFailed {
